@@ -102,7 +102,7 @@ export default async function DashboardPage() {
                   <TrendingUp className="w-5 h-5 text-primary-600" />
                 </div>
                 <p className="text-3xl font-bold text-gray-900">
-                  {data.donations.length}
+                  {data.donations?.length || 0}
                 </p>
               </div>
               <div className="bg-white rounded-lg shadow-md p-6">
@@ -111,7 +111,7 @@ export default async function DashboardPage() {
                   <Heart className="w-5 h-5 text-primary-600" />
                 </div>
                 <p className="text-3xl font-bold text-gray-900">
-                  {data.donations.length}
+                  {data.donations?.length || 0}
                 </p>
               </div>
             </>
@@ -123,7 +123,7 @@ export default async function DashboardPage() {
                   <Heart className="w-5 h-5 text-primary-600" />
                 </div>
                 <p className="text-3xl font-bold text-gray-900">
-                  ${data.totalReceived.toFixed(2)}
+                  ${data.totalReceived?.toFixed(2) || '0.00'}
                 </p>
               </div>
               <div className="bg-white rounded-lg shadow-md p-6">
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
                   <FileText className="w-5 h-5 text-primary-600" />
                 </div>
                 <p className="text-3xl font-bold text-gray-900">
-                  {data.requests.filter(r => r.status === 'ACTIVE' || r.status === 'PARTIALLY_FUNDED').length}
+                  {data.requests?.filter((r: any) => r.status === 'ACTIVE' || r.status === 'PARTIALLY_FUNDED').length || 0}
                 </p>
               </div>
               <div className="bg-white rounded-lg shadow-md p-6">
@@ -141,7 +141,7 @@ export default async function DashboardPage() {
                   <TrendingUp className="w-5 h-5 text-primary-600" />
                 </div>
                 <p className="text-3xl font-bold text-gray-900">
-                  {data.requests.length}
+                  {data.requests?.length || 0}
                 </p>
               </div>
             </>
