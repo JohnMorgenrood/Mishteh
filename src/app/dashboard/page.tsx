@@ -93,7 +93,7 @@ export default async function DashboardPage() {
                   <Heart className="w-5 h-5 text-primary-600" />
                 </div>
                 <p className="text-3xl font-bold text-gray-900">
-                  ${data.totalDonated.toFixed(2)}
+                  ${data.totalDonated?.toFixed(2) || '0.00'}
                 </p>
               </div>
               <div className="bg-white rounded-lg shadow-md p-6">
