@@ -1,0 +1,194 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Enum definitions
+enum UserType {
+  DONOR
+  REQUESTER
+  ADMIN
+}
+
+enum RequestCategory {
+  FOOD
+  RENT
+  BILLS
+  FAMILY_SUPPORT
+  JOB_ASSISTANCE
+  MEDICAL
+  EDUCATION
+  OTHER
+}
+
+enum UrgencyLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RequestStatus {
+  PENDING
+  ACTIVE
+  FUNDED
+  PARTIALLY_FUNDED
+  WITHDRAWN
+  REJECTED
+}
+
+enum DonationStatus {
+  PLEDGED
+  COMPLETED
+  REFUNDED
+}
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// User model - stores all user accounts
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  password      String
+  fullName      String
+  userType      UserType
+  phone         String?
+  location      String?
+  bio           String?       @db.Text
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  requests      Request[]     // Requests created by this user (if REQUESTER)
+  donations     Donation[]    // Donations made by this user (if DONOR)
+  documents     Document[]    // Documents uploaded by this user
+  preferences   DonorPreference? // Donation preferences (if DONOR)
+  
+  @@index([email])
+  @@index([userType])
+}
+
+// Request model - help requests from people in need
+model Request {
+  id              String          @id @default(cuid())
+  userId          String
+  title           String
+  description     String          @db.Text
+  category        RequestCategory
+  urgency         UrgencyLevel
+  location        String
+  targetAmount    Float?
+  currentAmount   Float           @default(0)
+  status          RequestStatus   @default(PENDING)
+  verified        Boolean         @default(false)
+  views           Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  expiresAt       DateTime?
+  
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  donations       Donation[]
+  documents       Document[]
+  
+  @@index([userId])
+  @@index([category])
+  @@index([status])
+  @@index([urgency])
+  @@index([location])
+  @@index([createdAt])
+}
+
+// Donation model - tracks donations from donors
+model Donation {
+  id              String          @id @default(cuid())
+  donorId         String
+  requestId       String
+  amount          Float
+  message         String?         @db.Text
+  status          DonationStatus  @default(PLEDGED)
+  anonymous       Boolean         @default(false)
+  paymentIntentId String?         // Stripe payment intent ID
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  // Relations
+  donor           User            @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  request         Request         @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  
+  @@index([donorId])
+  @@index([requestId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Document model - stores uploaded verification documents
+model Document {
+  id              String          @id @default(cuid())
+  userId          String
+  requestId       String?
+  fileName        String
+  fileType        String
+  fileSize        Int
+  filePath        String
+  documentType    String          // e.g., "ID", "proof_of_need", "income_statement"
+  status          DocumentStatus  @default(PENDING)
+  rejectionReason String?         @db.Text
+  uploadedAt      DateTime        @default(now())
+  verifiedAt      DateTime?
+  verifiedBy      String?         // Admin user ID who verified
+  
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  request         Request?        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([requestId])
+  @@index([status])
+}
+
+// DonorPreference model - stores donor preferences for notifications
+model DonorPreference {
+  id                  String              @id @default(cuid())
+  userId              String              @unique
+  preferredCategories RequestCategory[]
+  preferredLocations  String[]
+  minUrgency          UrgencyLevel?
+  emailNotifications  Boolean             @default(true)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  
+  // Relations
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+// Notification model - stores notifications for users
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  message     String    @db.Text
+  type        String    // e.g., "new_request", "donation_received", "document_verified"
+  read        Boolean   @default(false)
+  link        String?
+  createdAt   DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
