@@ -170,7 +170,7 @@ export default async function DashboardPage() {
           <div className="p-6">
             {session.user.userType === 'DONOR' ? (
               <div className="space-y-4">
-                {data.donations.length > 0 ? (
+                {data.donations && data.donations.length > 0 ? (
                   data.donations.map((donation: any) => (
                     <div key={donation.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex justify-between items-start">
@@ -218,7 +218,7 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {data.requests.length > 0 ? (
+                {data.requests && data.requests.length > 0 ? (
                   data.requests.map((request: any) => (
                     <div key={request.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex justify-between items-start">
