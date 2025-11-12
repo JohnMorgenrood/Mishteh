@@ -18,6 +18,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+    // Google will use the signIn callback in auth.ts to determine redirect
     await signIn('google', { callbackUrl: '/dashboard' });
   };
 
@@ -36,7 +37,16 @@ export default function LoginPage() {
       if (result?.error) {
         setError('Invalid email or password');
       } else {
-        router.push('/dashboard');
+        // Fetch session to check user type
+        const response = await fetch('/api/auth/session');
+        const session = await response.json();
+        
+        // Redirect based on user type
+        if (session?.user?.userType === 'ADMIN') {
+          router.push('/admin/accounts');
+        } else {
+          router.push('/dashboard');
+        }
         router.refresh();
       }
     } catch (err) {
