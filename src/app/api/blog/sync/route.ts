@@ -19,8 +19,8 @@ const RSS_FEEDS = [
     maxItems: 3,
   },
   {
-    url: 'https://www.jpost.com/rss/rssfeedsheadlines.aspx',
-    category: 'Israel News',
+    url: 'https://www.premiumtimesng.com/category/faith/feed',
+    category: 'Africa Faith',
     maxItems: 3,
   },
   {
