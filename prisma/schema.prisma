@@ -6,8 +6,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = "postgresql://postgres.goewhyfpzllwpaprhref:BE3putbJMcRvDyDS@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
-  directUrl = "postgresql://postgres.goewhyfpzllwpaprhref:BE3putbJMcRvDyDS@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
+  url       = "postgresql://postgres.goewhyfpzllwpaprhref:BE3putbJMcRvDyDS@db.goewhyfpzllwpaprhref.supabase.co:5432/postgres"
+  directUrl = "postgresql://postgres.goewhyfpzllwpaprhref:BE3putbJMcRvDyDS@db.goewhyfpzllwpaprhref.supabase.co:5432/postgres"
 }
 
 // Enum definitions
