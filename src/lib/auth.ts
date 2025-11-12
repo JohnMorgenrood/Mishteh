@@ -49,6 +49,15 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.userType = user.userType;
+      } else if (token.id) {
+        // Refresh user data from database to get latest userType
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { userType: true },
+        });
+        if (dbUser) {
+          token.userType = dbUser.userType;
+        }
       }
       return token;
     },
