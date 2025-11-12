@@ -3,6 +3,9 @@ import { ArrowRight, Heart, Shield, Users } from 'lucide-react';
 import RequestCard from '@/components/RequestCard';
 import { prisma } from '@/lib/prisma';
 
+// Revalidate every 60 seconds
+export const revalidate = 60;
+
 async function getFeaturedRequests() {
   try {
     const requests = await prisma.request.findMany({
