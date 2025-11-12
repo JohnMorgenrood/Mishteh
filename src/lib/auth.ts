@@ -52,29 +52,34 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       // Handle GitHub OAuth sign-in
       if (account?.provider === 'github') {
-        const email = user.email;
-        if (!email) return false;
+        try {
+          const email = user.email;
+          if (!email) return false;
 
-        // Check if user exists
-        let dbUser = await prisma.user.findUnique({
-          where: { email },
-        });
-
-        // Create user if doesn't exist
-        if (!dbUser) {
-          dbUser = await prisma.user.create({
-            data: {
-              email,
-              fullName: user.name || 'GitHub User',
-              userType: 'DONOR', // Default to DONOR for GitHub sign-ins
-              image: user.image,
-            },
+          // Check if user exists
+          let dbUser = await prisma.user.findUnique({
+            where: { email },
           });
-        }
 
-        // Store the database user ID in the account
-        user.id = dbUser.id;
-        (user as any).userType = dbUser.userType;
+          // Create user if doesn't exist
+          if (!dbUser) {
+            dbUser = await prisma.user.create({
+              data: {
+                email,
+                fullName: user.name || 'GitHub User',
+                userType: 'DONOR', // Default to DONOR for GitHub sign-ins
+                image: user.image,
+              },
+            });
+          }
+
+          // Store the database user ID in the account
+          user.id = dbUser.id;
+          (user as any).userType = dbUser.userType;
+        } catch (error) {
+          console.error('Error in signIn callback:', error);
+          return false;
+        }
       }
       return true;
     },
