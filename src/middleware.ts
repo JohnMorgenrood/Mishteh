@@ -10,6 +10,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard');
+  const isAdmin = request.nextUrl.pathname.startsWith('/admin');
 
   // Redirect authenticated users away from auth pages
   if (isAuthPage && token) {
@@ -17,7 +18,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect unauthenticated users to login
-  if (isDashboard && !token) {
+  if ((isDashboard || isAdmin) && !token) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
@@ -25,5 +26,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/auth/:path*', '/dashboard/:path*'],
+  matcher: ['/auth/:path*', '/dashboard/:path*', '/admin/:path*'],
 };
