@@ -195,3 +195,25 @@ model Notification {
   @@index([read])
   @@index([createdAt])
 }
+
+// BlogPost model - stores blog posts and external news
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String   @db.Text
+  content     String   @db.Text
+  author      String
+  category    String
+  imageUrl    String?
+  sourceUrl   String?
+  isExternal  Boolean  @default(false)
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([publishedAt(sort: Desc)])
+  @@index([slug])
+}
+
