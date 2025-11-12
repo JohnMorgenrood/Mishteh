@@ -53,12 +53,14 @@ export async function POST() {
     }
 
     let totalAdded = 0;
+    let totalProcessed = 0;
+    const feedResults: any[] = [];
 
     // First, delete old external posts (keep only last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    await prisma.blogPost.deleteMany({
+    const deleted = await prisma.blogPost.deleteMany({
       where: {
         isExternal: true,
         publishedAt: {
@@ -67,11 +69,18 @@ export async function POST() {
       },
     });
 
+    console.log(`Deleted ${deleted.count} old posts`);
+
     for (const feed of RSS_FEEDS) {
       try {
+        console.log(`Fetching feed: ${feed.url}`);
         const feedData = await parser.parseURL(feed.url);
+        console.log(`Found ${feedData.items.length} items in feed`);
+        
+        let addedFromFeed = 0;
         
         for (const item of feedData.items.slice(0, feed.maxItems)) {
+          totalProcessed++;
           if (!item.title || !item.link) continue;
 
           const slug = item.title
@@ -101,16 +110,33 @@ export async function POST() {
               },
             });
             totalAdded++;
+            addedFromFeed++;
+            console.log(`Added: ${item.title}`);
+          } else {
+            console.log(`Skipped (exists): ${item.title}`);
           }
         }
+        
+        feedResults.push({
+          url: feed.url,
+          category: feed.category,
+          added: addedFromFeed,
+        });
       } catch (feedError) {
         console.error(`Error fetching feed ${feed.url}:`, feedError);
+        feedResults.push({
+          url: feed.url,
+          error: String(feedError),
+        });
       }
     }
 
     return NextResponse.json({
-      message: `Successfully added ${totalAdded} new blog posts`,
+      message: `Successfully processed ${totalProcessed} articles, added ${totalAdded} new posts`,
       totalAdded,
+      totalProcessed,
+      deletedOld: deleted.count,
+      feedResults,
     });
   } catch (error: any) {
     console.error('Blog sync error:', error);

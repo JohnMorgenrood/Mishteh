@@ -64,16 +64,19 @@ export default function BlogPage() {
       const response = await fetch('/api/blog/sync', {
         method: 'POST',
       });
+      
+      const result = await response.json();
+      console.log('Sync result:', result);
+      
       if (response.ok) {
-        const result = await response.json();
-        alert(`Success! Added ${result.totalAdded} new posts from RSS feeds.`);
+        alert(`Success! Processed ${result.totalProcessed} articles.\nAdded ${result.totalAdded} new posts.\nDeleted ${result.deletedOld} old posts.\n\nDetails:\n${result.feedResults.map((f: any) => `${f.category}: ${f.added || 0} added${f.error ? ' (ERROR)' : ''}`).join('\n')}`);
         fetchPosts(); // Refresh the posts
       } else {
-        alert('Failed to sync feeds. Please try again.');
+        alert(`Failed to sync feeds: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error syncing feeds:', error);
-      alert('Error syncing feeds.');
+      alert('Error syncing feeds. Check console for details.');
     } finally {
       setSyncing(false);
     }
