@@ -36,19 +36,6 @@ export async function PATCH(
       },
     });
 
-    // Create notification for requester
-    await prisma.notification.create({
-      data: {
-        userId: helpRequest.userId,
-        title: status === 'ACTIVE' ? 'Request Approved!' : 'Request Rejected',
-        message: status === 'ACTIVE'
-          ? 'Your request has been approved and is now live.'
-          : 'Your request has been rejected. Please review the guidelines and try again.',
-        type: 'request_status',
-        link: `/requests/${helpRequest.id}`,
-      },
-    });
-
     return NextResponse.json({
       message: `Request ${status.toLowerCase()} successfully`,
       request: helpRequest,

@@ -55,8 +55,9 @@ export default function AdminRequestReview({ params }: { params: { id: string } 
     }
   };
 
-  const handleAction = async (action: 'APPROVED' | 'REJECTED') => {
-    if (!confirm(`Are you sure you want to ${action.toLowerCase()} this request?`)) {
+  const handleAction = async (action: 'ACTIVE' | 'REJECTED') => {
+    const actionText = action === 'ACTIVE' ? 'approve' : 'reject';
+    if (!confirm(`Are you sure you want to ${actionText} this request?`)) {
       return;
     }
 
@@ -187,7 +188,7 @@ export default function AdminRequestReview({ params }: { params: { id: string } 
             {request.status === 'PENDING' && (
               <div className="border-t pt-6 flex gap-4">
                 <button
-                  onClick={() => handleAction('APPROVED')}
+                  onClick={() => handleAction('ACTIVE')}
                   disabled={processing}
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
