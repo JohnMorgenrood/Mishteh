@@ -69,8 +69,10 @@ export default function BlogPage() {
       console.log('Sync result:', result);
       
       if (response.ok) {
+        // Refresh posts immediately
+        await fetchPosts();
+        
         alert(`Success! Processed ${result.totalProcessed} articles.\nAdded ${result.totalAdded} new posts.\nDeleted ${result.deletedOld} old posts.\n\nDetails:\n${result.feedResults.map((f: any) => `${f.category}: ${f.added || 0} added${f.error ? ' (ERROR)' : ''}`).join('\n')}`);
-        fetchPosts(); // Refresh the posts
       } else {
         alert(`Failed to sync feeds: ${result.error || 'Unknown error'}`);
       }

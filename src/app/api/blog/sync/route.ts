@@ -56,20 +56,14 @@ export async function POST() {
     let totalProcessed = 0;
     const feedResults: any[] = [];
 
-    // First, delete old external posts (keep only last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+    // Delete ALL external posts to force fresh sync
     const deleted = await prisma.blogPost.deleteMany({
       where: {
         isExternal: true,
-        publishedAt: {
-          lt: thirtyDaysAgo,
-        },
       },
     });
 
-    console.log(`Deleted ${deleted.count} old posts`);
+    console.log(`Deleted ${deleted.count} external posts for fresh sync`);
 
     for (const feed of RSS_FEEDS) {
       try {
@@ -95,6 +89,25 @@ export async function POST() {
           });
 
           if (!existing) {
+            // Try to extract image from content or use category placeholder
+            let imageUrl = item.enclosure?.url || null;
+            
+            if (!imageUrl && item.content) {
+              const imgMatch = item.content.match(/<img[^>]+src=["']([^"']+)["']/);
+              if (imgMatch) imageUrl = imgMatch[1];
+            }
+            
+            // Category-based placeholder images from Unsplash
+            if (!imageUrl) {
+              const placeholders: Record<string, string> = {
+                'Christian News': 'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=800&h=600&fit=crop',
+                'Faith & Culture': 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=800&h=600&fit=crop',
+                'Israel News': 'https://images.unsplash.com/photo-1552083375-1447ce886485?w=800&h=600&fit=crop',
+                'World News': 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&h=600&fit=crop',
+              };
+              imageUrl = placeholders[feed.category] || 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?w=800&h=600&fit=crop';
+            }
+
             await prisma.blogPost.create({
               data: {
                 title: item.title.substring(0, 200),
@@ -103,7 +116,7 @@ export async function POST() {
                 content: item.content || item.contentSnippet || item.title,
                 author: item.creator || 'External Source',
                 category: feed.category,
-                imageUrl: item.enclosure?.url || null,
+                imageUrl,
                 sourceUrl: item.link,
                 isExternal: true,
                 publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
