@@ -18,53 +18,63 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="glass sticky top-0 z-50 border-b border-primary-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <Heart className="w-8 h-8 text-primary-600" />
-            <span className="text-2xl font-bold text-gray-900">MISHTEH</span>
+          <Link href="/" className="flex items-center gap-2 group">
+            <Heart className="w-8 h-8 text-primary-600 group-hover:scale-110 transition-transform" fill="currentColor" />
+            <span className="text-2xl font-display font-bold gradient-text">MISHTEH</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             <Link
               href="/"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+              className={`text-sm font-medium transition-all ${
+                isActive('/') 
+                  ? 'text-primary-600 font-semibold' 
+                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
               }`}
             >
               Home
             </Link>
             <Link
               href="/requests"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/requests') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+              className={`text-sm font-medium transition-all ${
+                isActive('/requests') 
+                  ? 'text-primary-600 font-semibold' 
+                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
               }`}
             >
               Requests
             </Link>
             <Link
               href="/blog"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/blog') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+              className={`text-sm font-medium transition-all ${
+                isActive('/blog') 
+                  ? 'text-primary-600 font-semibold' 
+                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
               }`}
             >
               Blog
             </Link>
             <Link
               href="/about"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/about') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+              className={`text-sm font-medium transition-all ${
+                isActive('/about') 
+                  ? 'text-primary-600 font-semibold' 
+                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
               }`}
             >
               About
             </Link>
             <Link
               href="/contact"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/contact') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+              className={`text-sm font-medium transition-all ${
+                isActive('/contact') 
+                  ? 'text-primary-600 font-semibold' 
+                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
               }`}
             >
               Contact
@@ -74,19 +84,21 @@ export default function Navbar() {
               <>
                 <Link
                   href="/dashboard"
-                  className={`text-sm font-medium transition-colors ${
-                    isActive('/dashboard') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+                  className={`text-sm font-medium transition-all ${
+                    isActive('/dashboard') 
+                      ? 'text-primary-600 font-semibold' 
+                      : 'text-gray-700 hover:text-primary-600 hover:scale-105'
                   }`}
                 >
                   Dashboard
                 </Link>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 font-medium">
                     {session.user.name}
                   </span>
                   <button
                     onClick={handleSignOut}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:from-red-600 hover:to-pink-600 shadow-soft hover:shadow-soft-lg transition-all"
                   >
                     Sign Out
                   </button>
@@ -96,13 +108,13 @@ export default function Navbar() {
               <div className="flex items-center gap-3">
                 <Link
                   href="/auth/login"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-all hover:scale-105"
                 >
                   Login
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors"
+                  className="px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-xl shadow-soft hover:shadow-soft-lg hover:scale-105 transition-all"
                 >
                   Register
                 </Link>

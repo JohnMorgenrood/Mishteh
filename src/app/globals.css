@@ -1,33 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 245, 240, 232; /* #f5f0e8 - soft pearl/cream */
+  --foreground-rgb: 30, 30, 40;
+  --background-rgb: 253, 248, 252; /* #fdf8fc - blush white */
 }
 
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar - elegant rose gold theme */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+/* Modern scrollbar - girly pink & blue */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #fae8e1;
+  background: #fce7fe;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c85d40;
-  border-radius: 5px;
+  background: linear-gradient(180deg, #e74eeb 0%, #8187ff 100%);
+  border-radius: 6px;
+  border: 2px solid #fce7fe;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b04a36;
+  background: linear-gradient(180deg, #d12fd5 0%, #6b5ef7 100%);
+}
+
+/* Smooth animations */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
 /* Line clamp utilities */
@@ -43,4 +61,20 @@ body {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, #e74eeb 0%, #8187ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(231, 78, 235, 0.1);
 }

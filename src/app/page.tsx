@@ -3,8 +3,8 @@ import { ArrowRight, Heart, Shield, Users } from 'lucide-react';
 import RequestCard from '@/components/RequestCard';
 import { prisma } from '@/lib/prisma';
 
-// Revalidate every 60 seconds
-export const revalidate = 60;
+// Revalidate every 10 seconds for near-instant featured updates
+export const revalidate = 10;
 
 async function getFeaturedRequests() {
   try {
@@ -47,37 +47,41 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary-500 via-secondary-500 to-accent-lavender">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-5xl font-bold mb-6">
+            <h1 className="text-6xl font-display font-bold mb-6 text-white drop-shadow-lg">
               Together, We Can Make a Difference
             </h1>
-            <p className="text-xl mb-8 text-primary-100">
+            <p className="text-xl mb-10 text-white/90 leading-relaxed">
               MISHTEH connects generous donors with people in need. Every contribution,
               no matter how small, helps change lives.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/requests"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-primary-50 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-600 font-semibold rounded-2xl shadow-soft-lg hover:shadow-xl hover:scale-105 transition-all"
               >
                 View Requests
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
                 href="/auth/register"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-primary-700 text-white font-semibold rounded-lg hover:bg-primary-800 transition-colors border-2 border-white"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-2xl border-2 border-white/30 hover:bg-white/20 hover:scale-105 transition-all"
               >
                 Get Started
               </Link>
             </div>
           </div>
         </div>
+        {/* Decorative blobs */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-accent-mint rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent-peach rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-700"></div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">

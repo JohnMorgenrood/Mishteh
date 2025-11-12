@@ -9,46 +9,61 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Background color - soft pearl/cream
-        background: '#f5f0e8',
-        // Primary accent - Rich rose gold/copper (feminine & elegant)
+        // Background - Soft blush white
+        background: '#fdf8fc',
+        // Primary - Vibrant girly pink
         primary: {
-          50: '#fdf6f3',
-          100: '#fae8e1',
-          200: '#f5d1c3',
-          300: '#efb5a0',
-          400: '#e89277',
-          500: '#d97454',
-          600: '#c85d40',
-          700: '#b04a36',
-          800: '#923e31',
-          900: '#79362c',
-          DEFAULT: '#c85d40', // Rose gold/warm copper
+          50: '#fef5ff',
+          100: '#fce7fe',
+          200: '#fad4fd',
+          300: '#f7b0fa',
+          400: '#f27ef5',
+          500: '#e74eeb',
+          600: '#d12fd5',
+          700: '#b021b3',
+          800: '#911e92',
+          900: '#781f76',
+          DEFAULT: '#e74eeb', // Bright girly pink
         },
-        // Secondary accent - Deep teal with purple undertones (mystical & feminine)
+        // Secondary - Soft periwinkle blue
         secondary: {
-          50: '#f0f7f9',
-          100: '#dceef3',
-          200: '#bddde7',
-          300: '#8ec4d5',
-          400: '#5aa3bc',
-          500: '#3d87a1',
-          600: '#346d87',
-          700: '#2f5a6f',
-          800: '#2d4d5c',
-          900: '#29414e',
-          DEFAULT: '#2f5a6f', // Mystical teal
+          50: '#f4f6ff',
+          100: '#ebeeff',
+          200: '#dce1ff',
+          300: '#c0c9ff',
+          400: '#a0a7ff',
+          500: '#8187ff',
+          600: '#6b5ef7',
+          700: '#5a4de3',
+          800: '#4941bc',
+          900: '#3d3b95',
+          DEFAULT: '#8187ff', // Periwinkle blue
         },
-        // Accent colors
+        // Accent colors - Modern girly palette
         accent: {
-          gold: '#d4af37',      // Rich gold
-          rose: '#e8a5a5',      // Soft rose
-          lavender: '#c8b8d8',  // Gentle lavender
-          sage: '#a8b5a0',      // Soft sage green
+          lavender: '#d4c5f9',   // Soft lavender
+          mint: '#b8f4dc',       // Fresh mint
+          peach: '#ffd4c4',      // Peachy pink
+          skyblue: '#c7e9ff',    // Sky blue
+          rose: '#ffcce0',       // Rose pink
+          lilac: '#e6d5ff',      // Lilac purple
         },
       },
       backgroundColor: {
-        'page': '#f5f0e8', // Soft pearl background
+        'page': '#fdf8fc', // Blush white background
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Poppins', 'Inter', 'sans-serif'],
+      },
+      borderRadius: {
+        'xl': '1rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
+      },
+      boxShadow: {
+        'soft': '0 2px 15px -3px rgba(231, 78, 235, 0.1), 0 4px 6px -2px rgba(129, 135, 255, 0.05)',
+        'soft-lg': '0 10px 40px -10px rgba(231, 78, 235, 0.15), 0 4px 20px -2px rgba(129, 135, 255, 0.1)',
       },
     },
   },
