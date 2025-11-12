@@ -42,10 +42,27 @@ export async function PATCH(
     const helpRequest = await prisma.request.update({
       where: { id: params.id },
       data: updateData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phone: true,
+            location: true,
+          },
+        },
+      },
     });
 
+    const message = status 
+      ? `Request ${status.toLowerCase()} successfully`
+      : featured !== undefined
+      ? `Request ${featured ? 'featured' : 'unfeatured'} successfully`
+      : 'Request updated successfully';
+
     return NextResponse.json({
-      message: `Request ${status.toLowerCase()} successfully`,
+      message,
       request: helpRequest,
     });
   } catch (error) {
