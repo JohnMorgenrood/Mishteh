@@ -9,48 +9,46 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Background - Soft blush white
-        background: '#fdf8fc',
-        // Primary - Vibrant girly pink
+        // Background - Warm cream
+        background: '#faf8f5',
+        // Primary - Rich copper/bronze (biblical & ancient)
         primary: {
-          50: '#fef5ff',
-          100: '#fce7fe',
-          200: '#fad4fd',
-          300: '#f7b0fa',
-          400: '#f27ef5',
-          500: '#e74eeb',
-          600: '#d12fd5',
-          700: '#b021b3',
-          800: '#911e92',
-          900: '#781f76',
-          DEFAULT: '#e74eeb', // Bright girly pink
+          50: '#fef7f3',
+          100: '#fceee3',
+          200: '#f9dac5',
+          300: '#f4bf9d',
+          400: '#ed9a6b',
+          500: '#e67c45',
+          600: '#d6652f',
+          700: '#b34e27',
+          800: '#8f4025',
+          900: '#743722',
+          DEFAULT: '#d6652f', // Copper/bronze
         },
-        // Secondary - Soft periwinkle blue
+        // Secondary - Deep spiritual blue (night sky, ancient scrolls)
         secondary: {
-          50: '#f4f6ff',
-          100: '#ebeeff',
-          200: '#dce1ff',
-          300: '#c0c9ff',
-          400: '#a0a7ff',
-          500: '#8187ff',
-          600: '#6b5ef7',
-          700: '#5a4de3',
-          800: '#4941bc',
-          900: '#3d3b95',
-          DEFAULT: '#8187ff', // Periwinkle blue
+          50: '#f3f6f9',
+          100: '#e6ecf2',
+          200: '#c8d7e7',
+          300: '#98b5d4',
+          400: '#608fbd',
+          500: '#3d71a6',
+          600: '#2d5a8c',
+          700: '#254871',
+          800: '#223d5e',
+          900: '#1f3550',
+          DEFAULT: '#254871', // Deep spiritual blue
         },
-        // Accent colors - Modern girly palette
+        // Accent colors - Biblical & ancient
         accent: {
-          lavender: '#d4c5f9',   // Soft lavender
-          mint: '#b8f4dc',       // Fresh mint
-          peach: '#ffd4c4',      // Peachy pink
-          skyblue: '#c7e9ff',    // Sky blue
-          rose: '#ffcce0',       // Rose pink
-          lilac: '#e6d5ff',      // Lilac purple
+          gold: '#c9a961',      // Ancient gold
+          crimson: '#8b2635',   // Royal crimson
+          olive: '#6b7553',     // Olive branch
+          sand: '#d4c4a8',      // Desert sand
         },
       },
       backgroundColor: {
-        'page': '#fdf8fc', // Blush white background
+        'page': '#faf8f5', // Warm cream background
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -62,8 +60,8 @@ const config: Config = {
         '3xl': '2rem',
       },
       boxShadow: {
-        'soft': '0 2px 15px -3px rgba(231, 78, 235, 0.1), 0 4px 6px -2px rgba(129, 135, 255, 0.05)',
-        'soft-lg': '0 10px 40px -10px rgba(231, 78, 235, 0.15), 0 4px 20px -2px rgba(129, 135, 255, 0.1)',
+        'soft': '0 2px 15px -3px rgba(214, 101, 47, 0.1), 0 4px 6px -2px rgba(37, 72, 113, 0.05)',
+        'soft-lg': '0 10px 40px -10px rgba(214, 101, 47, 0.2), 0 4px 20px -2px rgba(37, 72, 113, 0.1)',
       },
     },
   },

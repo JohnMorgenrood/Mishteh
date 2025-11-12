@@ -6,7 +6,7 @@
 
 :root {
   --foreground-rgb: 30, 30, 40;
-  --background-rgb: 253, 248, 252; /* #fdf8fc - blush white */
+  --background-rgb: 250, 248, 245; /* #faf8f5 - warm cream */
 }
 
 body {
@@ -22,23 +22,23 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
 }
 
-/* Modern scrollbar - girly pink & blue */
+/* Spiritual scrollbar - copper & deep blue */
 ::-webkit-scrollbar {
   width: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #fce7fe;
+  background: #fceee3;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #e74eeb 0%, #8187ff 100%);
+  background: linear-gradient(180deg, #d6652f 0%, #254871 100%);
   border-radius: 6px;
-  border: 2px solid #fce7fe;
+  border: 2px solid #fceee3;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #d12fd5 0%, #6b5ef7 100%);
+  background: linear-gradient(180deg, #b34e27 0%, #1f3550 100%);
 }
 
 /* Smooth animations */
@@ -63,9 +63,9 @@ h1, h2, h3, h4, h5, h6 {
   overflow: hidden;
 }
 
-/* Gradient text effect */
+/* Gradient text effect - copper to blue */
 .gradient-text {
-  background: linear-gradient(135deg, #e74eeb 0%, #8187ff 100%);
+  background: linear-gradient(135deg, #d6652f 0%, #254871 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -73,8 +73,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Glass morphism effect */
 .glass {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(231, 78, 235, 0.1);
+  border: 1px solid rgba(214, 101, 47, 0.1);
 }
