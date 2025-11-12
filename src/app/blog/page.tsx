@@ -54,8 +54,8 @@ export default function BlogPage() {
         const data: BlogPost[] = await response.json();
         setPosts(data);
         
-        // Extract unique categories
-        const categorySet = new Set(data.map((post) => post.category));
+        // Extract unique categories, excluding old Israel News
+        const categorySet = new Set(data.map((post) => post.category).filter(cat => cat !== 'Israel News'));
         const uniqueCategories: string[] = ['All', ...Array.from(categorySet)];
         setCategories(uniqueCategories);
       }
