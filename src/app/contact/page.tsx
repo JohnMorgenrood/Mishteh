@@ -10,11 +10,19 @@ export default function ContactPage() {
     email: '',
     subject: '',
     message: '',
+    honeypot: '', // Anti-spam field
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check honeypot field - if filled, it's a bot
+    if (formData.honeypot) {
+      console.log('Bot detected');
+      return; // Silently reject
+    }
+    
     setStatus('loading');
 
     try {
@@ -23,7 +31,12 @@ export default function ContactPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+        }),
       });
 
       const data = await response.json();
@@ -33,7 +46,7 @@ export default function ContactPage() {
       }
 
       setStatus('success');
-      setFormData({ name: '', email: '', subject: '', message: '' });
+      setFormData({ name: '', email: '', subject: '', message: '', honeypot: '' });
       setTimeout(() => setStatus('idle'), 5000);
     } catch (error: any) {
       console.error('Contact form error:', error);
@@ -81,9 +94,13 @@ export default function ContactPage() {
                   <Phone className="w-5 h-5 text-primary-600 mt-1" />
                   <div>
                     <p className="font-medium text-gray-900">Phone</p>
-                    <a href="tel:+1234567890" className="text-primary-600 hover:underline">
-                      +1 (234) 567-890
-                    </a>
+                    <button
+                      onClick={() => alert('📞 For phone consultations, please email us at support@mishteh.org with your inquiry and preferred meeting time. We\'ll contact you to arrange a call.')}
+                      className="text-primary-600 hover:underline cursor-pointer"
+                    >
+                      +27 *** *** ***
+                    </button>
+                    <p className="text-xs text-gray-500 mt-1">Click for details</p>
                   </div>
                 </div>
 
@@ -92,9 +109,8 @@ export default function ContactPage() {
                   <div>
                     <p className="font-medium text-gray-900">Address</p>
                     <p className="text-gray-600">
-                      123 Charity Lane<br />
-                      San Francisco, CA 94102<br />
-                      United States
+                      Cape Town<br />
+                      South Africa
                     </p>
                   </div>
                 </div>
@@ -200,6 +216,18 @@ export default function ContactPage() {
                     placeholder="Tell us what's on your mind..."
                   />
                 </div>
+
+                {/* Honeypot field - hidden from humans, bots will fill it */}
+                <input
+                  type="text"
+                  name="honeypot"
+                  value={formData.honeypot}
+                  onChange={handleChange}
+                  style={{ position: 'absolute', left: '-9999px' }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                />
 
                 <button
                   type="submit"
