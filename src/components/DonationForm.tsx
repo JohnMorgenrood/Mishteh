@@ -48,10 +48,10 @@ export default function DonationForm({
   const donationAmount = parseFloat(amount) || 0;
   const usdAmount = toPayPalAmount(donationAmount, userCurrency);
   
-  // Calculate platform fee (R2 or equivalent + 3%)
-  const platformFeeFixed = userCurrency === 'USD' ? 2 : convertCurrency(2, 'USD', userCurrency);
-  const platformFeePercent = donationAmount * 0.03;
-  const totalPlatformFee = platformFeeFixed + platformFeePercent;
+  // Calculate platform fee: $1 USD flat fee (converted to local currency)
+  const platformFeeFixed = userCurrency === 'USD' ? 1 : convertCurrency(1, 'USD', userCurrency);
+  const platformFeePercent = 0; // No percentage fee
+  const totalPlatformFee = platformFeeFixed;
   const recipientReceives = donationAmount - totalPlatformFee;
 
   const handleAmountConfirm = () => {
@@ -279,8 +279,11 @@ export default function DonationForm({
                     <span className="font-semibold text-green-900">{formatCurrency(donationAmount, userCurrency)}</span>
                   </div>
                   <div className="flex justify-between text-xs text-green-700">
-                    <span>Platform fee ({currencySymbol}{platformFeeFixed.toFixed(2)} + 3%):</span>
+                    <span>Platform fee:</span>
                     <span>-{formatCurrency(totalPlatformFee, userCurrency)}</span>
+                  </div>
+                  <div className="text-xs text-green-600 italic">
+                    + PayPal processing fees apply
                   </div>
                   <div className="flex justify-between pt-2 border-t border-green-300">
                     <span className="font-semibold text-green-900">Recipient receives:</span>

@@ -40,9 +40,9 @@ export async function POST(request: NextRequest) {
       ? `${captureResult.payer.name.given_name} ${captureResult.payer.name.surname}`
       : null;
 
-    // Calculate platform fee: $2 USD fixed + 3% of amount
-    // This fee is what the platform (you) keeps
-    const feeAmount = 2 + (amount * 0.03);
+    // Calculate platform fee: $1 USD flat fee only
+    // PayPal will charge their own transaction fees separately
+    const feeAmount = 1; // $1 USD flat fee
     const netAmount = amount - feeAmount; // This is what the recipient gets
 
     // Get request details if provided
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         requestId: requestId || null,
         requestTitle: request_details?.title || null,
         completedAt: new Date(),
-        adminNotes: `Platform fee from donation. Fixed: $2.00, Percentage: ${(amount * 0.03).toFixed(2)} (3%)`,
+        adminNotes: `Platform fee from donation: $1.00 flat fee. PayPal transaction fees handled separately.`,
       },
     });
 
