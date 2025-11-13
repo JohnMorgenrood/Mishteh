@@ -1,5 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import RequestCard from '@/components/RequestCard';
+import DonationForm from '@/components/DonationForm';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import Link from 'next/link';
 import { Suspense } from 'react';
 
 async function getRequest(id: string) {
@@ -59,6 +63,7 @@ async function getRequest(id: string) {
 
 export default async function RequestDetailPage({ params }: { params: { id: string } }) {
   const request = await getRequest(params.id);
+  const session = await getServerSession(authOptions);
 
   if (!request) {
     return (
@@ -164,57 +169,70 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-20">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Support This Request</h2>
-              
-              {/* Progress */}
-              {request.targetAmount && (
-                <div className="mb-6">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-semibold text-gray-700">
-                      ${request.currentAmount.toFixed(2)}
-                    </span>
-                    <span className="text-gray-500">
-                      of ${request.targetAmount.toFixed(2)}
-                    </span>
+            {session?.user ? (
+              // Show donation form if logged in
+              <div className="sticky top-20">
+                <DonationForm
+                  requestId={request.id}
+                  requestTitle={request.title}
+                  targetAmount={request.targetAmount}
+                  currentAmount={request.currentAmount}
+                />
+              </div>
+            ) : (
+              // Show login prompt if not logged in
+              <div className="bg-white rounded-lg shadow-md p-6 sticky top-20">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Support This Request</h2>
+                
+                {/* Progress */}
+                {request.targetAmount && (
+                  <div className="mb-6">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="font-semibold text-gray-700">
+                        ${request.currentAmount.toFixed(2)}
+                      </span>
+                      <span className="text-gray-500">
+                        of ${request.targetAmount.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className="bg-primary-600 h-3 rounded-full transition-all"
+                        style={{ width: `${progressPercentage}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {progressPercentage.toFixed(1)}% funded
+                    </p>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div
-                      className="bg-primary-600 h-3 rounded-full transition-all"
-                      style={{ width: `${progressPercentage}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {progressPercentage.toFixed(1)}% funded
+                )}
+
+                <div className="space-y-3">
+                  <Link
+                    href="/auth/login"
+                    className="block w-full px-6 py-3 bg-primary-600 text-white text-center font-semibold rounded-md hover:bg-primary-700 transition-colors"
+                  >
+                    Login to Donate
+                  </Link>
+                  <p className="text-xs text-gray-500 text-center">
+                    You must be logged in to make a donation
                   </p>
                 </div>
-              )}
 
-              <div className="space-y-3">
-                <a
-                  href="/auth/login"
-                  className="block w-full px-6 py-3 bg-primary-600 text-white text-center font-semibold rounded-md hover:bg-primary-700 transition-colors"
-                >
-                  Donate Now
-                </a>
-                <p className="text-xs text-gray-500 text-center">
-                  You must be logged in to donate
-                </p>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Total Donations:</span>
-                    <span className="font-semibold">{request._count.donations}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Status:</span>
-                    <span className="font-semibold capitalize">{request.status.toLowerCase()}</span>
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div className="flex justify-between">
+                      <span>Total Donations:</span>
+                      <span className="font-semibold">{request._count.donations}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Status:</span>
+                      <span className="font-semibold capitalize">{request.status.toLowerCase()}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
