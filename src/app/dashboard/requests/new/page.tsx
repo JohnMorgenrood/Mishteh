@@ -1,5 +1,6 @@
 'use client';
 
+// Updated with comprehensive category system - 80+ categories in 14 groups
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
