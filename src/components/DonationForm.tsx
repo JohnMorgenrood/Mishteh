@@ -149,7 +149,7 @@ export default function DonationForm({
     <PayPalScriptProvider
       options={{
         clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
-        currency: userCurrency,
+        currency: 'USD',
       }}
     >
       <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
