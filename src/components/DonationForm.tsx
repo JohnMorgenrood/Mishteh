@@ -11,6 +11,7 @@ import {
   getConversionMessage,
   convertCurrency,
   CURRENCIES,
+  EXCHANGE_RATES,
   Currency,
 } from '@/lib/currency';
 
@@ -54,7 +55,9 @@ export default function DonationForm({
   // Total amount user pays = donation amount + platform fee
   const totalAmount = donationAmount + totalPlatformFee;
   const recipientReceives = donationAmount; // Recipient gets the full donation amount
-  const usdAmount = toPayPalAmount(totalAmount, userCurrency); // Convert total to USD for PayPal
+  
+  // Convert to USD for PayPal - use the total amount
+  const usdAmount = userCurrency === 'USD' ? totalAmount : (totalAmount / EXCHANGE_RATES[userCurrency]);
 
   const handleAmountConfirm = () => {
     if (donationAmount <= 0) {
