@@ -73,7 +73,7 @@ export default function DonationForm({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: usdAmount, // Send total amount (donation + fee) in USD
+          amount: usdAmount, // Always send USD to PayPal (they support USD everywhere)
           currency: 'USD',
         }),
       });
@@ -84,8 +84,10 @@ export default function DonationForm({
         throw new Error(data.error || 'Failed to create order');
       }
 
+      console.log('PayPal order created:', data.id);
       return data.id;
     } catch (err: any) {
+      console.error('Create order error:', err);
       setError(err.message || 'Failed to create PayPal order');
       throw err;
     }
@@ -104,20 +106,26 @@ export default function DonationForm({
           requestId,
           message,
           anonymous,
+          originalCurrency: userCurrency,
+          originalAmount: donationAmount,
+          totalAmount: totalAmount,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
+        console.error('Capture error:', result);
         throw new Error(result.error || 'Failed to capture payment');
       }
 
+      console.log('Payment captured successfully:', result);
       // Success - redirect to dashboard with success message
       alert('Thank you for your donation! Your payment has been processed successfully.');
       router.push('/dashboard');
       router.refresh();
     } catch (err: any) {
+      console.error('Payment error:', err);
       setError(err.message || 'Failed to process donation');
       setIsSubmitting(false);
     }
