@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import RequestCard from '@/components/RequestCard';
 import DonationForm from '@/components/DonationForm';
+import { CurrencyDisplay, CurrencyProgressBar } from '@/components/CurrencyDisplay';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Link from 'next/link';
@@ -148,11 +149,11 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
                   Recent Donations ({request._count.donations})
                 </h2>
                 <div className="space-y-4">
-                  {request.donations.slice(0, 5).map((donation) => (
+                  {request.donations.slice(0, 5).map((donation: any) => (
                     <div key={donation.id} className="border-b border-gray-200 pb-4 last:border-0">
                       <div className="flex justify-between items-start mb-2">
                         <p className="font-semibold text-gray-900">{donation.donor.fullName}</p>
-                        <span className="text-primary-600 font-semibold">${donation.amount.toFixed(2)}</span>
+                        <CurrencyDisplay amount={donation.amount} className="text-primary-600 font-semibold" />
                       </div>
                       {donation.message && (
                         <p className="text-sm text-gray-600">{donation.message}</p>
@@ -186,25 +187,10 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
                 
                 {/* Progress */}
                 {request.targetAmount && (
-                  <div className="mb-6">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="font-semibold text-gray-700">
-                        ${request.currentAmount.toFixed(2)}
-                      </span>
-                      <span className="text-gray-500">
-                        of ${request.targetAmount.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-primary-600 h-3 rounded-full transition-all"
-                        style={{ width: `${progressPercentage}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {progressPercentage.toFixed(1)}% funded
-                    </p>
-                  </div>
+                  <CurrencyProgressBar
+                    currentAmount={request.currentAmount}
+                    targetAmount={request.targetAmount}
+                  />
                 )}
 
                 <div className="space-y-3">

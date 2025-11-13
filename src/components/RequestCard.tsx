@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { RequestCategory, UrgencyLevel } from '@prisma/client';
 import { Clock, MapPin, TrendingUp } from 'lucide-react';
+import { CurrencyDisplay } from './CurrencyDisplay';
 
 interface Request {
   id: string;
@@ -84,10 +85,10 @@ export default function RequestCard({ request }: RequestCardProps) {
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
             <span className="font-semibold text-gray-700">
-              ${request.currentAmount.toFixed(2)} raised
+              <CurrencyDisplay amount={request.currentAmount} /> raised
             </span>
             <span className="text-gray-500">
-              of ${request.targetAmount.toFixed(2)}
+              of <CurrencyDisplay amount={request.targetAmount} />
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5">

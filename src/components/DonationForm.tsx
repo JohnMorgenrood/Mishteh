@@ -1,8 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import {
+  detectUserCurrency,
+  formatCurrency,
+  getQuickAmounts,
+  toPayPalAmount,
+  getConversionMessage,
+  CURRENCIES,
+  Currency,
+} from '@/lib/currency';
 
 interface DonationFormProps {
   requestId: string;
@@ -24,10 +33,19 @@ export default function DonationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showPayPal, setShowPayPal] = useState(false);
+  const [userCurrency, setUserCurrency] = useState<Currency>('ZAR');
 
-  const quickAmounts = [10, 25, 50, 100, 250];
+  // Detect user's currency on mount
+  useEffect(() => {
+    const currency = detectUserCurrency();
+    setUserCurrency(currency);
+  }, []);
+
+  const quickAmounts = getQuickAmounts(userCurrency);
+  const currencySymbol = CURRENCIES[userCurrency].symbol;
 
   const donationAmount = parseFloat(amount) || 0;
+  const usdAmount = toPayPalAmount(donationAmount, userCurrency);
 
   const handleAmountConfirm = () => {
     if (donationAmount <= 0) {
@@ -46,7 +64,7 @@ export default function DonationForm({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: donationAmount,
+          amount: usdAmount, // Always send USD to PayPal
           currency: 'USD',
         }),
       });
@@ -121,14 +139,36 @@ export default function DonationForm({
           <h3 className="font-semibold text-gray-900 mb-2">{requestTitle}</h3>
           {targetAmount && (
             <div className="text-sm text-gray-600">
-              <p>Goal: ${targetAmount.toFixed(2)}</p>
-              <p>Raised: ${currentAmount.toFixed(2)}</p>
-              <p>Remaining: ${(targetAmount - currentAmount).toFixed(2)}</p>
+              <p>Goal: {formatCurrency(targetAmount, userCurrency)}</p>
+              <p>Raised: {formatCurrency(currentAmount, userCurrency)}</p>
+              <p>Remaining: {formatCurrency(targetAmount - currentAmount, userCurrency)}</p>
             </div>
           )}
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* Currency Selector */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Currency
+            </label>
+            <select
+              value={userCurrency}
+              onChange={(e) => {
+                setUserCurrency(e.target.value as Currency);
+                setAmount('');
+                setShowPayPal(false);
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+            >
+              {Object.entries(CURRENCIES).map(([code, config]) => (
+                <option key={code} value={code}>
+                  {config.symbol} {config.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Quick Amount Buttons */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -149,7 +189,7 @@ export default function DonationForm({
                       : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  ${quickAmount}
+                  {currencySymbol}{quickAmount}
                 </button>
               ))}
             </div>
@@ -161,7 +201,7 @@ export default function DonationForm({
               Or Enter Custom Amount
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-500">$</span>
+              <span className="absolute left-3 top-2.5 text-gray-500">{currencySymbol}</span>
               <input
                 type="number"
                 id="amount"
@@ -177,6 +217,11 @@ export default function DonationForm({
                 required
               />
             </div>
+            {donationAmount > 0 && userCurrency !== 'USD' && (
+              <p className="text-xs text-gray-500 mt-1">
+                ≈ {formatCurrency(usdAmount, 'USD')} USD will be charged via PayPal
+              </p>
+            )}
           </div>
 
           {/* Message */}
@@ -217,6 +262,17 @@ export default function DonationForm({
           {/* PayPal Buttons or Confirm Button */}
           {showPayPal && donationAmount > 0 ? (
             <div className="mb-4">
+              {userCurrency !== 'USD' && (
+                <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    💱 {getConversionMessage(donationAmount, userCurrency)}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Exchange rate: 1 USD = {CURRENCIES[userCurrency].symbol}
+                    {(1 / toPayPalAmount(1, userCurrency)).toFixed(2)}
+                  </p>
+                </div>
+              )}
               <PayPalButtons
                 style={{ layout: 'vertical' }}
                 createOrder={createOrder}
@@ -231,13 +287,18 @@ export default function DonationForm({
               disabled={isSubmitting || !amount || parseFloat(amount) <= 0}
               className="w-full px-6 py-3 bg-primary-600 text-white font-semibold rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Processing...' : `Continue to PayPal - $${donationAmount.toFixed(2)}`}
+              {isSubmitting ? 'Processing...' : `Continue to PayPal - ${formatCurrency(donationAmount, userCurrency)}`}
             </button>
           )}
         </form>
 
         <p className="mt-4 text-xs text-gray-500 text-center">
           Your donation helps those in need. Secure payment powered by PayPal.
+          {userCurrency !== 'USD' && (
+            <span className="block mt-1">
+              Amounts are converted to USD for payment processing.
+            </span>
+          )}
         </p>
       </div>
     </PayPalScriptProvider>
