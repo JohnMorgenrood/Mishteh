@@ -73,8 +73,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="mailto:support@mishteh.com" className="text-gray-400 hover:text-white transition-colors">
-                  support@mishteh.com
+                <a href="mailto:support@mishteh.org" className="text-gray-400 hover:text-white transition-colors">
+                  support@mishteh.org
                 </a>
               </li>
             </ul>
@@ -83,6 +83,17 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
           <p>Made with ❤️ to help those in need</p>
+          <p className="mt-2">
+            Developed by{' '}
+            <a 
+              href="https://www.webdevsa.co.za" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              www.webdevsa.co.za
+            </a>
+          </p>
         </div>
       </div>
     </footer>

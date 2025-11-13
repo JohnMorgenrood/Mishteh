@@ -286,3 +286,19 @@ model Transaction {
   @@index([createdAt(sort: Desc)])
   @@index([paymentId])
 }
+
+// Contact form submissions
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String   @db.Text
+  status    String   @default("NEW") // NEW, READ, REPLIED, CLOSED
+  adminNotes String? @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}

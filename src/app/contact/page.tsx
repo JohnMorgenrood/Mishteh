@@ -17,12 +17,29 @@ export default function ContactPage() {
     e.preventDefault();
     setStatus('loading');
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+
       setStatus('success');
       setFormData({ name: '', email: '', subject: '', message: '' });
-      setTimeout(() => setStatus('idle'), 3000);
-    }, 1000);
+      setTimeout(() => setStatus('idle'), 5000);
+    } catch (error: any) {
+      console.error('Contact form error:', error);
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 5000);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -54,8 +71,8 @@ export default function ContactPage() {
                   <Mail className="w-5 h-5 text-primary-600 mt-1" />
                   <div>
                     <p className="font-medium text-gray-900">Email</p>
-                    <a href="mailto:support@mishteh.com" className="text-primary-600 hover:underline">
-                      support@mishteh.com
+                    <a href="mailto:support@mishteh.org" className="text-primary-600 hover:underline">
+                      support@mishteh.org
                     </a>
                   </div>
                 </div>
@@ -105,6 +122,14 @@ export default function ContactPage() {
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-green-800">
                     Thank you for contacting us! We'll get back to you soon.
+                  </p>
+                </div>
+              )}
+
+              {status === 'error' && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-800">
+                    Oops! Something went wrong. Please try again or email us directly at support@mishteh.org
                   </p>
                 </div>
               )}
