@@ -46,13 +46,15 @@ export default function DonationForm({
   const currencySymbol = CURRENCIES[userCurrency].symbol;
 
   const donationAmount = parseFloat(amount) || 0;
-  const usdAmount = toPayPalAmount(donationAmount, userCurrency);
   
   // Calculate platform fee: $1 USD flat fee (converted to local currency)
   const platformFeeFixed = userCurrency === 'USD' ? 1 : convertCurrency(1, 'USD', userCurrency);
-  const platformFeePercent = 0; // No percentage fee
   const totalPlatformFee = platformFeeFixed;
-  const recipientReceives = donationAmount - totalPlatformFee;
+  
+  // Total amount user pays = donation amount + platform fee
+  const totalAmount = donationAmount + totalPlatformFee;
+  const recipientReceives = donationAmount; // Recipient gets the full donation amount
+  const usdAmount = toPayPalAmount(totalAmount, userCurrency); // Convert total to USD for PayPal
 
   const handleAmountConfirm = () => {
     if (donationAmount <= 0) {
@@ -71,8 +73,8 @@ export default function DonationForm({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: donationAmount, // Send amount in user's currency
-          currency: userCurrency, // Send user's selected currency
+          amount: usdAmount, // Send total amount (donation + fee) in USD
+          currency: 'USD',
         }),
       });
 
@@ -267,25 +269,36 @@ export default function DonationForm({
             <div className="mb-4">
               {/* Fee Breakdown */}
               <div className="mb-3 p-4 bg-green-50 border border-green-200 rounded-md">
-                <h4 className="font-semibold text-green-900 mb-2">💚 Donation Breakdown</h4>
+                <h4 className="font-semibold text-green-900 mb-2">💚 Payment Breakdown</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-green-800">Your donation:</span>
+                    <span className="text-green-800">Donation to recipient:</span>
                     <span className="font-semibold text-green-900">{formatCurrency(donationAmount, userCurrency)}</span>
                   </div>
                   <div className="flex justify-between text-xs text-green-700">
                     <span>Platform fee:</span>
-                    <span>-{formatCurrency(totalPlatformFee, userCurrency)}</span>
+                    <span>+{formatCurrency(totalPlatformFee, userCurrency)}</span>
                   </div>
                   <div className="text-xs text-green-600 italic">
                     + PayPal processing fees apply
                   </div>
                   <div className="flex justify-between pt-2 border-t border-green-300">
-                    <span className="font-semibold text-green-900">Recipient receives:</span>
-                    <span className="font-bold text-green-900">{formatCurrency(recipientReceives, userCurrency)}</span>
+                    <span className="font-semibold text-green-900">Total you'll pay:</span>
+                    <span className="font-bold text-green-900">{formatCurrency(totalAmount, userCurrency)}</span>
                   </div>
                 </div>
               </div>
+              
+              {userCurrency !== 'USD' && (
+                <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    💱 PayPal will charge: <strong>{formatCurrency(usdAmount, 'USD')}</strong>
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Converted from {formatCurrency(totalAmount, userCurrency)}
+                  </p>
+                </div>
+              )}
               
               <PayPalButtons
                 style={{ layout: 'vertical' }}
@@ -301,7 +314,7 @@ export default function DonationForm({
               disabled={isSubmitting || !amount || parseFloat(amount) <= 0}
               className="w-full px-6 py-3 bg-primary-600 text-white font-semibold rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Processing...' : `Continue to PayPal - ${formatCurrency(donationAmount, userCurrency)}`}
+              {isSubmitting ? 'Processing...' : `Continue to PayPal - Total: ${formatCurrency(totalAmount, userCurrency)}`}
             </button>
           )}
         </form>

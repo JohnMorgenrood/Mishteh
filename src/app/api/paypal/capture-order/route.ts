@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Get order details
     const orderDetails = await getOrderDetails(orderId);
-    const amount = parseFloat(orderDetails.purchase_units[0].amount.value);
+    const totalAmount = parseFloat(orderDetails.purchase_units[0].amount.value); // Total paid by donor (donation + fee)
     const currency = orderDetails.purchase_units[0].amount.currency_code;
 
     // Get payer info
@@ -41,13 +41,11 @@ export async function POST(request: NextRequest) {
       ? `${captureResult.payer.name.given_name} ${captureResult.payer.name.surname}`
       : null;
 
-    // Calculate platform fee: $1 USD flat fee (converted to transaction currency)
-    // PayPal will charge their own transaction fees separately
+    // Calculate platform fee: $1 USD flat fee
+    // The total amount already includes this fee, so we just need to separate it
     const feeAmountUSD = 1; // $1 USD flat fee
-    const feeAmount = currency === 'USD' 
-      ? feeAmountUSD 
-      : convertCurrency(feeAmountUSD, 'USD', currency as Currency);
-    const netAmount = amount - feeAmount; // This is what the recipient gets
+    const feeAmount = feeAmountUSD; // Fee is always $1 USD
+    const donationAmount = totalAmount - feeAmount; // This is what the recipient gets
 
     // Get request details if provided
     let request_details = null;
@@ -66,12 +64,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create donation record (stores the full amount paid by donor)
+    // Create donation record (stores the donation amount to recipient)
     const donation = await prisma.donation.create({
       data: {
         requestId: requestId || null,
         donorId: session.user.id,
-        amount, // Full amount paid
+        amount: donationAmount, // Amount recipient receives
         message: message || null,
         anonymous: anonymous || false,
         paymentMethod: 'PAYPAL',
@@ -85,9 +83,9 @@ export async function POST(request: NextRequest) {
       data: {
         type: 'DONATION',
         status: 'COMPLETED',
-        amount,
+        amount: totalAmount, // Total amount donor paid
         feeAmount,
-        netAmount,
+        netAmount: donationAmount, // Amount recipient receives
         currency,
         paymentGateway: 'PAYPAL',
         paymentId: orderId,
@@ -109,7 +107,7 @@ export async function POST(request: NextRequest) {
       data: {
         type: 'FEE',
         status: 'COMPLETED',
-        amount: feeAmount, // Platform's revenue ($2 + 3%)
+        amount: feeAmount, // Platform's revenue ($1 USD)
         feeAmount: 0,
         netAmount: feeAmount, // This goes to platform owner
         currency,
@@ -121,7 +119,7 @@ export async function POST(request: NextRequest) {
         requestId: requestId || null,
         requestTitle: request_details?.title || null,
         completedAt: new Date(),
-        adminNotes: `Platform fee from donation: $${feeAmountUSD.toFixed(2)} USD flat fee (${feeAmount.toFixed(2)} ${currency}). PayPal transaction fees handled separately.`,
+        adminNotes: `Platform fee from donation: $${feeAmountUSD.toFixed(2)} USD flat fee. Total paid by donor: ${totalAmount.toFixed(2)} ${currency}. PayPal transaction fees handled separately.`,
       },
     });
 
@@ -132,7 +130,7 @@ export async function POST(request: NextRequest) {
           userId: request_details.userId,
           type: 'DONATION_RECEIVED',
           title: 'New Donation Received',
-          message: `${session.user.name} donated ${netAmount.toFixed(2)} ${currency} to your request "${request_details.title}" (after platform fees)`,
+          message: `${session.user.name} donated ${donationAmount.toFixed(2)} ${currency} to your request "${request_details.title}"`,
           read: false,
         },
       });
