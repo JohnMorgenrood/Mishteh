@@ -1,5 +1,5 @@
-import { Heart } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -9,7 +9,12 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <Heart className="w-8 h-8 text-primary-400" />
+              <Image 
+                src="/assets/logo.png" 
+                alt="Mishteh Logo" 
+                width={32} 
+                height={32}
+              />
               <span className="text-2xl font-bold">MISHTEH</span>
             </div>
             <p className="text-gray-400 text-sm mb-4">

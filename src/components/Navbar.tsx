@@ -217,17 +217,17 @@ export default function Navbar() {
                   </div>
                 </>
               ) : (
-                <div className="px-4 py-2 mt-2 border-t border-gray-200 flex flex-col gap-2">
+                <div className="px-4 py-4 mt-2 border-t border-gray-200 flex flex-col gap-3">
                   <Link
                     href="/auth/login"
-                    className="w-full px-4 py-2 text-sm font-medium text-center text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                    className="w-full px-4 py-3 text-sm font-medium text-center text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Login
                   </Link>
                   <Link
                     href="/auth/register"
-                    className="w-full px-4 py-2 text-sm font-semibold text-center text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-lg shadow-soft hover:shadow-soft-lg transition-all"
+                    className="w-full px-4 py-3 text-sm font-semibold text-center text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-lg shadow-soft hover:shadow-soft-lg transition-all"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Register
