@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import RequestCard from '@/components/RequestCard';
+import { REQUEST_CATEGORY_GROUPS } from '@/lib/constants';
 
 export default function RequestsPage() {
   const [requests, setRequests] = useState<any[]>([]);
@@ -84,14 +85,15 @@ export default function RequestsPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="">All Categories</option>
-                <option value="FOOD">Food</option>
-                <option value="RENT">Rent</option>
-                <option value="BILLS">Bills</option>
-                <option value="FAMILY_SUPPORT">Family Support</option>
-                <option value="JOB_ASSISTANCE">Job Assistance</option>
-                <option value="MEDICAL">Medical</option>
-                <option value="EDUCATION">Education</option>
-                <option value="OTHER">Other</option>
+                {REQUEST_CATEGORY_GROUPS.map((group) => (
+                  <optgroup key={group.group} label={group.group}>
+                    {group.categories.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </div>
 
