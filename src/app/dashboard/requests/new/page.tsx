@@ -35,39 +35,58 @@ export default function NewRequestPage() {
   const detectLocation = async () => {
     setIsDetectingLocation(true);
     try {
-      // Try to get user's position with high accuracy
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords;
             
-            // Use reverse geocoding to get full address
+            try {
+              // Try Nominatim (OpenStreetMap) first - better suburb detail
+              const nominatimResponse = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+              );
+              const nominatimData = await nominatimResponse.json();
+              
+              if (nominatimData.address) {
+                const addr = nominatimData.address;
+                const parts = [];
+                
+                // Add suburb/neighborhood
+                if (addr.suburb) parts.push(addr.suburb);
+                else if (addr.neighbourhood) parts.push(addr.neighbourhood);
+                else if (addr.quarter) parts.push(addr.quarter);
+                
+                // Add city/town
+                if (addr.city) parts.push(addr.city);
+                else if (addr.town) parts.push(addr.town);
+                
+                // Add state/province
+                if (addr.state) parts.push(addr.state);
+                
+                // Add country
+                if (addr.country) parts.push(addr.country);
+                
+                const location = parts.join(', ');
+                if (location) {
+                  setFormData(prev => ({ ...prev, location }));
+                  setIsDetectingLocation(false);
+                  return;
+                }
+              }
+            } catch (error) {
+              console.log('Nominatim failed, trying BigDataCloud...');
+            }
+            
+            // Fallback to BigDataCloud
             const response = await fetch(
               `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
             );
             const data = await response.json();
             
-            // Full precise address: Street, Suburb/District, City, State, Country
             const parts = [];
-            
-            // Add street address if available
-            if (data.localityInfo?.administrative) {
-              const admin = data.localityInfo.administrative;
-              // Try to get street/neighborhood level detail
-              const street = admin.find((a: any) => a.order >= 8)?.name;
-              if (street) parts.push(street);
-            }
-            
-            // Add suburb/district
             if (data.locality) parts.push(data.locality);
-            
-            // Add city if different from locality
             if (data.city && data.city !== data.locality) parts.push(data.city);
-            
-            // Add state/province
             if (data.principalSubdivision) parts.push(data.principalSubdivision);
-            
-            // Add country
             if (data.countryName) parts.push(data.countryName);
             
             const location = parts.join(', ');
