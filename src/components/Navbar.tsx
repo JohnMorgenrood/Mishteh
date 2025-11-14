@@ -99,6 +99,64 @@ export default function Navbar() {
                 >
                   Dashboard
                 </Link>
+                
+                <Link
+                  href="/dashboard/profile"
+                  className={`text-sm font-medium transition-all ${
+                    isActive('/dashboard/profile') 
+                      ? 'text-primary-600 font-semibold' 
+                      : 'text-gray-700 hover:text-primary-600 hover:scale-105'
+                  }`}
+                >
+                  Profile
+                </Link>
+                
+                {/* Admin Links */}
+                {session.user.userType === 'ADMIN' && (
+                  <>
+                    <Link
+                      href="/admin"
+                      className={`text-sm font-medium transition-all ${
+                        pathname?.startsWith('/admin')
+                          ? 'text-primary-600 font-semibold' 
+                          : 'text-gray-700 hover:text-primary-600 hover:scale-105'
+                      }`}
+                    >
+                      Admin
+                    </Link>
+                    <Link
+                      href="/admin/accounts"
+                      className={`text-sm font-medium transition-all ${
+                        isActive('/admin/accounts')
+                          ? 'text-primary-600 font-semibold' 
+                          : 'text-gray-700 hover:text-primary-600 hover:scale-105'
+                      }`}
+                    >
+                      Accounts
+                    </Link>
+                    <Link
+                      href="/admin/requests"
+                      className={`text-sm font-medium transition-all ${
+                        pathname?.startsWith('/admin/requests')
+                          ? 'text-primary-600 font-semibold' 
+                          : 'text-gray-700 hover:text-primary-600 hover:scale-105'
+                      }`}
+                    >
+                      Admin Requests
+                    </Link>
+                    <Link
+                      href="/admin/transactions"
+                      className={`text-sm font-medium transition-all ${
+                        pathname?.startsWith('/admin/transactions')
+                          ? 'text-primary-600 font-semibold' 
+                          : 'text-gray-700 hover:text-primary-600 hover:scale-105'
+                      }`}
+                    >
+                      Transactions
+                    </Link>
+                  </>
+                )}
+                
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-600 font-medium">
                     {session.user.name}
@@ -203,6 +261,59 @@ export default function Navbar() {
                   >
                     Dashboard
                   </Link>
+                  
+                  <Link
+                    href="/dashboard/profile"
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      isActive('/dashboard/profile') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  
+                  {/* Admin Links for Mobile */}
+                  {session.user.userType === 'ADMIN' && (
+                    <>
+                      <Link
+                        href="/admin"
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                          pathname?.startsWith('/admin') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Admin
+                      </Link>
+                      <Link
+                        href="/admin/accounts"
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                          isActive('/admin/accounts') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Accounts
+                      </Link>
+                      <Link
+                        href="/admin/requests"
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                          pathname?.startsWith('/admin/requests') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Admin Requests
+                      </Link>
+                      <Link
+                        href="/admin/transactions"
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                          pathname?.startsWith('/admin/transactions') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Transactions
+                      </Link>
+                    </>
+                  )}
+                  
                   <div className="px-4 py-2 mt-2 border-t border-gray-200">
                     <p className="text-sm text-gray-600 mb-2 font-medium">{session.user.name}</p>
                     <button

@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { RequestCategory, UrgencyLevel } from '@prisma/client';
-import { Clock, MapPin, TrendingUp } from 'lucide-react';
+import { Clock, MapPin, TrendingUp, User } from 'lucide-react';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import { REQUEST_CATEGORIES } from '@/lib/constants';
+import Image from 'next/image';
 
 interface Request {
   id: string;
@@ -17,6 +18,7 @@ interface Request {
   user: {
     fullName: string;
     location: string | null;
+    image?: string | null;
   };
 }
 
@@ -52,6 +54,28 @@ export default function RequestCard({ request }: RequestCardProps) {
         <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${urgencyColors[request.urgency]}`}>
           {request.urgency}
         </span>
+      </div>
+
+      {/* User Profile Section */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+          {request.user.image ? (
+            <Image
+              src={request.user.image}
+              alt={request.user.fullName}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <User className="w-6 h-6 text-gray-400" />
+          )}
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-900">{request.user.fullName}</p>
+          {request.user.location && (
+            <p className="text-xs text-gray-500">{request.user.location}</p>
+          )}
+        </div>
       </div>
 
       {/* Title */}
@@ -102,14 +126,11 @@ export default function RequestCard({ request }: RequestCardProps) {
 
       {/* Footer */}
       <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-        <span className="text-sm text-gray-600">
-          By {request.user.fullName}
-        </span>
         <Link
           href={`/requests/${request.id}`}
-          className="inline-block px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-md hover:bg-primary-700 transition-colors"
+          className="inline-block px-6 py-2 bg-primary-600 text-white text-sm font-semibold rounded-md hover:bg-primary-700 transition-colors"
         >
-          Read More
+          View Details & Donate
         </Link>
       </div>
     </div>

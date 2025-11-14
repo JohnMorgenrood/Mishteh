@@ -173,9 +173,20 @@ model User {
   location      String?
   bio           String?       @db.Text
   emailVerified DateTime?
-  image         String?
+  image         String?       // Profile photo URL
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  
+  // FICA Compliance Documents (for REQUESTER/RECIPIENT users)
+  idDocumentUrl       String?       // National ID, Passport, Driver's License
+  idDocumentType      String?       // Type of ID document
+  idNumber            String?       // ID number
+  proofOfAddressUrl   String?       // Utility bill, bank statement, etc.
+  selfieUrl           String?       // Selfie holding ID for verification
+  dateOfBirth         DateTime?     // For age verification
+  ficaVerified        Boolean       @default(false)
+  ficaVerifiedAt      DateTime?
+  ficaVerifiedBy      String?       // Admin ID who verified
   
   // Relations
   requests      Request[]     // Requests created by this user (if REQUESTER)
@@ -185,6 +196,7 @@ model User {
   
   @@index([email])
   @@index([userType])
+  @@index([ficaVerified])
 }
 
 // Request model - help requests from people in need

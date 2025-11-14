@@ -1,33 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { z } from 'zod';
-
-// Validation schema for registration
-const registerSchema = z.object({
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  userType: z.enum(['DONOR', 'REQUESTER']),
-  phone: z.string().optional(),
-  location: z.string().optional(),
-});
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const formData = await request.formData();
     
-    // Validate request body
-    const validationResult = registerSchema.safeParse(body);
+    // Extract form fields
+    const fullName = formData.get('fullName') as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const userType = formData.get('userType') as string;
+    const phone = formData.get('phone') as string | null;
+    const location = formData.get('location') as string | null;
     
-    if (!validationResult.success) {
+    // FICA fields for REQUESTER users
+    const idNumber = formData.get('idNumber') as string | null;
+    const dateOfBirth = formData.get('dateOfBirth') as string | null;
+    const idDocumentType = formData.get('idDocumentType') as string | null;
+    
+    // Validate required fields
+    if (!fullName || !email || !password || !userType) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.flatten() },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    const { fullName, email, password, userType, phone, location } = validationResult.data;
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email address' },
+        { status: 400 }
+      );
+    }
+
+    // Validate password length
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters' },
+        { status: 400 }
+      );
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -44,21 +62,81 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Handle file uploads for REQUESTER users
+    let profilePhotoUrl = null;
+    let idDocumentUrl = null;
+    let proofOfAddressUrl = null;
+    let selfieUrl = null;
+
+    if (userType === 'REQUESTER') {
+      const profilePhoto = formData.get('profilePhoto') as File | null;
+      const idDocument = formData.get('idDocument') as File | null;
+      const proofOfAddress = formData.get('proofOfAddress') as File | null;
+      const selfieWithId = formData.get('selfieWithId') as File | null;
+
+      // Validate required FICA documents
+      if (!profilePhoto || !idDocument || !proofOfAddress || !selfieWithId) {
+        return NextResponse.json(
+          { error: 'All FICA documents are required for help seekers' },
+          { status: 400 }
+        );
+      }
+
+      if (!idNumber || !dateOfBirth) {
+        return NextResponse.json(
+          { error: 'ID number and date of birth are required for help seekers' },
+          { status: 400 }
+        );
+      }
+
+      // Create upload directory
+      const uploadDir = join(process.cwd(), 'public', 'uploads', 'fica');
+      if (!existsSync(uploadDir)) {
+        await mkdir(uploadDir, { recursive: true });
+      }
+
+      // Helper function to save file
+      const saveFile = async (file: File, prefix: string): Promise<string> => {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const timestamp = Date.now();
+        const filename = `${prefix}_${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const filepath = join(uploadDir, filename);
+        await writeFile(filepath, buffer);
+        return `/uploads/fica/${filename}`;
+      };
+
+      // Save all files
+      profilePhotoUrl = await saveFile(profilePhoto, 'profile');
+      idDocumentUrl = await saveFile(idDocument, 'id');
+      proofOfAddressUrl = await saveFile(proofOfAddress, 'address');
+      selfieUrl = await saveFile(selfieWithId, 'selfie');
+    }
+
     // Create new user
     const user = await prisma.user.create({
       data: {
         fullName,
         email,
         password: hashedPassword,
-        userType,
+        userType: userType as any,
         phone,
         location,
+        image: profilePhotoUrl,
+        idDocumentUrl,
+        idDocumentType,
+        idNumber,
+        proofOfAddressUrl,
+        selfieUrl,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        ficaVerified: false, // Admin will verify
       },
       select: {
         id: true,
         email: true,
         fullName: true,
         userType: true,
+        ficaVerified: true,
       },
     });
 
