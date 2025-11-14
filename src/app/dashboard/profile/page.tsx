@@ -19,6 +19,7 @@ export default function ProfileSettingsPage() {
     phone: '',
     location: '',
     bio: '',
+    paypalEmail: '',
   });
 
   const [files, setFiles] = useState<{
@@ -53,6 +54,7 @@ export default function ProfileSettingsPage() {
           phone: data.user.phone || '',
           location: data.user.location || '',
           bio: data.user.bio || '',
+          paypalEmail: data.user.paypalEmail || '',
         });
       }
     } catch (error) {
@@ -73,6 +75,7 @@ export default function ProfileSettingsPage() {
       submitData.append('phone', formData.phone);
       submitData.append('location', formData.location);
       submitData.append('bio', formData.bio);
+      submitData.append('paypalEmail', formData.paypalEmail);
 
       if (files.profilePhoto) {
         submitData.append('profilePhoto', files.profilePhoto);
@@ -232,6 +235,60 @@ export default function ProfileSettingsPage() {
                 </div>
               </div>
             </div>
+
+            {/* PayPal Payment Details - Only for REQUESTER users */}
+            {session?.user.userType === 'REQUESTER' && (
+              <div className="border-t border-gray-200 pt-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Payment Details</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Add your PayPal email to receive donations directly to your account.
+                </p>
+
+                {profileData?.paypalVerified && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-800 font-medium">
+                      ✓ Your PayPal account has been verified
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="paypalEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                    PayPal Email
+                  </label>
+                  <input
+                    id="paypalEmail"
+                    type="email"
+                    value={formData.paypalEmail}
+                    onChange={(e) => setFormData({ ...formData, paypalEmail: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="your-email@example.com"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This is the email associated with your PayPal account
+                  </p>
+                </div>
+
+                {!formData.paypalEmail && !profileData?.paypalEmail && (
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-900 font-medium mb-2">
+                      Don't have a PayPal account?
+                    </p>
+                    <p className="text-sm text-blue-800 mb-3">
+                      Create a free PayPal account to receive donations securely.
+                    </p>
+                    <a
+                      href="https://www.paypal.com/za/webapps/mpp/account-selection"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Create PayPal Account →
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Profile Photo */}
             <div className="border-t border-gray-200 pt-6">

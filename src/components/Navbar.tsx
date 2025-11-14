@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut, LogIn, UserPlus } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
@@ -12,6 +12,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
+  const [mobileAdminDropdownOpen, setMobileAdminDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => pathname === path;
@@ -187,8 +188,9 @@ export default function Navbar() {
                   </span>
                   <button
                     onClick={handleSignOut}
-                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:from-red-600 hover:to-pink-600 shadow-soft hover:shadow-soft-lg transition-all"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:from-red-600 hover:to-pink-600 shadow-soft hover:shadow-soft-lg transition-all"
                   >
+                    <LogOut className="w-4 h-4" />
                     Sign Out
                   </button>
                 </div>
@@ -197,14 +199,16 @@ export default function Navbar() {
               <div className="flex items-center gap-3">
                 <Link
                   href="/auth/login"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-all hover:scale-105"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-all hover:scale-105"
                 >
+                  <LogIn className="w-4 h-4" />
                   Login
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-xl shadow-soft hover:shadow-soft-lg hover:scale-105 transition-all"
+                  className="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-xl shadow-soft hover:shadow-soft-lg hover:scale-105 transition-all"
                 >
+                  <UserPlus className="w-4 h-4" />
                   Register
                 </Link>
               </div>
@@ -296,46 +300,70 @@ export default function Navbar() {
                     Profile
                   </Link>
                   
-                  {/* Admin Links for Mobile */}
+                  {/* Admin Dropdown for Mobile */}
                   {session.user.userType === 'ADMIN' && (
-                    <>
-                      <Link
-                        href="/admin"
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                          pathname?.startsWith('/admin') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                        onClick={() => setMobileMenuOpen(false)}
+                    <div className="border-t border-gray-200 mt-2 pt-2">
+                      <button
+                        onClick={() => setMobileAdminDropdownOpen(!mobileAdminDropdownOpen)}
+                        className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
                       >
-                        Admin
-                      </Link>
-                      <Link
-                        href="/admin/accounts"
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                          isActive('/admin/accounts') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Accounts
-                      </Link>
-                      <Link
-                        href="/admin/requests"
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                          pathname?.startsWith('/admin/requests') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Admin Requests
-                      </Link>
-                      <Link
-                        href="/admin/transactions"
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                          pathname?.startsWith('/admin/transactions') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Transactions
-                      </Link>
-                    </>
+                        <span>Admin Pages</span>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${mobileAdminDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      
+                      {mobileAdminDropdownOpen && (
+                        <div className="ml-4 mt-1 space-y-1">
+                          <Link
+                            href="/admin"
+                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                              isActive('/admin') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              setMobileAdminDropdownOpen(false);
+                            }}
+                          >
+                            Dashboard
+                          </Link>
+                          <Link
+                            href="/admin/accounts"
+                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                              isActive('/admin/accounts') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              setMobileAdminDropdownOpen(false);
+                            }}
+                          >
+                            Accounts
+                          </Link>
+                          <Link
+                            href="/admin/requests"
+                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                              pathname?.startsWith('/admin/requests') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              setMobileAdminDropdownOpen(false);
+                            }}
+                          >
+                            Requests
+                          </Link>
+                          <Link
+                            href="/admin/transactions"
+                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                              pathname?.startsWith('/admin/transactions') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              setMobileAdminDropdownOpen(false);
+                            }}
+                          >
+                            Transactions
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                   )}
                   
                   <div className="px-4 py-2 mt-2 border-t border-gray-200">

@@ -188,6 +188,11 @@ model User {
   ficaVerifiedAt      DateTime?
   ficaVerifiedBy      String?       // Admin ID who verified
   
+  // Payment Details (for REQUESTER users to receive donations)
+  paypalEmail         String?       // PayPal email for receiving payments
+  paypalVerified      Boolean       @default(false)
+  paypalVerifiedAt    DateTime?
+  
   // Relations
   requests      Request[]     // Requests created by this user (if REQUESTER)
   donations     Donation[]    // Donations made by this user (if DONOR)

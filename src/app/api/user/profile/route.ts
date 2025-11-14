@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
         ficaVerifiedAt: true,
         createdAt: true,
         preferences: true,
+        paypalEmail: true,
+        paypalVerified: true,
+        paypalVerifiedAt: true,
       },
     });
 
@@ -78,6 +81,7 @@ export async function PUT(request: NextRequest) {
     const phone = formData.get('phone') as string | null;
     const location = formData.get('location') as string | null;
     const bio = formData.get('bio') as string | null;
+    const paypalEmail = formData.get('paypalEmail') as string | null;
     
     // Extract files
     const profilePhoto = formData.get('profilePhoto') as File | null;
@@ -91,6 +95,7 @@ export async function PUT(request: NextRequest) {
       phone,
       location,
       bio,
+      paypalEmail,
     };
 
     // Handle file uploads if provided
