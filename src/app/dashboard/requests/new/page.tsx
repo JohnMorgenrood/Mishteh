@@ -32,7 +32,7 @@ export default function NewRequestPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load Google Maps API and initialize autocomplete
+  // Load Google Maps API
   useEffect(() => {
     const loadGoogleMaps = () => {
       if (window.google) {
@@ -40,12 +40,21 @@ export default function NewRequestPage() {
         return;
       }
 
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        console.error('Google Maps API key is missing');
+        return;
+      }
+
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = () => {
         initAutocomplete();
+      };
+      script.onerror = () => {
+        console.error('Failed to load Google Maps API');
       };
       document.head.appendChild(script);
     };
