@@ -89,14 +89,14 @@ export async function PUT(request: NextRequest) {
     const proofOfAddress = formData.get('proofOfAddress') as File | null;
     const selfieWithId = formData.get('selfieWithId') as File | null;
 
-    // Prepare update data
-    const updateData: any = {
-      fullName,
-      phone,
-      location,
-      bio,
-      paypalEmail,
-    };
+    // Prepare update data - only include non-empty values
+    const updateData: any = {};
+    
+    if (fullName) updateData.fullName = fullName;
+    if (phone) updateData.phone = phone;
+    if (location) updateData.location = location;
+    if (bio) updateData.bio = bio;
+    if (paypalEmail) updateData.paypalEmail = paypalEmail;
 
     // Handle file uploads if provided
     if (profilePhoto || idDocument || proofOfAddress || selfieWithId) {

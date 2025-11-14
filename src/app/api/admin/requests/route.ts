@@ -31,13 +31,14 @@ export async function GET(request: Request) {
             id: true,
             fullName: true,
             email: true,
+            ficaVerified: true,
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(requests);
+    return NextResponse.json({ requests });
   } catch (error: any) {
     console.error('Admin requests fetch error:', error);
     return NextResponse.json(
