@@ -1,13 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { UserPlus, Eye, EyeOff, MapPin } from 'lucide-react';
+import { UserPlus, Eye, EyeOff } from 'lucide-react';
 import { COUNTRY_CODES } from '@/lib/countries';
+
+// Declare Google Maps types
+declare global {
+  interface Window {
+    google: any;
+    initAutocomplete: () => void;
+  }
+}
 
 export default function RegisterPage() {
   const router = useRouter();
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -22,116 +32,46 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
-  // Auto-detect location on mount
+  // Load Google Maps API
   useEffect(() => {
-    if (!formData.location) {
-      detectLocation();
-    }
+    const loadGoogleMaps = () => {
+      if (window.google) {
+        initAutocomplete();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        initAutocomplete();
+      };
+      document.head.appendChild(script);
+    };
+
+    loadGoogleMaps();
   }, []);
 
-  const detectLocation = async () => {
-    setIsDetectingLocation(true);
-    try {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            
-            try {
-              // Use Google Maps Geocoding API for precise location
-              const googleMapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-              const response = await fetch(
-                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleMapsKey}`
-              );
-              const data = await response.json();
-              
-              if (data.results && data.results.length > 0) {
-                // Get the most detailed result (usually first one)
-                const result = data.results[0];
-                const components = result.address_components;
-                
-                const parts = [];
-                let suburb = '';
-                let city = '';
-                let state = '';
-                let country = '';
-                
-                // Extract address components
-                components.forEach((component: any) => {
-                  if (component.types.includes('sublocality') || component.types.includes('neighborhood')) {
-                    suburb = component.long_name;
-                  }
-                  if (component.types.includes('locality')) {
-                    city = component.long_name;
-                  }
-                  if (component.types.includes('administrative_area_level_1')) {
-                    state = component.long_name;
-                  }
-                  if (component.types.includes('country')) {
-                    country = component.long_name;
-                  }
-                });
-                
-                // Build location string
-                if (suburb) parts.push(suburb);
-                if (city) parts.push(city);
-                if (state) parts.push(state);
-                if (country) parts.push(country);
-                
-                const location = parts.join(', ');
-                if (location) {
-                  setFormData(prev => ({ ...prev, location }));
-                  setIsDetectingLocation(false);
-                  return;
-                }
-              }
-            } catch (error) {
-              console.log('Google Maps failed, trying fallback...');
-            }
-            
-            // Fallback to OpenStreetMap
-            try {
-              const nominatimResponse = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
-              );
-              const nominatimData = await nominatimResponse.json();
-              
-              if (nominatimData.address) {
-                const addr = nominatimData.address;
-                const parts = [];
-                
-                if (addr.suburb) parts.push(addr.suburb);
-                else if (addr.neighbourhood) parts.push(addr.neighbourhood);
-                if (addr.city || addr.town) parts.push(addr.city || addr.town);
-                if (addr.state) parts.push(addr.state);
-                if (addr.country) parts.push(addr.country);
-                
-                const location = parts.join(', ');
-                if (location) {
-                  setFormData(prev => ({ ...prev, location }));
-                  setIsDetectingLocation(false);
-                  return;
-                }
-              }
-            } catch (error) {
-              console.log('OpenStreetMap failed');
-            }
-            
-            setIsDetectingLocation(false);
-          },
-          (error) => {
-            console.log('Location detection declined or unavailable');
-            setIsDetectingLocation(false);
-          },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
+  const initAutocomplete = () => {
+    if (!locationInputRef.current || !window.google) return;
+
+    autocompleteRef.current = new window.google.maps.places.Autocomplete(
+      locationInputRef.current,
+      {
+        types: ['geocode', 'establishment'],
+        fields: ['address_components', 'formatted_address', 'geometry'],
       }
-    } catch (error) {
-      console.error('Error detecting location:', error);
-      setIsDetectingLocation(false);
-    }
+    );
+
+    autocompleteRef.current.addListener('place_changed', () => {
+      const place = autocompleteRef.current.getPlace();
+      
+      if (place.formatted_address) {
+        setFormData(prev => ({ ...prev, location: place.formatted_address }));
+      }
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -306,33 +246,18 @@ export default function RegisterPage() {
               <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
                 Location (Optional)
               </label>
-              <div className="relative">
-                <input
-                  id="location"
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="City, Country"
-                />
-                {isDetectingLocation && (
-                  <div className="absolute right-3 top-2.5">
-                    <div className="animate-spin h-5 w-5 border-2 border-primary-600 border-t-transparent rounded-full"></div>
-                  </div>
-                )}
-                {!isDetectingLocation && !formData.location && (
-                  <button
-                    type="button"
-                    onClick={detectLocation}
-                    className="absolute right-2 top-2 p-1 text-gray-400 hover:text-primary-600 transition-colors"
-                    title="Detect my location"
-                  >
-                    <MapPin className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
+              <input
+                ref={locationInputRef}
+                id="location"
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Start typing your address..."
+                autoComplete="off"
+              />
               <p className="text-xs text-gray-500 mt-1">
-                {isDetectingLocation ? 'Detecting your location...' : 'Location auto-detected or enter manually'}
+                Start typing to search for your address
               </p>
             </div>
 
