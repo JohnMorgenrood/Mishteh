@@ -44,10 +44,27 @@ export default function RegisterPage() {
             );
             const data = await response.json();
             
-            // More precise location: City, State/Province, Country
+            // Full precise address: Street, Suburb/District, City, State, Country
             const parts = [];
-            if (data.city || data.locality) parts.push(data.city || data.locality);
+            
+            // Add street address if available
+            if (data.localityInfo?.administrative) {
+              const admin = data.localityInfo.administrative;
+              // Try to get street/neighborhood level detail
+              const street = admin.find((a: any) => a.order >= 8)?.name;
+              if (street) parts.push(street);
+            }
+            
+            // Add suburb/district
+            if (data.locality) parts.push(data.locality);
+            
+            // Add city if different from locality
+            if (data.city && data.city !== data.locality) parts.push(data.city);
+            
+            // Add state/province
             if (data.principalSubdivision) parts.push(data.principalSubdivision);
+            
+            // Add country
             if (data.countryName) parts.push(data.countryName);
             
             const location = parts.join(', ');
@@ -59,7 +76,8 @@ export default function RegisterPage() {
           (error) => {
             console.log('Location detection declined or unavailable');
             setIsDetectingLocation(false);
-          }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       }
     } catch (error) {

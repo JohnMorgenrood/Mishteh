@@ -35,22 +35,39 @@ export default function NewRequestPage() {
   const detectLocation = async () => {
     setIsDetectingLocation(true);
     try {
-      // Try to get user's position
+      // Try to get user's position with high accuracy
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords;
             
-            // Use reverse geocoding to get city/state/country
+            // Use reverse geocoding to get full address
             const response = await fetch(
               `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
             );
             const data = await response.json();
             
-            // More precise location: City, State/Province, Country
+            // Full precise address: Street, Suburb/District, City, State, Country
             const parts = [];
-            if (data.city || data.locality) parts.push(data.city || data.locality);
+            
+            // Add street address if available
+            if (data.localityInfo?.administrative) {
+              const admin = data.localityInfo.administrative;
+              // Try to get street/neighborhood level detail
+              const street = admin.find((a: any) => a.order >= 8)?.name;
+              if (street) parts.push(street);
+            }
+            
+            // Add suburb/district
+            if (data.locality) parts.push(data.locality);
+            
+            // Add city if different from locality
+            if (data.city && data.city !== data.locality) parts.push(data.city);
+            
+            // Add state/province
             if (data.principalSubdivision) parts.push(data.principalSubdivision);
+            
+            // Add country
             if (data.countryName) parts.push(data.countryName);
             
             const location = parts.join(', ');
@@ -62,7 +79,8 @@ export default function NewRequestPage() {
           (error) => {
             console.log('Location detection declined or unavailable');
             setIsDetectingLocation(false);
-          }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       }
     } catch (error) {

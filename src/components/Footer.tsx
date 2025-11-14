@@ -19,7 +19,7 @@ export default function Footer() {
             </div>
             <p className="text-gray-400 text-sm mb-4">
               Connecting donors with people in need. Together, we can make a difference
-              in our community.
+              in our community and beyond.
             </p>
             <p className="text-gray-500 text-xs">
               © 2025 MISHTEH. All rights reserved.
