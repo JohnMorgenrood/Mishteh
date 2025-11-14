@@ -227,10 +227,10 @@ export default function Navbar() {
         {/* Mobile Navigation with Dropdown Animation */}
         <div
           className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            mobileMenuOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="py-4 border-t border-gray-200">
+          <div className="py-4 border-t border-gray-200 max-h-[calc(100vh-5rem)] overflow-y-auto">
             <div className="flex flex-col gap-3">
               <Link
                 href="/"

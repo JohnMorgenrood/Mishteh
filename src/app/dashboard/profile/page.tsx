@@ -1,10 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { User, Camera, FileText, Home, Shield, Loader, CheckCircle } from 'lucide-react';
 import FicaUpload from '@/components/FicaUpload';
+
+// Declare Google Maps types
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 export default function ProfileSettingsPage() {
   const { data: session, status } = useSession();
@@ -12,6 +19,8 @@ export default function ProfileSettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
   
   const [profileData, setProfileData] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -39,8 +48,50 @@ export default function ProfileSettingsPage() {
       router.push('/auth/login');
     } else if (status === 'authenticated') {
       fetchProfile();
+      loadGoogleMaps();
     }
   }, [status, router]);
+
+  const loadGoogleMaps = () => {
+    if (window.google) {
+      initAutocomplete();
+      return;
+    }
+
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.error('Google Maps API key is missing');
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      initAutocomplete();
+    };
+    document.head.appendChild(script);
+  };
+
+  const initAutocomplete = () => {
+    if (!locationInputRef.current || !window.google) return;
+
+    autocompleteRef.current = new window.google.maps.places.Autocomplete(
+      locationInputRef.current,
+      {
+        types: ['geocode', 'establishment'],
+        fields: ['address_components', 'formatted_address', 'geometry'],
+      }
+    );
+
+    autocompleteRef.current.addListener('place_changed', () => {
+      const place = autocompleteRef.current.getPlace();
+      if (place.formatted_address) {
+        setFormData(prev => ({ ...prev, location: place.formatted_address }));
+      }
+    });
+  };
 
   const fetchProfile = async () => {
     setIsLoading(true);
