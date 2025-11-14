@@ -41,14 +41,20 @@ export default function NewRequestPage() {
           async (position) => {
             const { latitude, longitude } = position.coords;
             
-            // Use reverse geocoding to get city/country
+            // Use reverse geocoding to get city/state/country
             const response = await fetch(
               `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
             );
             const data = await response.json();
             
-            const location = `${data.city || data.locality || ''}, ${data.countryName || ''}`.trim();
-            if (location !== ',') {
+            // More precise location: City, State/Province, Country
+            const parts = [];
+            if (data.city || data.locality) parts.push(data.city || data.locality);
+            if (data.principalSubdivision) parts.push(data.principalSubdivision);
+            if (data.countryName) parts.push(data.countryName);
+            
+            const location = parts.join(', ');
+            if (location) {
               setFormData(prev => ({ ...prev, location }));
             }
             setIsDetectingLocation(false);

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UserPlus, Eye, EyeOff, MapPin } from 'lucide-react';
+import { COUNTRY_CODES } from '@/lib/countries';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     userType: 'DONOR' as 'DONOR' | 'REQUESTER',
+    countryCode: '+27',
     phone: '',
     location: '',
   });
@@ -42,8 +44,14 @@ export default function RegisterPage() {
             );
             const data = await response.json();
             
-            const location = `${data.city || data.locality || ''}, ${data.countryName || ''}`.trim();
-            if (location !== ',') {
+            // More precise location: City, State/Province, Country
+            const parts = [];
+            if (data.city || data.locality) parts.push(data.city || data.locality);
+            if (data.principalSubdivision) parts.push(data.principalSubdivision);
+            if (data.countryName) parts.push(data.countryName);
+            
+            const location = parts.join(', ');
+            if (location) {
               setFormData(prev => ({ ...prev, location }));
             }
             setIsDetectingLocation(false);
@@ -89,7 +97,7 @@ export default function RegisterPage() {
           email: formData.email,
           password: formData.password,
           userType: formData.userType,
-          phone: formData.phone || undefined,
+          phone: formData.phone ? `${formData.countryCode}${formData.phone}` : undefined,
           location: formData.location || undefined,
         }),
       });
@@ -198,14 +206,27 @@ export default function RegisterPage() {
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number (Optional)
               </label>
-              <input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-                placeholder="+1 (555) 123-4567"
-              />
+              <div className="flex gap-2">
+                <select
+                  value={formData.countryCode}
+                  onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
+                  className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                >
+                  {COUNTRY_CODES.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.flag} {country.code}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9]/g, '') })}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="123456789"
+                />
+              </div>
             </div>
 
             <div>
