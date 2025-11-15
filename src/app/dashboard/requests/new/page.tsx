@@ -23,6 +23,7 @@ export default function NewRequestPage() {
     title: '',
     description: '',
     category: 'FOOD_GROCERIES',
+    customCategory: '',
     urgency: 'MEDIUM',
     location: '',
     targetAmount: '',
@@ -109,6 +110,12 @@ export default function NewRequestPage() {
       return;
     }
 
+    // Validate custom category if OTHER is selected
+    if (formData.category === 'OTHER' && !formData.customCategory.trim()) {
+      setError('Please enter a custom category description');
+      return;
+    }
+
     // Check if user is logged in
     if (!session?.user) {
       setError('You must be logged in to create a request');
@@ -128,6 +135,7 @@ export default function NewRequestPage() {
           title: formData.title,
           description: formData.description,
           category: formData.category,
+          customCategory: formData.category === 'OTHER' ? formData.customCategory : undefined,
           urgency: formData.urgency,
           location: formData.location,
           targetAmount: formData.targetAmount ? parseFloat(formData.targetAmount) : undefined,
@@ -225,6 +233,27 @@ export default function NewRequestPage() {
                   Select the category that best describes your request
                 </p>
               </div>
+
+              {/* Custom Category Input - shown when OTHER is selected */}
+              {formData.category === 'OTHER' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <label htmlFor="customCategory" className="block text-sm font-medium text-gray-700 mb-2">
+                    Custom Category *
+                  </label>
+                  <input
+                    id="customCategory"
+                    type="text"
+                    required
+                    value={formData.customCategory}
+                    onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter your custom category (e.g., 'Art Supplies for Students')"
+                  />
+                  <p className="text-xs text-blue-600 mt-1">
+                    Please describe your specific need in a few words
+                  </p>
+                </div>
+              )}
 
               {/* Urgency */}
               <div>

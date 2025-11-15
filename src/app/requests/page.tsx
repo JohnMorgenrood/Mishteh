@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import RequestCard from '@/components/RequestCard';
+import CategorySelector from '@/components/CategorySelector';
 import { REQUEST_CATEGORY_GROUPS } from '@/lib/constants';
 
 export default function RequestsPage() {
@@ -74,27 +75,25 @@ export default function RequestsPage() {
 
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Category Filter */}
             <div>
               <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
                 Category
               </label>
-              <select
-                id="category"
-                value={filters.category}
-                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">All Categories</option>
-                {REQUEST_CATEGORY_GROUPS.map((group) => (
-                  <optgroup key={group.group} label={group.group}>
-                    {group.categories.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+              <div className="md:hidden">
+                <CategorySelector 
+                  value={filters.category}
+                  onChange={(value) => setFilters({ ...filters, category: value })}
+                  isMobile={true}
+                />
+              </div>
+              <div className="hidden md:block">
+                <CategorySelector 
+                  value={filters.category}
+                  onChange={(value) => setFilters({ ...filters, category: value })}
+                  isMobile={false}
+                />
+              </div>
             </div>
 
             <div>
@@ -132,7 +131,10 @@ export default function RequestsPage() {
 
           {/* Clear Filters */}
           {(filters.category || filters.urgency || filters.location || searchTerm) && (
-            <div className="mt-4">
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                {filteredRequests.length} {filteredRequests.length === 1 ? 'result' : 'results'} found
+              </span>
               <button
                 onClick={() => {
                   setFilters({ category: '', urgency: '', location: '' });

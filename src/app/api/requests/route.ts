@@ -129,6 +129,7 @@ export async function POST(request: NextRequest) {
         title: data.title,
         description: data.description,
         category: data.category,
+        customCategory: data.category === 'OTHER' ? data.customCategory : null,
         urgency: data.urgency,
         location: data.location,
         targetAmount: data.targetAmount,

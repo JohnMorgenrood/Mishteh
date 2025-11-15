@@ -211,6 +211,7 @@ model Request {
   title           String
   description     String          @db.Text
   category        RequestCategory
+  customCategory  String?
   urgency         UrgencyLevel
   location        String
   targetAmount    Float?
