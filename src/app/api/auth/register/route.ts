@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
     const idNumber = formData.get('idNumber') as string | null;
     const dateOfBirth = formData.get('dateOfBirth') as string | null;
     const idDocumentType = formData.get('idDocumentType') as string | null;
+    const address = formData.get('address') as string | null;
+    const facebookUrl = formData.get('facebookUrl') as string | null;
+    const twitterUrl = formData.get('twitterUrl') as string | null;
+    const instagramUrl = formData.get('instagramUrl') as string | null;
     
     // Validate required fields
     if (!fullName || !email || !password || !userType) {
@@ -65,19 +69,17 @@ export async function POST(request: NextRequest) {
     // Handle file uploads for REQUESTER users
     let profilePhotoUrl = null;
     let idDocumentUrl = null;
-    let proofOfAddressUrl = null;
     let selfieUrl = null;
 
     if (userType === 'REQUESTER') {
       const profilePhoto = formData.get('profilePhoto') as File | null;
       const idDocument = formData.get('idDocument') as File | null;
-      const proofOfAddress = formData.get('proofOfAddress') as File | null;
       const selfieWithId = formData.get('selfieWithId') as File | null;
 
       // Validate required FICA documents
-      if (!profilePhoto || !idDocument || !proofOfAddress || !selfieWithId) {
+      if (!profilePhoto || !idDocument || !selfieWithId) {
         return NextResponse.json(
-          { error: 'All FICA documents are required for help seekers' },
+          { error: 'Profile photo, ID document, and selfie with ID are required for help seekers' },
           { status: 400 }
         );
       }
@@ -109,7 +111,6 @@ export async function POST(request: NextRequest) {
       // Save all files
       profilePhotoUrl = await saveFile(profilePhoto, 'profile');
       idDocumentUrl = await saveFile(idDocument, 'id');
-      proofOfAddressUrl = await saveFile(proofOfAddress, 'address');
       selfieUrl = await saveFile(selfieWithId, 'selfie');
     }
 
@@ -126,17 +127,18 @@ export async function POST(request: NextRequest) {
         idDocumentUrl,
         idDocumentType,
         idNumber,
-        proofOfAddressUrl,
+        address,
+        facebookUrl,
+        twitterUrl,
+        instagramUrl,
         selfieUrl,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-        ficaVerified: false, // Admin will verify
       },
       select: {
         id: true,
         email: true,
         fullName: true,
         userType: true,
-        ficaVerified: true,
       },
     });
 

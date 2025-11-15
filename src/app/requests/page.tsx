@@ -38,11 +38,21 @@ export default function RequestsPage() {
     }
   };
 
-  const filteredRequests = requests.filter((request) =>
-    searchTerm === '' ||
-    request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRequests = requests.filter((request) => {
+    if (searchTerm === '') return true;
+    
+    const search = searchTerm.toLowerCase();
+    
+    // Search across multiple fields
+    return (
+      request.title?.toLowerCase().includes(search) ||
+      request.description?.toLowerCase().includes(search) ||
+      request.user?.fullName?.toLowerCase().includes(search) ||
+      request.category?.toLowerCase().includes(search) ||
+      request.customCategory?.toLowerCase().includes(search) ||
+      request.location?.toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

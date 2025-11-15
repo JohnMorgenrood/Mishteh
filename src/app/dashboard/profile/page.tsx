@@ -29,6 +29,10 @@ export default function ProfileSettingsPage() {
     location: '',
     bio: '',
     paypalEmail: '',
+    address: '',
+    facebookUrl: '',
+    twitterUrl: '',
+    instagramUrl: '',
   });
 
   const [files, setFiles] = useState<{
@@ -106,6 +110,10 @@ export default function ProfileSettingsPage() {
           location: data.user.location || '',
           bio: data.user.bio || '',
           paypalEmail: data.user.paypalEmail || '',
+          address: data.user.address || '',
+          facebookUrl: data.user.facebookUrl || '',
+          twitterUrl: data.user.twitterUrl || '',
+          instagramUrl: data.user.instagramUrl || '',
         });
       }
     } catch (error) {
@@ -127,6 +135,10 @@ export default function ProfileSettingsPage() {
       submitData.append('location', formData.location);
       submitData.append('bio', formData.bio);
       submitData.append('paypalEmail', formData.paypalEmail);
+      submitData.append('address', formData.address);
+      submitData.append('facebookUrl', formData.facebookUrl);
+      submitData.append('twitterUrl', formData.twitterUrl);
+      submitData.append('instagramUrl', formData.instagramUrl);
 
       if (files.profilePhoto) {
         submitData.append('profilePhoto', files.profilePhoto);
@@ -341,6 +353,71 @@ export default function ProfileSettingsPage() {
                     </a>
                   </div>
                 )}
+
+                {/* Address */}
+                <div>
+                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                    Physical Address (Optional)
+                  </label>
+                  <textarea
+                    id="address"
+                    rows={3}
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter your physical address"
+                  />
+                </div>
+
+                {/* Social Media Profiles */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-gray-700">Social Media Profiles (Optional)</h3>
+                    <span className="text-xs text-gray-500">- Helps build trust with donors</span>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="facebookUrl" className="block text-xs text-gray-600 mb-1">
+                      Facebook Profile URL
+                    </label>
+                    <input
+                      id="facebookUrl"
+                      type="url"
+                      value={formData.facebookUrl}
+                      onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="https://facebook.com/yourprofile"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="twitterUrl" className="block text-xs text-gray-600 mb-1">
+                      X (Twitter) Profile URL
+                    </label>
+                    <input
+                      id="twitterUrl"
+                      type="url"
+                      value={formData.twitterUrl}
+                      onChange={(e) => setFormData({ ...formData, twitterUrl: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="https://twitter.com/yourhandle"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="instagramUrl" className="block text-xs text-gray-600 mb-1">
+                      Instagram Profile URL
+                    </label>
+                    <input
+                      id="instagramUrl"
+                      type="url"
+                      value={formData.instagramUrl}
+                      onChange={(e) => setFormData({ ...formData, instagramUrl: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="https://instagram.com/yourhandle"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 

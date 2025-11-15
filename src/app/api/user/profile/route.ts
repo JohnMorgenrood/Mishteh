@@ -32,7 +32,10 @@ export async function GET(request: NextRequest) {
         idDocumentUrl: true,
         idDocumentType: true,
         idNumber: true,
-        proofOfAddressUrl: true,
+        address: true,
+        facebookUrl: true,
+        twitterUrl: true,
+        instagramUrl: true,
         selfieUrl: true,
         dateOfBirth: true,
         ficaVerified: true,
@@ -82,11 +85,14 @@ export async function PUT(request: NextRequest) {
     const location = formData.get('location') as string | null;
     const bio = formData.get('bio') as string | null;
     const paypalEmail = formData.get('paypalEmail') as string | null;
+    const address = formData.get('address') as string | null;
+    const facebookUrl = formData.get('facebookUrl') as string | null;
+    const twitterUrl = formData.get('twitterUrl') as string | null;
+    const instagramUrl = formData.get('instagramUrl') as string | null;
     
     // Extract files
     const profilePhoto = formData.get('profilePhoto') as File | null;
     const idDocument = formData.get('idDocument') as File | null;
-    const proofOfAddress = formData.get('proofOfAddress') as File | null;
     const selfieWithId = formData.get('selfieWithId') as File | null;
 
     // Prepare update data - only include non-empty values
@@ -97,9 +103,13 @@ export async function PUT(request: NextRequest) {
     if (location) updateData.location = location;
     if (bio) updateData.bio = bio;
     if (paypalEmail) updateData.paypalEmail = paypalEmail;
+    if (address) updateData.address = address;
+    if (facebookUrl) updateData.facebookUrl = facebookUrl;
+    if (twitterUrl) updateData.twitterUrl = twitterUrl;
+    if (instagramUrl) updateData.instagramUrl = instagramUrl;
 
     // Handle file uploads if provided
-    if (profilePhoto || idDocument || proofOfAddress || selfieWithId) {
+    if (profilePhoto || idDocument || selfieWithId) {
       const uploadDir = join(process.cwd(), 'public', 'uploads', 'fica');
       if (!existsSync(uploadDir)) {
         await mkdir(uploadDir, { recursive: true });
@@ -121,11 +131,6 @@ export async function PUT(request: NextRequest) {
       if (idDocument) {
         updateData.idDocumentUrl = await saveFile(idDocument, 'id');
         // If FICA documents are updated, reset verification status
-        updateData.ficaVerified = false;
-        updateData.ficaVerifiedAt = null;
-      }
-      if (proofOfAddress) {
-        updateData.proofOfAddressUrl = await saveFile(proofOfAddress, 'address');
         updateData.ficaVerified = false;
         updateData.ficaVerifiedAt = null;
       }

@@ -1,6 +1,3 @@
-// This is your Prisma schema file
-// Updated with comprehensive category system
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,7 +8,223 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Enum definitions
+model User {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  password         String?
+  fullName         String
+  userType         UserType
+  phone            String?
+  location         String?
+  bio              String?
+  emailVerified    DateTime?
+  image            String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  dateOfBirth      DateTime?
+  ficaVerified     Boolean          @default(false)
+  ficaVerifiedAt   DateTime?
+  ficaVerifiedBy   String?
+  idDocumentType   String?
+  idDocumentUrl    String?
+  idNumber         String?
+  selfieUrl        String?
+  paypalEmail      String?
+  paypalVerified   Boolean          @default(false)
+  paypalVerifiedAt DateTime?
+  address          String?
+  facebookUrl      String?
+  instagramUrl     String?
+  twitterUrl       String?
+  documents        Document[]
+  donations        Donation[]
+  preferences      DonorPreference?
+  requests         Request[]
+
+  @@index([email])
+  @@index([userType])
+  @@index([ficaVerified])
+}
+
+model Request {
+  id             String          @id @default(cuid())
+  userId         String
+  title          String
+  description    String
+  category       RequestCategory
+  urgency        UrgencyLevel
+  location       String
+  targetAmount   Float?
+  currentAmount  Float           @default(0)
+  status         RequestStatus   @default(PENDING)
+  verified       Boolean         @default(false)
+  views          Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  expiresAt      DateTime?
+  featured       Boolean         @default(false)
+  isAnonymous    Boolean         @default(false)
+  customCategory String?
+  documents      Document[]
+  donations      Donation[]
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([category])
+  @@index([status])
+  @@index([urgency])
+  @@index([location])
+  @@index([createdAt])
+  @@index([featured])
+}
+
+model Donation {
+  id              String         @id @default(cuid())
+  donorId         String
+  requestId       String
+  amount          Float
+  message         String?
+  status          DonationStatus @default(PLEDGED)
+  anonymous       Boolean        @default(false)
+  paymentIntentId String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  paymentMethod   String?        @default("STRIPE")
+  paymentStatus   String?        @default("PENDING")
+  donor           User           @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  request         Request        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([donorId])
+  @@index([requestId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Document {
+  id              String         @id @default(cuid())
+  userId          String
+  requestId       String?
+  fileName        String
+  fileType        String
+  fileSize        Int
+  filePath        String
+  documentType    String
+  status          DocumentStatus @default(PENDING)
+  rejectionReason String?
+  uploadedAt      DateTime       @default(now())
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  request         Request?       @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([requestId])
+  @@index([status])
+}
+
+model DonorPreference {
+  id                  String            @id @default(cuid())
+  userId              String            @unique
+  preferredCategories RequestCategory[]
+  preferredLocations  String[]
+  minUrgency          UrgencyLevel?
+  emailNotifications  Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String
+  content     String
+  author      String
+  category    String
+  imageUrl    String?
+  sourceUrl   String?
+  isExternal  Boolean  @default(false)
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([publishedAt(sort: Desc)])
+  @@index([slug])
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  amount          Float
+  feeAmount       Float             @default(0)
+  netAmount       Float
+  currency        String            @default("ZAR")
+  paymentGateway  String?
+  paymentId       String?
+  payerId         String?
+  paymentIntentId String?
+  gatewayResponse String?
+  gatewayFee      Float?
+  donorId         String?
+  donorName       String?
+  donorEmail      String?
+  recipientId     String?
+  recipientName   String?
+  recipientEmail  String?
+  requestId       String?
+  requestTitle    String?
+  approvedBy      String?
+  approvedAt      DateTime?
+  failureReason   String?
+  adminNotes      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  completedAt     DateTime?
+
+  @@index([type])
+  @@index([status])
+  @@index([donorId])
+  @@index([recipientId])
+  @@index([requestId])
+  @@index([createdAt(sort: Desc)])
+  @@index([paymentId])
+}
+
+model ContactMessage {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  subject    String
+  message    String
+  status     String   @default("NEW")
+  adminNotes String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
 enum UserType {
   DONOR
   REQUESTER
@@ -19,7 +232,6 @@ enum UserType {
 }
 
 enum RequestCategory {
-  // Legacy categories (kept for backward compatibility)
   FOOD
   RENT
   BILLS
@@ -28,91 +240,63 @@ enum RequestCategory {
   MEDICAL
   EDUCATION
   OTHER
-  
-  // Basic Needs
   FOOD_GROCERIES
   RENT_HOUSING
   UTILITIES
   CLOTHING_ESSENTIALS
   TRANSPORTATION
-  
-  // Family & Children
   SINGLE_PARENTS
   CHILDCARE_SCHOOL
   NEWBORN_BABY
   ADOPTION_FOSTER
   FAMILY_EMERGENCY
-  
-  // Health & Medical
   MEDICAL_BILLS
   PRESCRIPTION_MEDS
   DISABILITY_SUPPORT
   MENTAL_HEALTH
   THERAPY_REHAB
-  
-  // Education & Career
   TUITION_FEES
   BOOKS_SUPPLIES
   VOCATIONAL_TRAINING
   TECHNOLOGY_LEARNING
-  
-  // Elderly & Retired
   RETIREMENT_SUPPORT
   MOBILITY_EQUIPMENT
   HOME_CARE
   SENIOR_SOCIAL_SUPPORT
-  
-  // Emergency & Crisis
   NATURAL_DISASTER
   ACCIDENT_INJURY
   DOMESTIC_VIOLENCE
   FUNERAL_SUPPORT
   LEGAL_AID_CRISIS
-  
-  // Community & Social
   NEIGHBORHOOD_PROJECT
   COMMUNITY_FOOD_DRIVE
   YOUTH_PROGRAMS
   CULTURAL_RELIGIOUS
   VOLUNTEER_NONPROFIT
-  
-  // Animals & Pets
   PET_FOOD_SUPPLIES
   EMERGENCY_VET_CARE
   ANIMAL_RESCUE
   FARM_ANIMAL_AID
-  
-  // Disabled & Special Needs
   ADAPTIVE_EQUIPMENT
   HOME_MODIFICATIONS
   DISABLED_TRANSPORT
   SUPPORT_ANIMALS
-  
-  // Veterans & Service
   VETERAN_HOUSING
   PTSD_COUNSELING
   VETERAN_JOB_PLACEMENT
   VETERAN_FAMILY_AID
-  
-  // Entrepreneurship
   STARTUP_GRANT
   BUSINESS_TOOLS
   BUSINESS_LICENSING
   BUSINESS_TRAINING
-  
-  // Housing & Homelessness
   EMERGENCY_SHELTER
   HOME_REPAIRS
   MOVING_ASSISTANCE
   EVICTION_PREVENTION
-  
-  // Immigrants & Refugees
   RELOCATION_COSTS
   LEGAL_DOCUMENTATION
   LANGUAGE_INTEGRATION
   REFUGEE_EMERGENCY
-  
-  // Special Situations
   JOB_LOSS_HARDSHIP
   TRAVEL_EMERGENCY
   UNEXPECTED_EXPENSES
@@ -160,253 +344,4 @@ enum DocumentStatus {
   PENDING
   VERIFIED
   REJECTED
-}
-
-// User model - stores all user accounts
-model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
-  password      String?       // Optional for OAuth users
-  fullName      String
-  userType      UserType
-  phone         String?
-  location      String?
-  bio           String?       @db.Text
-  emailVerified DateTime?
-  image         String?       // Profile photo URL
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
-  // FICA Compliance Documents (for REQUESTER/RECIPIENT users)
-  idDocumentUrl       String?       // National ID, Passport, Driver's License
-  idDocumentType      String?       // Type of ID document
-  idNumber            String?       // ID number
-  proofOfAddressUrl   String?       // Utility bill, bank statement, etc.
-  selfieUrl           String?       // Selfie holding ID for verification
-  dateOfBirth         DateTime?     // For age verification
-  ficaVerified        Boolean       @default(false)
-  ficaVerifiedAt      DateTime?
-  ficaVerifiedBy      String?       // Admin ID who verified
-  
-  // Payment Details (for REQUESTER users to receive donations)
-  paypalEmail         String?       // PayPal email for receiving payments
-  paypalVerified      Boolean       @default(false)
-  paypalVerifiedAt    DateTime?
-  
-  // Relations
-  requests      Request[]     // Requests created by this user (if REQUESTER)
-  donations     Donation[]    // Donations made by this user (if DONOR)
-  documents     Document[]    // Documents uploaded by this user
-  preferences   DonorPreference? // Donation preferences (if DONOR)
-  
-  @@index([email])
-  @@index([userType])
-  @@index([ficaVerified])
-}
-
-// Request model - help requests from people in need
-model Request {
-  id              String          @id @default(cuid())
-  userId          String
-  title           String
-  description     String          @db.Text
-  category        RequestCategory
-  customCategory  String?
-  urgency         UrgencyLevel
-  location        String
-  targetAmount    Float?
-  currentAmount   Float           @default(0)
-  status          RequestStatus   @default(PENDING)
-  verified        Boolean         @default(false)
-  featured        Boolean         @default(false)
-  isAnonymous     Boolean         @default(false)
-  views           Int             @default(0)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  expiresAt       DateTime?
-  
-  // Relations
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  donations       Donation[]
-  documents       Document[]
-  
-  @@index([userId])
-  @@index([category])
-  @@index([status])
-  @@index([urgency])
-  @@index([location])
-  @@index([createdAt])
-  @@index([featured])
-}
-
-// Donation model - tracks donations from donors
-model Donation {
-  id              String          @id @default(cuid())
-  donorId         String
-  requestId       String
-  amount          Float
-  message         String?         @db.Text
-  status          DonationStatus  @default(PLEDGED)
-  anonymous       Boolean         @default(false)
-  paymentIntentId String?         // Stripe payment intent ID
-  paymentMethod   String?         @default("STRIPE") // STRIPE, PAYPAL, BANK_TRANSFER
-  paymentStatus   String?         @default("PENDING") // PENDING, COMPLETED, FAILED
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
-  // Relations
-  donor           User            @relation(fields: [donorId], references: [id], onDelete: Cascade)
-  request         Request         @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  
-  @@index([donorId])
-  @@index([requestId])
-  @@index([status])
-  @@index([createdAt])
-}
-
-// Document model - stores uploaded verification documents
-model Document {
-  id              String          @id @default(cuid())
-  userId          String
-  requestId       String?
-  fileName        String
-  fileType        String
-  fileSize        Int
-  filePath        String
-  documentType    String          // e.g., "ID", "proof_of_need", "income_statement"
-  status          DocumentStatus  @default(PENDING)
-  rejectionReason String?         @db.Text
-  uploadedAt      DateTime        @default(now())
-  verifiedAt      DateTime?
-  verifiedBy      String?         // Admin user ID who verified
-  
-  // Relations
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  request         Request?        @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([requestId])
-  @@index([status])
-}
-
-// DonorPreference model - stores donor preferences for notifications
-model DonorPreference {
-  id                  String              @id @default(cuid())
-  userId              String              @unique
-  preferredCategories RequestCategory[]
-  preferredLocations  String[]
-  minUrgency          UrgencyLevel?
-  emailNotifications  Boolean             @default(true)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  
-  // Relations
-  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-}
-
-// Notification model - stores notifications for users
-model Notification {
-  id          String    @id @default(cuid())
-  userId      String
-  title       String
-  message     String    @db.Text
-  type        String    // e.g., "new_request", "donation_received", "document_verified"
-  read        Boolean   @default(false)
-  link        String?
-  createdAt   DateTime  @default(now())
-  
-  @@index([userId])
-  @@index([read])
-  @@index([createdAt])
-}
-
-// BlogPost model - stores blog posts and external news
-model BlogPost {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  excerpt     String   @db.Text
-  content     String   @db.Text
-  author      String
-  category    String
-  imageUrl    String?
-  sourceUrl   String?
-  isExternal  Boolean  @default(false)
-  publishedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([category])
-  @@index([publishedAt(sort: Desc)])
-  @@index([slug])
-}
-
-// Transaction model - comprehensive financial transaction tracking
-model Transaction {
-  id                String            @id @default(cuid())
-  
-  // Transaction details
-  type              TransactionType
-  status            TransactionStatus @default(PENDING)
-  amount            Float             // Gross amount
-  feeAmount         Float             @default(0) // Platform fee (R2 + %)
-  netAmount         Float             // Amount after fees
-  currency          String            @default("ZAR")
-  
-  // PayPal/Payment gateway details
-  paymentGateway    String?           // "PayPal", "Stripe", etc.
-  paymentId         String?           // External payment ID
-  payerId           String?           // Payer ID from gateway
-  paymentIntentId   String?           // Payment intent ID
-  gatewayResponse   String?           @db.Text // JSON response from gateway
-  gatewayFee        Float?            // Fee charged by payment gateway
-  
-  // User relationships
-  donorId           String?           // User who made donation
-  donorName         String?           // Cached donor name
-  donorEmail        String?           // Cached donor email
-  recipientId       String?           // User receiving funds
-  recipientName     String?           // Cached recipient name
-  recipientEmail    String?           // Cached recipient email
-  
-  // Request relationship
-  requestId         String?           // Associated request
-  requestTitle      String?           // Cached request title
-  
-  // Admin controls
-  approvedBy        String?           // Admin user ID who approved
-  approvedAt        DateTime?
-  failureReason     String?           @db.Text
-  adminNotes        String?           @db.Text
-  
-  // Timestamps
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  completedAt       DateTime?
-  
-  @@index([type])
-  @@index([status])
-  @@index([donorId])
-  @@index([recipientId])
-  @@index([requestId])
-  @@index([createdAt(sort: Desc)])
-  @@index([paymentId])
-}
-
-// Contact form submissions
-model ContactMessage {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  subject   String
-  message   String   @db.Text
-  status    String   @default("NEW") // NEW, READ, REPLIED, CLOSED
-  adminNotes String? @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@index([status])
-  @@index([createdAt(sort: Desc)])
 }

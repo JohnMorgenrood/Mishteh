@@ -10,6 +10,7 @@ interface Request {
   title: string;
   description: string;
   category: RequestCategory;
+  customCategory?: string | null;
   urgency: UrgencyLevel;
   location: string;
   targetAmount?: number | null;
@@ -44,12 +45,17 @@ export default function RequestCard({ request }: RequestCardProps) {
     ? Math.min((request.currentAmount / request.targetAmount) * 100, 100)
     : 0;
 
+  // Get category display text - use custom category if category is OTHER
+  const categoryDisplay = request.category === 'OTHER' && request.customCategory
+    ? request.customCategory
+    : (categoryLabelsMap[request.category] || request.category);
+
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-6 border border-gray-200">
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-800">
-          {categoryLabelsMap[request.category] || request.category}
+          {categoryDisplay}
         </span>
         <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${urgencyColors[request.urgency]}`}>
           {request.urgency}
