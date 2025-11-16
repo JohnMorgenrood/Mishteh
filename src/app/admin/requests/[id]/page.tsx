@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, XCircle, User } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, User, Edit2, Save } from 'lucide-react';
+import { REQUEST_CATEGORIES } from '@/lib/constants';
 
 interface Request {
   id: string;
@@ -34,6 +35,8 @@ export default function AdminRequestReview({ params }: { params: { id: string } 
   const [request, setRequest] = useState<Request | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [isEditingCategory, setIsEditingCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
 
   useEffect(() => {
     if (session?.user?.userType !== 'ADMIN') {
@@ -50,11 +53,43 @@ export default function AdminRequestReview({ params }: { params: { id: string } 
       if (response.ok) {
         const data = await response.json();
         setRequest(data);
+        setNewCategory(data.category);
       }
     } catch (error) {
       console.error('Error fetching request:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!newCategory || newCategory === request?.category) {
+      setIsEditingCategory(false);
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
+      const response = await fetch(`/api/admin/requests/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: newCategory }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRequest(data.request);
+        setIsEditingCategory(false);
+        alert('Category updated successfully!');
+      } else {
+        alert('Failed to update category');
+      }
+    } catch (error) {
+      console.error('Error updating category:', error);
+      alert('An error occurred');
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -161,8 +196,58 @@ export default function AdminRequestReview({ params }: { params: { id: string } 
               <h2 className="text-xl font-bold text-gray-900 mb-4">{request.title}</h2>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-gray-600">Category</p>
-                  <p className="font-medium">{request.category}</p>
+                  <p className="text-sm text-gray-600 mb-1">Category</p>
+                  {isEditingCategory ? (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                      >
+                        {REQUEST_CATEGORIES.map((cat) => (
+                          <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={handleUpdateCategory}
+                        disabled={processing}
+                        className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                        title="Save"
+                      >
+                        <Save className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditingCategory(false);
+                          setNewCategory(request.category);
+                        }}
+                        className="px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                        title="Cancel"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">
+                        {REQUEST_CATEGORIES.find(cat => cat.value === request.category)?.label || request.category}
+                      </p>
+                      <button
+                        onClick={() => setIsEditingCategory(true)}
+                        className="text-primary-600 hover:text-primary-700"
+                        title="Edit Category"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      {request.category === 'OTHER' && (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                          Needs Recategorization
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Urgency</p>

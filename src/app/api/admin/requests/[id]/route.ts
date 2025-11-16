@@ -19,7 +19,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status, featured } = body;
+    const { status, featured, category } = body;
 
     // Prepare update data
     const updateData: any = {};
@@ -37,6 +37,10 @@ export async function PATCH(
 
     if (featured !== undefined) {
       updateData.featured = featured;
+    }
+
+    if (category !== undefined) {
+      updateData.category = category;
     }
 
     const helpRequest = await prisma.request.update({
@@ -59,6 +63,8 @@ export async function PATCH(
       ? `Request ${status.toLowerCase()} successfully`
       : featured !== undefined
       ? `Request ${featured ? 'featured' : 'unfeatured'} successfully`
+      : category !== undefined
+      ? 'Request category updated successfully'
       : 'Request updated successfully';
 
     return NextResponse.json({

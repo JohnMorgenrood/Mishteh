@@ -128,6 +128,11 @@ export default function AdminRequestsPage() {
 
   const categories = Array.from(new Set(requests.map((r) => r.category)));
 
+  // Calculate stats
+  const pendingCount = requests.filter(r => r.status === 'PENDING').length;
+  const needsRecategorizationCount = requests.filter(r => r.category === 'OTHER' || r.category === 'CUSTOM').length;
+  const criticalCount = requests.filter(r => r.urgency === 'CRITICAL' && r.status === 'ACTIVE').length;
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -145,6 +150,29 @@ export default function AdminRequestsPage() {
         <h1 className="text-3xl font-bold text-gray-900">Manage Requests</h1>
         <p className="text-gray-600 mt-2">Review and manage all help requests</p>
       </div>
+
+      {/* Action Items Alert */}
+      {(pendingCount > 0 || needsRecategorizationCount > 0 || criticalCount > 0) && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+          <div className="flex">
+            <AlertTriangle className="h-5 w-5 text-yellow-400" />
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">Action Required</h3>
+              <div className="mt-2 text-sm text-yellow-700 space-y-1">
+                {pendingCount > 0 && (
+                  <p>• <strong>{pendingCount}</strong> request{pendingCount !== 1 ? 's' : ''} awaiting approval</p>
+                )}
+                {needsRecategorizationCount > 0 && (
+                  <p>• <strong>{needsRecategorizationCount}</strong> request{needsRecategorizationCount !== 1 ? 's need' : ' needs'} proper categorization</p>
+                )}
+                {criticalCount > 0 && (
+                  <p>• <strong>{criticalCount}</strong> critical request{criticalCount !== 1 ? 's' : ''} need{criticalCount === 1 ? 's' : ''} attention</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -209,7 +237,9 @@ export default function AdminRequestsPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="all">All Categories</option>
-              {categories.map((cat) => (
+              <option value="OTHER">⚠️ Needs Recategorization</option>
+              <option value="CUSTOM">⚠️ Custom Category</option>
+              {categories.filter(cat => cat !== 'OTHER' && cat !== 'CUSTOM').map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>
@@ -264,8 +294,14 @@ export default function AdminRequestsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredRequests.map((request) => (
-                  <tr key={request.id} className="hover:bg-gray-50">
+                filteredRequests.map((request) => {
+                  const needsRecategorization = request.category === 'OTHER' || request.category === 'CUSTOM';
+                  const rowClasses = needsRecategorization 
+                    ? 'hover:bg-yellow-50 bg-yellow-50/30 border-l-4 border-yellow-400'
+                    : 'hover:bg-gray-50';
+                  
+                  return (
+                  <tr key={request.id} className={rowClasses}>
                     <td className="px-6 py-4">
                       <div className="text-sm">
                         <Link
@@ -310,7 +346,14 @@ export default function AdminRequestsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-900">{request.category}</span>
+                      <span className="text-sm text-gray-900">
+                        {request.category}
+                        {needsRecategorization && (
+                          <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                            Needs Category
+                          </span>
+                        )}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm">
@@ -338,7 +381,8 @@ export default function AdminRequestsPage() {
                       </Link>
                     </td>
                   </tr>
-                ))
+                );
+                })
               )}
             </tbody>
           </table>
