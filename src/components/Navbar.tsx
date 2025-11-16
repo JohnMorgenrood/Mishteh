@@ -148,34 +148,55 @@ export default function Navbar() {
                     
                     {/* Dropdown Menu */}
                     {adminDropdownOpen && (
-                      <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <div className="absolute top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                         <Link
-                          href="/admin"
+                          href="/admin/dashboard"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
                           onClick={() => setAdminDropdownOpen(false)}
                         >
-                          Dashboard
+                          🏠 Main Dashboard
                         </Link>
                         <Link
-                          href="/admin/accounts"
+                          href="/admin/users"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
                           onClick={() => setAdminDropdownOpen(false)}
                         >
-                          Accounts
+                          👥 User Management
                         </Link>
                         <Link
                           href="/admin/requests"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
                           onClick={() => setAdminDropdownOpen(false)}
                         >
-                          Requests
+                          📋 Requests
                         </Link>
                         <Link
                           href="/admin/transactions"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
                           onClick={() => setAdminDropdownOpen(false)}
                         >
-                          Transactions
+                          💰 Transactions
+                        </Link>
+                        <Link
+                          href="/admin/blog"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          ✍️ Blog Management
+                        </Link>
+                        <Link
+                          href="/admin/preview"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          👁️ Dashboard Preview
+                        </Link>
+                        <Link
+                          href="/admin/accounts"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          🔐 Accounts
                         </Link>
                       </div>
                     )}
@@ -314,28 +335,28 @@ export default function Navbar() {
                       {mobileAdminDropdownOpen && (
                         <div className="ml-4 mt-1 space-y-1">
                           <Link
-                            href="/admin"
+                            href="/admin/dashboard"
                             className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                              isActive('/admin') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
+                              isActive('/admin/dashboard') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
                             }`}
                             onClick={() => {
                               setMobileMenuOpen(false);
                               setMobileAdminDropdownOpen(false);
                             }}
                           >
-                            Dashboard
+                            🏠 Main Dashboard
                           </Link>
                           <Link
-                            href="/admin/accounts"
+                            href="/admin/users"
                             className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                              isActive('/admin/accounts') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
+                              isActive('/admin/users') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
                             }`}
                             onClick={() => {
                               setMobileMenuOpen(false);
                               setMobileAdminDropdownOpen(false);
                             }}
                           >
-                            Accounts
+                            👥 User Management
                           </Link>
                           <Link
                             href="/admin/requests"
@@ -347,7 +368,7 @@ export default function Navbar() {
                               setMobileAdminDropdownOpen(false);
                             }}
                           >
-                            Requests
+                            📋 Requests
                           </Link>
                           <Link
                             href="/admin/transactions"
@@ -359,7 +380,43 @@ export default function Navbar() {
                               setMobileAdminDropdownOpen(false);
                             }}
                           >
-                            Transactions
+                            💰 Transactions
+                          </Link>
+                          <Link
+                            href="/admin/blog"
+                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                              isActive('/admin/blog') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              setMobileAdminDropdownOpen(false);
+                            }}
+                          >
+                            ✍️ Blog Management
+                          </Link>
+                          <Link
+                            href="/admin/preview"
+                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                              isActive('/admin/preview') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              setMobileAdminDropdownOpen(false);
+                            }}
+                          >
+                            👁️ Dashboard Preview
+                          </Link>
+                          <Link
+                            href="/admin/accounts"
+                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                              isActive('/admin/accounts') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              setMobileAdminDropdownOpen(false);
+                            }}
+                          >
+                            🔐 Accounts
                           </Link>
                         </div>
                       )}
