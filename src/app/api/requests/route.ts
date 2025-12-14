@@ -53,11 +53,21 @@ export async function GET(request: NextRequest) {
               fullName: true,
               location: true,
               image: true,
+              instagramUrl: true,
+              facebookUrl: true,
+              twitterUrl: true,
             },
           },
           _count: {
             select: {
               donations: true,
+              likes: true,
+              comments: true,
+            },
+          },
+          likes: {
+            select: {
+              userId: true,
             },
           },
         },

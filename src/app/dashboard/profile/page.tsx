@@ -33,6 +33,8 @@ export default function ProfileSettingsPage() {
     facebookUrl: '',
     twitterUrl: '',
     instagramUrl: '',
+    tiktokUrl: '',
+    websiteUrl: '',
   });
 
   const [files, setFiles] = useState<{
@@ -114,6 +116,8 @@ export default function ProfileSettingsPage() {
           facebookUrl: data.user.facebookUrl || '',
           twitterUrl: data.user.twitterUrl || '',
           instagramUrl: data.user.instagramUrl || '',
+          tiktokUrl: data.user.tiktokUrl || '',
+          websiteUrl: data.user.websiteUrl || '',
         });
       }
     } catch (error) {
@@ -139,6 +143,8 @@ export default function ProfileSettingsPage() {
       submitData.append('facebookUrl', formData.facebookUrl);
       submitData.append('twitterUrl', formData.twitterUrl);
       submitData.append('instagramUrl', formData.instagramUrl);
+      submitData.append('tiktokUrl', formData.tiktokUrl);
+      submitData.append('websiteUrl', formData.websiteUrl);
 
       if (files.profilePhoto) {
         submitData.append('profilePhoto', files.profilePhoto);
@@ -420,6 +426,34 @@ export default function ProfileSettingsPage() {
                       onChange={(e) => setFormData({ ...formData, instagramUrl: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
                       placeholder="https://instagram.com/yourhandle"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="tiktokUrl" className="block text-xs text-gray-600 mb-1">
+                      TikTok Profile URL
+                    </label>
+                    <input
+                      id="tiktokUrl"
+                      type="url"
+                      value={formData.tiktokUrl}
+                      onChange={(e) => setFormData({ ...formData, tiktokUrl: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="https://tiktok.com/@yourhandle"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="websiteUrl" className="block text-xs text-gray-600 mb-1">
+                      Personal Website / Portfolio
+                    </label>
+                    <input
+                      id="websiteUrl"
+                      type="url"
+                      value={formData.websiteUrl}
+                      onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="https://yourwebsite.com"
                     />
                   </div>
                 </div>

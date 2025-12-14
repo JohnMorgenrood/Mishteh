@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { ArrowRight, Heart, Shield, Users } from 'lucide-react';
-import RequestCard from '@/components/RequestCard';
+import { ArrowRight, Heart, Shield, Users, Sparkles } from 'lucide-react';
+import SocialCard from '@/components/SocialCard';
 import HeroSlider from '@/components/HeroSlider';
+import ActivityFeed from '@/components/ActivityFeed';
 import { prisma } from '@/lib/prisma';
 
 // Revalidate every 10 seconds for near-instant featured updates
@@ -21,11 +22,21 @@ async function getFeaturedRequests() {
             fullName: true,
             location: true,
             image: true,
+            instagramUrl: true,
+            facebookUrl: true,
+            twitterUrl: true,
           },
         },
         _count: {
           select: {
             donations: true,
+            likes: true,
+            comments: true,
+          },
+        },
+        likes: {
+          select: {
+            userId: true,
           },
         },
       },
@@ -125,37 +136,72 @@ export default async function HomePage() {
           </div>
 
           {featuredRequests.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredRequests.map((request) => (
-                <RequestCard key={request.id} request={request} />
-              ))}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Featured Stories - 2 columns on desktop */}
+              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {featuredRequests.map((request, index) => (
+                  <SocialCard key={request.id} request={request} index={index} />
+                ))}
+              </div>
+              
+              {/* Activity Feed Sidebar */}
+              <div className="lg:col-span-1">
+                <div className="sticky top-24">
+                  <ActivityFeed limit={8} />
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <p className="text-gray-600 text-lg">
-                No active requests at the moment. Check back soon!
+            <div className="text-center py-16 bg-white rounded-2xl shadow-soft">
+              <Sparkles className="w-12 h-12 text-primary-300 mx-auto mb-4" />
+              <p className="text-gray-600 text-lg mb-2">
+                No active requests at the moment.
               </p>
+              <p className="text-gray-500">
+                Check back soon or be the first to share your story!
+              </p>
+              <Link
+                href="/dashboard/requests/new"
+                className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                Share Your Story
+                <ArrowRight className="w-5 h-5" />
+              </Link>
             </div>
           )}
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="bg-primary-600 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">
+      <section className="bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-700 text-white py-20 relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary-400/10 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <h2 className="text-4xl font-bold mb-4 animate-fade-in-up">
             Ready to Make an Impact?
           </h2>
-          <p className="text-xl mb-8 text-primary-100">
-            Join our community of donors and requesters today.
+          <p className="text-xl mb-8 text-primary-100/90">
+            Join our community of donors and requesters today. Every act of kindness creates a ripple effect.
           </p>
-          <Link
-            href="/auth/register"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-primary-50 transition-colors"
-          >
-            Register Now
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/auth/register"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-600 font-semibold rounded-xl hover:bg-primary-50 transition-all hover:-translate-y-1 hover:shadow-xl"
+            >
+              Get Started
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href="/requests"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-transparent border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-all"
+            >
+              Browse Stories
+            </Link>
+          </div>
         </div>
       </section>
     </div>

@@ -43,6 +43,10 @@ model User {
   donations        Donation[]
   preferences      DonorPreference?
   requests         Request[]
+  likes            Like[]
+  comments         Comment[]
+  tiktokUrl        String?
+  websiteUrl       String?
 
   @@index([email])
   @@index([userType])
@@ -71,6 +75,8 @@ model Request {
   documents      Document[]
   donations      Donation[]
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes          Like[]
+  comments       Comment[]
 
   @@index([userId])
   @@index([category])
@@ -79,6 +85,49 @@ model Request {
   @@index([location])
   @@index([createdAt])
   @@index([featured])
+}
+
+// Social Features - Likes
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  requestId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  request   Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, requestId])
+  @@index([requestId])
+  @@index([userId])
+}
+
+// Social Features - Comments
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  requestId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  request   Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
+
+// Activity Feed
+model Activity {
+  id        String       @id @default(cuid())
+  type      ActivityType
+  userId    String?
+  requestId String?
+  metadata  String?      // JSON string for additional data
+  createdAt DateTime     @default(now())
+
+  @@index([type])
+  @@index([createdAt(sort: Desc)])
 }
 
 model Donation {
@@ -353,4 +402,12 @@ enum DocumentStatus {
   PENDING
   VERIFIED
   REJECTED
+}
+
+enum ActivityType {
+  LIKE
+  COMMENT
+  DONATION
+  NEW_REQUEST
+  REQUEST_FUNDED
 }

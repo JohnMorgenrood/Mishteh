@@ -36,6 +36,8 @@ export async function GET(request: NextRequest) {
         facebookUrl: true,
         twitterUrl: true,
         instagramUrl: true,
+        tiktokUrl: true,
+        websiteUrl: true,
         selfieUrl: true,
         dateOfBirth: true,
         ficaVerified: true,
@@ -89,6 +91,8 @@ export async function PUT(request: NextRequest) {
     const facebookUrl = formData.get('facebookUrl') as string | null;
     const twitterUrl = formData.get('twitterUrl') as string | null;
     const instagramUrl = formData.get('instagramUrl') as string | null;
+    const tiktokUrl = formData.get('tiktokUrl') as string | null;
+    const websiteUrl = formData.get('websiteUrl') as string | null;
 
     // Validate required fields
     if (!location || location.trim() === '') {
@@ -115,6 +119,8 @@ export async function PUT(request: NextRequest) {
     if (facebookUrl) updateData.facebookUrl = facebookUrl;
     if (twitterUrl) updateData.twitterUrl = twitterUrl;
     if (instagramUrl) updateData.instagramUrl = instagramUrl;
+    if (tiktokUrl) updateData.tiktokUrl = tiktokUrl;
+    if (websiteUrl) updateData.websiteUrl = websiteUrl;
 
     // Handle file uploads if provided
     if (profilePhoto || idDocument || selfieWithId) {

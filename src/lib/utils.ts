@@ -22,6 +22,17 @@ export function formatDate(date: Date | string): string {
 }
 
 /**
+ * Format date to short format (MM/DD/YYYY) - consistent across server/client
+ */
+export function formatShortDate(date: Date | string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).format(new Date(date));
+}
+
+/**
  * Format relative time (e.g., "2 days ago")
  */
 export function formatRelativeTime(date: Date | string): string {

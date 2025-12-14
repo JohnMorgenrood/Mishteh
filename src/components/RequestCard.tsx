@@ -6,6 +6,7 @@ import { RequestCategory, UrgencyLevel } from '@prisma/client';
 import { Clock, MapPin, TrendingUp, User, Share2, X, Facebook, Twitter, MessageCircle, Copy, Check } from 'lucide-react';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import { REQUEST_CATEGORIES } from '@/lib/constants';
+import { formatShortDate } from '@/lib/utils';
 import Image from 'next/image';
 
 interface Request {
@@ -136,7 +137,7 @@ export default function RequestCard({ request }: RequestCardProps) {
         </div>
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4" />
-          <span>Posted {new Date(request.createdAt).toLocaleDateString()}</span>
+          <span>Posted {formatShortDate(request.createdAt)}</span>
         </div>
       </div>
 

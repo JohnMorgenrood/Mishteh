@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Filter } from 'lucide-react';
-import RequestCard from '@/components/RequestCard';
+import { Search, Filter, Sparkles } from 'lucide-react';
+import SocialCard from '@/components/SocialCard';
+import { CardSkeletonGrid } from '@/components/Skeletons';
 import CategorySelector from '@/components/CategorySelector';
 import { REQUEST_CATEGORY_GROUPS } from '@/lib/constants';
 
@@ -167,19 +168,16 @@ export default function RequestsPage() {
 
         {/* Requests Grid */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading requests...</p>
-          </div>
+          <CardSkeletonGrid count={6} />
         ) : filteredRequests.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRequests.map((request) => (
-              <RequestCard key={request.id} request={request} />
+            {filteredRequests.map((request, index) => (
+              <SocialCard key={request.id} request={request} index={index} />
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <Filter className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <div className="bg-white rounded-2xl shadow-soft p-12 text-center">
+            <Sparkles className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               No requests found
             </h3>
