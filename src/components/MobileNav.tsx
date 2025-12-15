@@ -2,8 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, PlusCircle, Bell, User, HandHeart } from 'lucide-react';
+import { Home, Search, PlusCircle, Bell, User, HandHeart, LucideIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+
+interface NavItem {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  isSpecial?: boolean;
+}
 
 export default function MobileNav() {
   const pathname = usePathname();
@@ -17,8 +24,8 @@ export default function MobileNav() {
   };
 
   // Build nav items based on user type
-  const getNavItems = () => {
-    const baseItems = [
+  const getNavItems = (): NavItem[] => {
+    const baseItems: NavItem[] = [
       {
         href: '/',
         icon: Home,
@@ -32,7 +39,7 @@ export default function MobileNav() {
     ];
 
     // Middle action button - different based on user type
-    let actionItem;
+    let actionItem: NavItem;
     
     if (!session) {
       // Not logged in - show login
@@ -76,7 +83,7 @@ export default function MobileNav() {
       };
     }
 
-    const endItems = [
+    const endItems: NavItem[] = [
       {
         href: '/activity',
         icon: Bell,
