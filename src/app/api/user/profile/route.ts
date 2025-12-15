@@ -81,6 +81,9 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData();
     
+    // Log incoming data for debugging
+    console.log('Profile update request from user:', session.user.id);
+    
     // Extract form fields
     const fullName = formData.get('fullName') as string;
     const phone = formData.get('phone') as string | null;
@@ -94,33 +97,32 @@ export async function PUT(request: NextRequest) {
     const tiktokUrl = formData.get('tiktokUrl') as string | null;
     const websiteUrl = formData.get('websiteUrl') as string | null;
 
-    // Validate required fields
-    if (!location || location.trim() === '') {
-      return NextResponse.json(
-        { error: 'Location is required' },
-        { status: 400 }
-      );
-    }
-    
+    console.log('Form data received:', { fullName, phone, location, bio, paypalEmail, facebookUrl, twitterUrl, instagramUrl, tiktokUrl, websiteUrl });
+
     // Extract files
     const profilePhoto = formData.get('profilePhoto') as File | null;
     const idDocument = formData.get('idDocument') as File | null;
     const selfieWithId = formData.get('selfieWithId') as File | null;
 
-    // Prepare update data - only include non-empty values
-    const updateData: any = {};
+    // Prepare update data - include all values (allow empty strings to clear fields)
+    const updateData: any = {
+      fullName: fullName || undefined,
+      phone: phone || null,
+      location: location || null,
+      bio: bio || null,
+      paypalEmail: paypalEmail || null,
+      address: address || null,
+      facebookUrl: facebookUrl || null,
+      twitterUrl: twitterUrl || null,
+      instagramUrl: instagramUrl || null,
+      tiktokUrl: tiktokUrl || null,
+      websiteUrl: websiteUrl || null,
+    };
     
-    if (fullName) updateData.fullName = fullName;
-    if (phone) updateData.phone = phone;
-    if (location) updateData.location = location;
-    if (bio) updateData.bio = bio;
-    if (paypalEmail) updateData.paypalEmail = paypalEmail;
-    if (address) updateData.address = address;
-    if (facebookUrl) updateData.facebookUrl = facebookUrl;
-    if (twitterUrl) updateData.twitterUrl = twitterUrl;
-    if (instagramUrl) updateData.instagramUrl = instagramUrl;
-    if (tiktokUrl) updateData.tiktokUrl = tiktokUrl;
-    if (websiteUrl) updateData.websiteUrl = websiteUrl;
+    // Remove undefined values (keep null to clear fields)
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) delete updateData[key];
+    });
 
     // Handle file uploads if provided
     if (profilePhoto || idDocument || selfieWithId) {

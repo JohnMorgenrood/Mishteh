@@ -7,6 +7,7 @@ import {
   HandHeart, TrendingUp
 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
+import { getApproximateLocation } from '@/lib/utils';
 import SocialCard from '@/components/SocialCard';
 
 interface ProfilePageProps {
@@ -163,7 +164,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   {user.location && (
                     <span className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
-                      {user.location}
+                      {getApproximateLocation(user.location)}
                     </span>
                   )}
                   <span className="flex items-center gap-1">

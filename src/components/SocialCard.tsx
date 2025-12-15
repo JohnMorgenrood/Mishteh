@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import { REQUEST_CATEGORIES } from '@/lib/constants';
-import { formatShortDate } from '@/lib/utils';
+import { formatShortDate, getApproximateLocation } from '@/lib/utils';
 import CommentSection from './CommentSection';
 
 interface RequestUser {
@@ -256,7 +256,7 @@ export default function SocialCard({ request, index = 0, onLikeUpdate }: SocialC
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
-                  {request.user.location || request.location}
+                  {getApproximateLocation(request.user.location || request.location)}
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">

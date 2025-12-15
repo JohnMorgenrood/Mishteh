@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import DonationForm from '@/components/DonationForm';
 import { CurrencyDisplay, CurrencyProgressBar } from '@/components/CurrencyDisplay';
-import { formatShortDate } from '@/lib/utils';
+import { formatShortDate, getApproximateLocation } from '@/lib/utils';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import CommentSection from '@/components/CommentSection';
 import SocialActions from '@/components/SocialActions';
+import LocationMap from '@/components/LocationMap';
 
 async function getRequest(id: string) {
   try {
@@ -178,10 +179,10 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                 </div>
 
                 {/* Meta Info */}
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6 pb-6 border-b border-gray-100">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-4">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {request.location}
+                    {getApproximateLocation(request.location)}
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
@@ -191,6 +192,11 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                     <Eye className="w-4 h-4" />
                     {request.views} views
                   </div>
+                </div>
+
+                {/* Location Map */}
+                <div className="mb-6 pb-6 border-b border-gray-100">
+                  <LocationMap location={request.location} />
                 </div>
 
                 {/* Description */}
@@ -239,7 +245,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                     {request.user.location && (
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3 h-3" />
-                        {request.user.location}
+                        {getApproximateLocation(request.user.location)}
                       </p>
                     )}
                     {request.user.bio && (

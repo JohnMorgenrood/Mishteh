@@ -6,7 +6,7 @@ import { RequestCategory, UrgencyLevel } from '@prisma/client';
 import { Clock, MapPin, TrendingUp, User, Share2, X, Facebook, Twitter, MessageCircle, Copy, Check } from 'lucide-react';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import { REQUEST_CATEGORIES } from '@/lib/constants';
-import { formatShortDate } from '@/lib/utils';
+import { formatShortDate, getApproximateLocation } from '@/lib/utils';
 import Image from 'next/image';
 
 interface Request {
@@ -133,7 +133,7 @@ export default function RequestCard({ request }: RequestCardProps) {
       <div className="flex flex-col gap-2 mb-4 text-sm text-gray-500">
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4" />
-          <span>{request.location}</span>
+          <span>{getApproximateLocation(request.location)}</span>
         </div>
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4" />

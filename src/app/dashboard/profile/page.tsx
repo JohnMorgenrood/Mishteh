@@ -59,8 +59,12 @@ export default function ProfileSettingsPage() {
   }, [status, router]);
 
   const loadGoogleMaps = () => {
-    if (window.google) {
-      initAutocomplete();
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    
+    if (window.google?.maps?.places) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => initAutocomplete(), 100);
       return;
     }
 
@@ -70,33 +74,60 @@ export default function ProfileSettingsPage() {
       return;
     }
 
+    if (existingScript) {
+      // Script exists but not loaded yet, wait for it
+      existingScript.addEventListener('load', () => {
+        setTimeout(() => initAutocomplete(), 100);
+      });
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      initAutocomplete();
+      setTimeout(() => initAutocomplete(), 100);
+    };
+    script.onerror = () => {
+      console.error('Failed to load Google Maps API');
     };
     document.head.appendChild(script);
   };
 
   const initAutocomplete = () => {
-    if (!locationInputRef.current || !window.google) return;
+    if (!locationInputRef.current) {
+      console.log('Location input ref not ready');
+      return;
+    }
+    if (!window.google?.maps?.places) {
+      console.log('Google Maps Places not ready');
+      return;
+    }
 
-    autocompleteRef.current = new window.google.maps.places.Autocomplete(
-      locationInputRef.current,
-      {
-        types: ['geocode', 'establishment'],
-        fields: ['address_components', 'formatted_address', 'geometry'],
-      }
-    );
+    // Prevent duplicate autocomplete
+    if (autocompleteRef.current) return;
 
-    autocompleteRef.current.addListener('place_changed', () => {
-      const place = autocompleteRef.current.getPlace();
-      if (place.formatted_address) {
-        setFormData(prev => ({ ...prev, location: place.formatted_address }));
-      }
-    });
+    try {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+        locationInputRef.current,
+        {
+          types: ['geocode', 'establishment'],
+          fields: ['address_components', 'formatted_address', 'geometry'],
+        }
+      );
+
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current.getPlace();
+        if (place.formatted_address) {
+          setFormData(prev => ({ ...prev, location: place.formatted_address }));
+        }
+      });
+      
+      console.log('Google Maps Autocomplete initialized successfully');
+    } catch (error) {
+      console.error('Error initializing Google Maps Autocomplete:', error);
+    }
   };
 
   const fetchProfile = async () => {
@@ -159,12 +190,15 @@ export default function ProfileSettingsPage() {
         submitData.append('selfieWithId', files.selfieWithId);
       }
 
+      console.log('Submitting profile data:', Object.fromEntries(submitData.entries()));
+      
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         body: submitData,
       });
 
       const data = await response.json();
+      console.log('Profile update response:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update profile');

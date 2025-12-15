@@ -215,3 +215,56 @@ export async function shareUrl(url: string, title: string): Promise<boolean> {
     return copyToClipboard(url);
   }
 }
+
+/**
+ * Get approximate/privacy-friendly location from full address
+ * Returns only city, state/province, and country - no street addresses
+ */
+export function getApproximateLocation(fullAddress: string | null | undefined): string {
+  if (!fullAddress) return 'Location not specified';
+  
+  // Split by comma and clean up
+  const parts = fullAddress.split(',').map(p => p.trim()).filter(Boolean);
+  
+  if (parts.length === 0) return 'Location not specified';
+  if (parts.length === 1) return parts[0];
+  
+  // Try to identify and remove street-level details
+  // Usually: Street Number, Street Name, City, State/Province, Country, Postal Code
+  
+  // Remove parts that look like street addresses or postal codes
+  const filteredParts = parts.filter(part => {
+    // Skip if it starts with a number (likely street address)
+    if (/^\d+\s/.test(part)) return false;
+    // Skip if it's just a postal code
+    if (/^\d{4,6}$/.test(part)) return false;
+    if (/^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i.test(part)) return false; // Canadian postal
+    if (/^\d{5}(-\d{4})?$/.test(part)) return false; // US ZIP
+    // Skip common street indicators
+    if (/^(unit|apt|suite|floor|building|blk|block)\s/i.test(part)) return false;
+    // Skip if contains "Street", "Road", "Avenue", etc.
+    if (/\b(street|st|road|rd|avenue|ave|boulevard|blvd|drive|dr|lane|ln|way|court|ct|place|pl|crescent|cres)\b/i.test(part)) return false;
+    return true;
+  });
+  
+  // If we filtered everything, return last 2-3 parts of original (likely city, country)
+  if (filteredParts.length === 0) {
+    return parts.slice(-Math.min(3, parts.length)).join(', ');
+  }
+  
+  // Return last 2-3 parts (city, state, country)
+  return filteredParts.slice(-Math.min(3, filteredParts.length)).join(', ');
+}
+
+/**
+ * Extract coordinates from Google Maps URL or address for embedding
+ */
+export function getMapEmbedUrl(location: string | null | undefined): string | null {
+  if (!location) return null;
+  
+  // Use Google Maps embed with place query (approximate, privacy-friendly)
+  const approximateLocation = getApproximateLocation(location);
+  const encodedLocation = encodeURIComponent(approximateLocation);
+  
+  return `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${encodedLocation}&zoom=12`;
+}
