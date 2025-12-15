@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, File, CheckCircle, XCircle, Loader, Camera, Image as ImageIcon } from 'lucide-react';
+import { Upload, File, CheckCircle, XCircle, Loader, Camera, Image as ImageIcon, AlertCircle } from 'lucide-react';
 
 interface FicaUploadProps {
   label: string;
@@ -26,12 +26,48 @@ export default function FicaUpload({
   icon = 'document',
 }: FicaUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Create preview when value changes externally
+  useEffect(() => {
+    if (value && value.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(value);
+    } else if (!value) {
+      setPreview(null);
+    }
+  }, [value]);
 
   const onDrop = useCallback(
-    async (acceptedFiles: File[]) => {
-      if (acceptedFiles.length === 0) return;
+    (acceptedFiles: File[], rejectedFiles: any[]) => {
+      setError(null);
+      
+      // Handle rejected files
+      if (rejectedFiles && rejectedFiles.length > 0) {
+        const rejection = rejectedFiles[0];
+        const errorCode = rejection.errors?.[0]?.code;
+        
+        if (errorCode === 'file-too-large') {
+          setError(`File is too large. Maximum size is ${maxSize / 1024 / 1024}MB`);
+        } else if (errorCode === 'file-invalid-type') {
+          setError('Invalid file type. Please upload a valid image file.');
+        } else {
+          setError(rejection.errors?.[0]?.message || 'File upload failed');
+        }
+        return;
+      }
+
+      if (acceptedFiles.length === 0) {
+        return;
+      }
 
       const file = acceptedFiles[0];
+      console.log('File selected:', file.name, file.type, file.size);
+      
+      // Call the parent's onFileSelect
       onFileSelect(file);
 
       // Create preview for images
@@ -40,17 +76,36 @@ export default function FicaUpload({
         reader.onload = (e) => {
           setPreview(e.target?.result as string);
         };
+        reader.onerror = () => {
+          console.error('Failed to read file for preview');
+        };
         reader.readAsDataURL(file);
+      } else {
+        setPreview(null);
       }
     },
-    [onFileSelect]
+    [onFileSelect, maxSize]
   );
 
-  const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
+  // Build accept object for react-dropzone
+  const acceptObject = acceptedTypes.reduce((acc, type) => {
+    // Map MIME types to extensions for better browser support
+    const extensions: { [key: string]: string[] } = {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/jpg': ['.jpg', '.jpeg'],
+      'application/pdf': ['.pdf'],
+    };
+    return { ...acc, [type]: extensions[type] || [] };
+  }, {});
+
+  const { getRootProps, getInputProps, isDragActive, fileRejections, open } = useDropzone({
     onDrop,
-    accept: acceptedTypes.reduce((acc, type) => ({ ...acc, [type]: [] }), {}),
+    accept: acceptObject,
     maxSize,
     maxFiles: 1,
+    noClick: false,
+    noKeyboard: false,
   });
 
   const getIcon = () => {
@@ -114,13 +169,34 @@ export default function FicaUpload({
         </div>
       </div>
 
-      {fileRejections.length > 0 && (
-        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-          <p className="text-xs text-red-600">
+      {/* Custom error display */}
+      {error && (
+        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+
+      {/* React-dropzone rejections */}
+      {fileRejections.length > 0 && !error && (
+        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+          <p className="text-sm text-red-600">
             {fileRejections[0].errors[0].message}
           </p>
         </div>
       )}
+
+      {/* Manual file input fallback for browsers with dropzone issues */}
+      <div className="mt-2">
+        <button
+          type="button"
+          onClick={open}
+          className="text-xs text-primary-600 hover:text-primary-700 underline"
+        >
+          Click here if drag & drop doesn't work
+        </button>
+      </div>
     </div>
   );
 }

@@ -2,71 +2,125 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, PlusCircle, Bell, User } from 'lucide-react';
+import { Home, Search, PlusCircle, Bell, User, HandHeart } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 export default function MobileNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  
+  const userType = session?.user?.userType;
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
     return pathname.startsWith(path);
   };
 
-  const navItems = [
-    {
-      href: '/',
-      icon: Home,
-      label: 'Home',
-    },
-    {
-      href: '/requests',
-      icon: Search,
-      label: 'Browse',
-    },
-    {
-      href: session ? '/dashboard/requests/new' : '/auth/login',
-      icon: PlusCircle,
-      label: 'Create',
-      isSpecial: true,
-    },
-    {
-      href: '/activity',
-      icon: Bell,
-      label: 'Activity',
-    },
-    {
-      href: session ? '/dashboard/profile' : '/auth/login',
-      icon: User,
-      label: 'Profile',
-    },
-  ];
+  // Build nav items based on user type
+  const getNavItems = () => {
+    const baseItems = [
+      {
+        href: '/',
+        icon: Home,
+        label: 'Home',
+      },
+      {
+        href: '/requests',
+        icon: Search,
+        label: 'Browse',
+      },
+    ];
+
+    // Middle action button - different based on user type
+    let actionItem;
+    
+    if (!session) {
+      // Not logged in - show login
+      actionItem = {
+        href: '/auth/login',
+        icon: User,
+        label: 'Login',
+        isSpecial: true,
+      };
+    } else if (userType === 'REQUESTER') {
+      // Requester - show "Create Request"
+      actionItem = {
+        href: '/dashboard/requests/new',
+        icon: PlusCircle,
+        label: 'Request',
+        isSpecial: true,
+      };
+    } else if (userType === 'DONOR' || userType === 'SPONSOR') {
+      // Donor/Sponsor - show "Donate" (browse requests)
+      actionItem = {
+        href: '/requests',
+        icon: HandHeart,
+        label: 'Donate',
+        isSpecial: true,
+      };
+    } else if (userType === 'ADMIN') {
+      // Admin - show admin dashboard
+      actionItem = {
+        href: '/admin',
+        icon: User,
+        label: 'Admin',
+        isSpecial: true,
+      };
+    } else {
+      // Default fallback
+      actionItem = {
+        href: '/requests',
+        icon: Search,
+        label: 'Browse',
+        isSpecial: true,
+      };
+    }
+
+    const endItems = [
+      {
+        href: '/activity',
+        icon: Bell,
+        label: 'Activity',
+      },
+      {
+        href: session ? '/dashboard/profile' : '/auth/login',
+        icon: User,
+        label: 'Profile',
+      },
+    ];
+
+    return [...baseItems, actionItem, ...endItems];
+  };
+
+  const navItems = getNavItems();
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
       <div className="flex items-center justify-around px-2 py-2">
-        {navItems.map((item) => {
+        {navItems.map((item, index) => {
           const Icon = item.icon;
           const active = isActive(item.href);
 
           if (item.isSpecial) {
             return (
               <Link
-                key={item.href}
+                key={`${item.href}-${index}`}
                 href={item.href}
                 className="flex flex-col items-center justify-center -mt-5"
               >
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
                   <Icon className="w-7 h-7 text-white" />
                 </div>
+                <span className="text-xs mt-1 text-primary-600 font-medium">
+                  {item.label}
+                </span>
               </Link>
             );
           }
 
           return (
             <Link
-              key={item.href}
+              key={`${item.href}-${index}`}
               href={item.href}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors ${
                 active
