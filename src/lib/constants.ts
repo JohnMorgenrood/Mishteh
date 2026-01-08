@@ -148,7 +148,6 @@ export const REQUEST_CATEGORY_GROUPS = [
       { value: 'JOB_LOSS_HARDSHIP', label: 'Lost Job / Temporary Financial Hardship' },
       { value: 'TRAVEL_EMERGENCY', label: 'Travel for Medical or Family Emergencies' },
       { value: 'UNEXPECTED_EXPENSES', label: 'Unexpected Expenses (Repairs, Theft, etc.)' },
-      { value: 'OTHER', label: 'Other (Custom Category)' },
     ],
   },
 ] as const;

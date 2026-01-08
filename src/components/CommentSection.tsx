@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { User, Send, Loader2, MessageCircle, AlertCircle } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
+import { TranslateLink } from './TranslateButton';
 
 interface Comment {
   id: string;
@@ -249,6 +250,8 @@ export default function CommentSection({
                     <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">
                       {comment.content}
                     </p>
+                    {/* Translate link for comments */}
+                    <TranslateLink text={comment.content} />
                   </div>
                 </div>
               </div>

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import CommentSection from '@/components/CommentSection';
 import SocialActions from '@/components/SocialActions';
+import TranslateButton from '@/components/TranslateButton';
 
 async function getRequest(id: string) {
   try {
@@ -197,6 +198,8 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                 <div className="mb-8">
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Story</h2>
                   <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{request.description}</p>
+                  {/* Facebook-style translate button */}
+                  <TranslateButton text={request.description} className="mt-3" />
                 </div>
 
                 {/* Social Actions */}

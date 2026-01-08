@@ -8,12 +8,13 @@ import { RequestCategory, UrgencyLevel } from '@prisma/client';
 import { 
   Clock, MapPin, TrendingUp, User, Share2, X, 
   Facebook, Twitter, MessageCircle, Copy, Check,
-  Heart, Instagram, Globe, ExternalLink
+  Heart, Instagram, Globe, ExternalLink, Languages
 } from 'lucide-react';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import { REQUEST_CATEGORIES } from '@/lib/constants';
 import { formatShortDate, getApproximateLocation } from '@/lib/utils';
 import CommentSection from './CommentSection';
+import { TranslateLink } from './TranslateButton';
 
 interface RequestUser {
   id: string;
@@ -304,9 +305,11 @@ export default function SocialCard({ request, index = 0, onLikeUpdate }: SocialC
             {request.title}
           </h3>
         </Link>
-        <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-4">
+        <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-2">
           {request.description}
         </p>
+        {/* Translate Button - like Facebook */}
+        <TranslateLink text={request.description} />
       </div>
 
       {/* Progress Bar */}
