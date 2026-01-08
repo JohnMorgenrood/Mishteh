@@ -147,57 +147,15 @@ export default function Navbar() {
                       <ChevronDown className={`w-4 h-4 transition-transform ${adminDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     
-                    {/* Dropdown Menu */}
+                    {/* Dropdown Menu - Blog Management Only */}
                     {adminDropdownOpen && (
                       <div className="absolute top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                        <Link
-                          href="/admin/dashboard"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                          onClick={() => setAdminDropdownOpen(false)}
-                        >
-                          🏠 Main Dashboard
-                        </Link>
-                        <Link
-                          href="/admin/users"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                          onClick={() => setAdminDropdownOpen(false)}
-                        >
-                          👥 User Management
-                        </Link>
-                        <Link
-                          href="/admin/requests"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                          onClick={() => setAdminDropdownOpen(false)}
-                        >
-                          📋 Requests
-                        </Link>
-                        <Link
-                          href="/admin/transactions"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                          onClick={() => setAdminDropdownOpen(false)}
-                        >
-                          💰 Transactions
-                        </Link>
                         <Link
                           href="/admin/blog"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
                           onClick={() => setAdminDropdownOpen(false)}
                         >
                           ✍️ Blog Management
-                        </Link>
-                        <Link
-                          href="/admin/preview"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                          onClick={() => setAdminDropdownOpen(false)}
-                        >
-                          👁️ Dashboard Preview
-                        </Link>
-                        <Link
-                          href="/admin/accounts"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                          onClick={() => setAdminDropdownOpen(false)}
-                        >
-                          🔐 Accounts
                         </Link>
                       </div>
                     )}
@@ -324,105 +282,18 @@ export default function Navbar() {
                     Profile
                   </Link>
                   
-                  {/* Admin Dropdown for Mobile */}
+                  {/* Admin Dropdown for Mobile - Blog Only */}
                   {session.user.userType === 'ADMIN' && (
                     <div className="border-t border-gray-200 mt-2 pt-2">
-                      <button
-                        onClick={() => setMobileAdminDropdownOpen(!mobileAdminDropdownOpen)}
-                        className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                      <Link
+                        href="/admin/blog"
+                        className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                          isActive('/admin/blog') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
                       >
-                        <span>Admin Pages</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${mobileAdminDropdownOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      
-                      {mobileAdminDropdownOpen && (
-                        <div className="ml-4 mt-1 space-y-1">
-                          <Link
-                            href="/admin/dashboard"
-                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                              isActive('/admin/dashboard') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              setMobileAdminDropdownOpen(false);
-                            }}
-                          >
-                            🏠 Main Dashboard
-                          </Link>
-                          <Link
-                            href="/admin/users"
-                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                              isActive('/admin/users') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              setMobileAdminDropdownOpen(false);
-                            }}
-                          >
-                            👥 User Management
-                          </Link>
-                          <Link
-                            href="/admin/requests"
-                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                              pathname?.startsWith('/admin/requests') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              setMobileAdminDropdownOpen(false);
-                            }}
-                          >
-                            📋 Requests
-                          </Link>
-                          <Link
-                            href="/admin/transactions"
-                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                              pathname?.startsWith('/admin/transactions') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              setMobileAdminDropdownOpen(false);
-                            }}
-                          >
-                            💰 Transactions
-                          </Link>
-                          <Link
-                            href="/admin/blog"
-                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                              isActive('/admin/blog') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              setMobileAdminDropdownOpen(false);
-                            }}
-                          >
-                            ✍️ Blog Management
-                          </Link>
-                          <Link
-                            href="/admin/preview"
-                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                              isActive('/admin/preview') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              setMobileAdminDropdownOpen(false);
-                            }}
-                          >
-                            👁️ Dashboard Preview
-                          </Link>
-                          <Link
-                            href="/admin/accounts"
-                            className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                              isActive('/admin/accounts') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              setMobileAdminDropdownOpen(false);
-                            }}
-                          >
-                            🔐 Accounts
-                          </Link>
-                        </div>
-                      )}
+                        ✍️ Blog Management
+                      </Link>
                     </div>
                   )}
                   
