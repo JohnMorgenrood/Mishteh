@@ -14,6 +14,7 @@ import {
 import CommentSection from '@/components/CommentSection';
 import SocialActions from '@/components/SocialActions';
 import TranslateButton from '@/components/TranslateButton';
+import { CountryFlag } from '@/components/CountryBadge';
 
 async function getRequest(id: string) {
   try {
@@ -235,9 +236,10 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                   <div className="flex-1">
                     <Link 
                       href={`/profile/${request.user.id}`}
-                      className="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
+                      className="font-semibold text-gray-900 hover:text-primary-600 transition-colors inline-flex items-center gap-2"
                     >
                       {request.user.fullName}
+                      <CountryFlag location={request.user.location} />
                     </Link>
                     {request.user.location && (
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">

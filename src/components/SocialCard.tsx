@@ -15,6 +15,7 @@ import { REQUEST_CATEGORIES } from '@/lib/constants';
 import { formatShortDate, getApproximateLocation } from '@/lib/utils';
 import CommentSection from './CommentSection';
 import { TranslateLink } from './TranslateButton';
+import { CountryFlag } from './CountryBadge';
 
 interface RequestUser {
   id: string;
@@ -250,9 +251,10 @@ export default function SocialCard({ request, index = 0, onLikeUpdate }: SocialC
             <div>
               <Link 
                 href={`/profile/${request.user.id}`}
-                className="font-semibold text-gray-900 hover:text-primary-600 transition-colors flex items-center gap-1"
+                className="font-semibold text-gray-900 hover:text-primary-600 transition-colors flex items-center gap-1.5"
               >
                 {request.user.fullName}
+                <CountryFlag location={request.user.location || request.location} />
               </Link>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span className="flex items-center gap-1">
@@ -308,8 +310,10 @@ export default function SocialCard({ request, index = 0, onLikeUpdate }: SocialC
         <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-2">
           {request.description}
         </p>
-        {/* Translate Button - like Facebook */}
-        <TranslateLink text={request.description} />
+        {/* Translate Button - Facebook style */}
+        <div className="mb-3">
+          <TranslateLink text={request.description} />
+        </div>
       </div>
 
       {/* Progress Bar */}

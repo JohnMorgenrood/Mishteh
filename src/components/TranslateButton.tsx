@@ -122,6 +122,7 @@ export function TranslateLink({ text }: { text: string }) {
   const [translated, setTranslated] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showTranslated, setShowTranslated] = useState(false);
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
 
   const handleTranslate = async () => {
     if (translated) {
@@ -132,12 +133,15 @@ export function TranslateLink({ text }: { text: string }) {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&dt=ld&q=${encodeURIComponent(text)}`
       );
       
       if (response.ok) {
         const data = await response.json();
         const translatedText = data[0]?.map((item: any) => item[0]).join('') || text;
+        // Get detected language
+        const langCode = data[2] || 'unknown';
+        setDetectedLanguage(langCode);
         setTranslated(translatedText);
         setShowTranslated(true);
       }
@@ -148,26 +152,46 @@ export function TranslateLink({ text }: { text: string }) {
     }
   };
 
+  // Language code to name mapping
+  const languageNames: Record<string, string> = {
+    af: 'Afrikaans', zu: 'Zulu', xh: 'Xhosa', st: 'Sesotho', tn: 'Setswana',
+    sw: 'Swahili', fr: 'French', pt: 'Portuguese', es: 'Spanish', de: 'German',
+    it: 'Italian', nl: 'Dutch', ru: 'Russian', ar: 'Arabic', hi: 'Hindi',
+    zh: 'Chinese', ja: 'Japanese', ko: 'Korean', en: 'English',
+  };
+
+  const langName = detectedLanguage ? (languageNames[detectedLanguage] || detectedLanguage.toUpperCase()) : null;
+
   return (
-    <>
-      {showTranslated && translated && translated !== text && (
-        <div className="mt-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400">
-          <p className="text-xs text-blue-600 mb-1">Translated from detected language</p>
-          <p className="text-gray-700">{translated}</p>
+    <div className="translate-widget">
+      {showTranslated && translated && translated.toLowerCase() !== text.toLowerCase() && (
+        <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-100 animate-fade-in">
+          <div className="flex items-center gap-2 text-xs text-blue-600 mb-2">
+            <Languages className="w-3.5 h-3.5" />
+            <span className="font-medium">
+              Translated from {langName || 'detected language'}
+            </span>
+          </div>
+          <p className="text-gray-800 text-sm">{translated}</p>
         </div>
       )}
       <button
         onClick={handleTranslate}
         disabled={isLoading}
-        className="text-xs text-blue-500 hover:text-blue-700 hover:underline mt-1 inline-flex items-center gap-1"
+        className="text-sm text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1.5 font-medium transition-colors"
       >
         {isLoading ? (
-          <Loader2 className="w-3 h-3 animate-spin" />
+          <>
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <span>Translating...</span>
+          </>
         ) : (
-          <Languages className="w-3 h-3" />
+          <>
+            <Languages className="w-3.5 h-3.5" />
+            <span>{showTranslated ? 'Show original' : 'See translation'}</span>
+          </>
         )}
-        {showTranslated ? 'Show original' : 'See translation'}
       </button>
-    </>
+    </div>
   );
 }
