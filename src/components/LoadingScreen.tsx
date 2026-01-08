@@ -1,44 +1,37 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 
 interface LoadingScreenProps {
   minDisplayTime?: number; // Minimum time to show loader in ms
 }
 
-export default function LoadingScreen({ minDisplayTime = 3000 }: LoadingScreenProps) {
+export default function LoadingScreen({ minDisplayTime = 2500 }: LoadingScreenProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isFading, setIsFading] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Check if this is the first load using sessionStorage
-    const hasLoaded = sessionStorage.getItem('mishteh-loaded');
-    
-    if (hasLoaded) {
-      // Skip loading screen on subsequent navigations
+    // Show loading screen on every page change
+    setIsVisible(true);
+    setIsFading(false);
+
+    // Start the fade out timer
+    const fadeTimer = setTimeout(() => {
+      setIsFading(true);
+    }, minDisplayTime);
+
+    const hideTimer = setTimeout(() => {
       setIsVisible(false);
-      return;
-    }
+    }, minDisplayTime + 500); // Add fade duration
 
-    // Wait for document to be ready and minimum display time
-    const handleLoad = () => {
-      setTimeout(() => {
-        setIsFading(true);
-        setTimeout(() => {
-          setIsVisible(false);
-          sessionStorage.setItem('mishteh-loaded', 'true');
-        }, 500); // Fade out duration
-      }, minDisplayTime);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(hideTimer);
     };
-
-    if (document.readyState === 'complete') {
-      handleLoad();
-    } else {
-      window.addEventListener('load', handleLoad);
-      return () => window.removeEventListener('load', handleLoad);
-    }
-  }, [minDisplayTime]);
+  }, [pathname, minDisplayTime]);
 
   if (!isVisible) return null;
 
