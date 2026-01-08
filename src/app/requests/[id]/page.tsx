@@ -164,7 +164,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-3">
                       <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-800">
-                        {request.category.replace(/_/g, ' ')}
+                        {request.category.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
                       </span>
                       <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${
                         request.urgency === 'CRITICAL' ? 'bg-red-100 text-red-800' :

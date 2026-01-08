@@ -142,9 +142,14 @@ export default function SocialCard({ request, index = 0, onLikeUpdate }: SocialC
     ? Math.min((request.currentAmount / request.targetAmount) * 100, 100)
     : 0;
 
+  // Format category for display - use label from constants, or format the raw value
+  const formatCategory = (cat: string) => {
+    return cat.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  };
+  
   const categoryDisplay = request.category === 'OTHER' && request.customCategory
     ? request.customCategory
-    : (categoryLabelsMap[request.category] || request.category);
+    : (categoryLabelsMap[request.category] || formatCategory(request.category));
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/requests/${request.id}` : '';
   const shareText = `Help ${request.user.fullName} with "${request.title}" on Mishteh`;

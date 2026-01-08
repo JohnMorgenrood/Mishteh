@@ -59,9 +59,9 @@ export async function GET(request: NextRequest) {
     if (location) where.location = { contains: location, mode: 'insensitive' };
     if (status) where.status = status;
     
-    // Default to showing only active requests for public view
+    // Default to showing active requests for public view (include PENDING for testing)
     if (!status) {
-      where.status = { in: ['ACTIVE', 'PARTIALLY_FUNDED'] };
+      where.status = { in: ['PENDING', 'ACTIVE', 'PARTIALLY_FUNDED'] };
     }
 
     const [requests, total] = await Promise.all([
