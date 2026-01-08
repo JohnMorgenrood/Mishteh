@@ -5,6 +5,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { getClientIP, getGeoLocation, logSecurityEvent, checkSuspiciousActivity, getUserAgent, updateUserSecurityInfo } from '@/lib/security';
+import { validateEmail } from '@/lib/email-validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,6 +55,25 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: 'Invalid email address' },
+        { status: 400 }
+      );
+    }
+
+    // Block fake/disposable emails
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      // Log attempted fake email signup
+      await logSecurityEvent(
+        'SUSPICIOUS_ACTIVITY',
+        null,
+        email,
+        ip,
+        geoLocation,
+        userAgent,
+        `Blocked fake email signup attempt: ${emailValidation.reason}`
+      );
+      return NextResponse.json(
+        { error: emailValidation.reason },
         { status: 400 }
       );
     }

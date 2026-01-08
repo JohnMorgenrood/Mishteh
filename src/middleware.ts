@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
-// SECURITY: Only this email can access admin pages
-const OWNER_EMAIL = 'mishteh144@gmail.com';
+// SECURITY: Only these emails can access admin pages
+const OWNER_EMAILS = ['mishteh144@gmail.com', 'golearnx@gmail.com'];
 
 export async function middleware(request: NextRequest) {
   const token = await getToken({
@@ -19,9 +19,9 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (isAuthPage && token) {
-    // Only redirect owner to admin blog, everyone else to dashboard
-    if (token.email === OWNER_EMAIL) {
-      return NextResponse.redirect(new URL('/admin/blog', request.url));
+    // Only redirect owners to admin, everyone else to dashboard
+    if (OWNER_EMAILS.includes(token.email as string)) {
+      return NextResponse.redirect(new URL('/admin', request.url));
     }
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
@@ -31,17 +31,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // SECURITY: Only owner can access admin pages
+  // SECURITY: Only owners can access admin pages - FULL ACCESS
   if (isAdmin && token) {
-    // If not the owner, redirect to dashboard
-    if (token.email !== OWNER_EMAIL) {
+    // If not an owner, redirect to dashboard
+    if (!OWNER_EMAILS.includes(token.email as string)) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-    
-    // Owner can access /admin/blog and /admin/security only
-    if (!isAdminBlog && !isAdminSecurity) {
-      return NextResponse.redirect(new URL('/admin/blog', request.url));
-    }
+    // Owners have FULL admin access - no restrictions
   }
 
   return NextResponse.next();

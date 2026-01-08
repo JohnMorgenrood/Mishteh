@@ -4,8 +4,8 @@ import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
 
-// SECURITY: Only the site owner can be ADMIN - NO OTHER ADMINS ALLOWED
-const ADMIN_EMAILS = ['mishteh144@gmail.com'];
+// SECURITY: Only these emails can be ADMIN - NO ONE ELSE
+const ADMIN_EMAILS = ['mishteh144@gmail.com', 'golearnx@gmail.com'];
 
 // Helper function to check if email is admin (strict check)
 function isAdminEmail(email: string): boolean {

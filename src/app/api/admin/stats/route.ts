@@ -3,16 +3,22 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+const OWNER_EMAILS = ['mishteh144@gmail.com', 'golearnx@gmail.com'];
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.userType !== 'ADMIN') {
+    if (!session?.user || !OWNER_EMAILS.includes(session.user.email || '')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
+
+    // Get today's start timestamp
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const [
       totalUsers,
@@ -22,6 +28,8 @@ export async function GET() {
       activeRequests,
       featuredRequests,
       pendingDocuments,
+      suspiciousUsers,
+      todaySignups,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.request.count(),
@@ -30,6 +38,8 @@ export async function GET() {
       prisma.request.count({ where: { status: 'ACTIVE' } }),
       prisma.request.count({ where: { featured: true, status: 'ACTIVE' } }),
       prisma.document.count({ where: { status: 'PENDING' } }),
+      prisma.user.count({ where: { isSuspicious: true } }).catch(() => 0),
+      prisma.user.count({ where: { createdAt: { gte: today } } }),
     ]);
 
     return NextResponse.json({
@@ -40,6 +50,8 @@ export async function GET() {
       activeRequests,
       featuredRequests,
       pendingDocuments,
+      suspiciousUsers,
+      todaySignups,
     });
   } catch (error: any) {
     console.error('Admin stats error:', error);

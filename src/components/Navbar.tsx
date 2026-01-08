@@ -133,7 +133,7 @@ export default function Navbar() {
                 </Link>
                 
                 {/* Admin Dropdown Menu */}
-                {session.user.userType === 'ADMIN' && (
+                {(session.user.userType === 'ADMIN' || ['mishteh144@gmail.com', 'golearnx@gmail.com'].includes(session.user.email || '')) && (
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setAdminDropdownOpen(!adminDropdownOpen)}
@@ -147,15 +147,29 @@ export default function Navbar() {
                       <ChevronDown className={`w-4 h-4 transition-transform ${adminDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     
-                    {/* Dropdown Menu - Blog Management & Security */}
+                    {/* Dropdown Menu - Full Admin Access */}
                     {adminDropdownOpen && (
                       <div className="absolute top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                        <Link
+                          href="/admin"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          🎛️ Control Center
+                        </Link>
                         <Link
                           href="/admin/blog"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
                           onClick={() => setAdminDropdownOpen(false)}
                         >
                           ✍️ Blog Management
+                        </Link>
+                        <Link
+                          href="/admin/requests"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          📋 Manage Requests
                         </Link>
                         <Link
                           href="/admin/security"
@@ -289,9 +303,18 @@ export default function Navbar() {
                     Profile
                   </Link>
                   
-                  {/* Admin Dropdown for Mobile - Blog & Security */}
-                  {session.user.userType === 'ADMIN' && (
+                  {/* Admin Dropdown for Mobile - Full Access */}
+                  {(session.user.userType === 'ADMIN' || ['mishteh144@gmail.com', 'golearnx@gmail.com'].includes(session.user.email || '')) && (
                     <div className="border-t border-gray-200 mt-2 pt-2">
+                      <Link
+                        href="/admin"
+                        className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                          isActive('/admin') && !isActive('/admin/blog') && !isActive('/admin/security') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        🎛️ Control Center
+                      </Link>
                       <Link
                         href="/admin/blog"
                         className={`block px-4 py-2 text-sm rounded-md transition-colors ${
@@ -300,6 +323,15 @@ export default function Navbar() {
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         ✍️ Blog Management
+                      </Link>
+                      <Link
+                        href="/admin/requests"
+                        className={`block px-4 py-2 text-sm rounded-md transition-colors ${
+                          isActive('/admin/requests') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        📋 Manage Requests
                       </Link>
                       <Link
                         href="/admin/security"
