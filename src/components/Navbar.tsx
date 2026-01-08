@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown, LogOut, LogIn, UserPlus } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import LanguageSelector from './LanguageSelector';
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -202,8 +203,9 @@ export default function Navbar() {
                     )}
                   </div>
                 )}
-                
-                <div className="flex items-center gap-3">
+                                {/* Language Selector */}
+                <LanguageSelector />
+                                <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-600 font-medium">
                     {session.user.name}
                   </span>
@@ -218,6 +220,7 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex items-center gap-3">
+                <LanguageSelector />
                 <Link
                   href="/auth/login"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-all hover:scale-105"

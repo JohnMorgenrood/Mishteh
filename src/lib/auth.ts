@@ -4,8 +4,13 @@ import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
 
-// Admin email addresses
+// Admin email addresses - ONLY these emails can be ADMIN
 const ADMIN_EMAILS = ['mishteh144@gmail.com', 'rubyroyal1@gmail.com'];
+
+// Helper function to check if email is admin (strict check)
+function isAdminEmail(email: string): boolean {
+  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -41,8 +46,8 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
-        // Check if user is an admin
-        const userType = ADMIN_EMAILS.includes(user.email) ? 'ADMIN' : user.userType;
+        // SECURITY: Check if user is an admin using whitelist
+        const userType = isAdminEmail(user.email) ? 'ADMIN' : user.userType;
 
         return {
           id: user.id,
@@ -69,8 +74,8 @@ export const authOptions: NextAuthOptions = {
 
           // Create user if doesn't exist
           if (!dbUser) {
-            // Check if email is admin
-            const userType = ADMIN_EMAILS.includes(email) ? 'ADMIN' : 'DONOR';
+            // SECURITY: Only set ADMIN if email is in whitelist
+            const userType = isAdminEmail(email) ? 'ADMIN' : 'DONOR';
             
             dbUser = await prisma.user.create({
               data: {
@@ -83,8 +88,8 @@ export const authOptions: NextAuthOptions = {
             });
           }
 
-          // Override userType if email is in admin list
-          const finalUserType = ADMIN_EMAILS.includes(email) ? 'ADMIN' : dbUser.userType;
+          // SECURITY: Override userType - only allow ADMIN if email is in whitelist
+          const finalUserType = isAdminEmail(email) ? 'ADMIN' : (dbUser.userType === 'ADMIN' ? 'DONOR' : dbUser.userType);
 
           // Store the database user ID in the account
           user.id = dbUser.id;
@@ -99,20 +104,24 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        token.userType = (user as any).userType;
         token.email = user.email;
+        // SECURITY: Only set ADMIN if email is in whitelist
+        token.userType = isAdminEmail(user.email || '') ? 'ADMIN' : (user as any).userType;
       } else if (token.id) {
-        // Check if email is admin
-        if (token.email && ADMIN_EMAILS.includes(token.email as string)) {
+        // SECURITY: Always enforce admin whitelist on every request
+        if (token.email && isAdminEmail(token.email as string)) {
           token.userType = 'ADMIN';
         } else {
-          // Refresh user data from database to get latest userType
+          // Refresh user data from database but NEVER allow ADMIN unless in whitelist
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id as string },
             select: { userType: true },
           });
           if (dbUser) {
-            token.userType = dbUser.userType;
+            // SECURITY: Even if database says ADMIN, only allow if in whitelist
+            token.userType = dbUser.userType === 'ADMIN' && !isAdminEmail(token.email as string) 
+              ? 'DONOR' 
+              : dbUser.userType;
           }
         }
       }
