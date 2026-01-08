@@ -7,7 +7,7 @@ interface LoadingScreenProps {
   minDisplayTime?: number; // Minimum time to show loader in ms
 }
 
-export default function LoadingScreen({ minDisplayTime = 1500 }: LoadingScreenProps) {
+export default function LoadingScreen({ minDisplayTime = 3000 }: LoadingScreenProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isFading, setIsFading] = useState(false);
 
@@ -89,6 +89,16 @@ export default function LoadingScreen({ minDisplayTime = 1500 }: LoadingScreenPr
         <p className="text-lg text-gray-600 font-medium animate-fade-in-up animation-delay-500 text-center px-4">
           Connecting people through kindness
         </p>
+
+        {/* Scripture Banner */}
+        <div className="animate-fade-in-up animation-delay-600 max-w-lg px-6 text-center">
+          <p className="text-sm md:text-base text-primary-700 italic leading-relaxed">
+            &ldquo;Learn to do good. Seek justice. Help the oppressed. Defend the cause of orphans. Fight for the rights of widows.&rdquo;
+          </p>
+          <p className="text-xs md:text-sm text-primary-500 font-medium mt-2">
+            — Isaiah 1:17
+          </p>
+        </div>
 
         {/* Loading Indicator */}
         <div className="flex items-center gap-3 animate-fade-in-up animation-delay-700">
