@@ -10,11 +10,9 @@
  * - YOCO_MODE: 'test' or 'live' (default: 'test')
  */
 
-// Yoco API base URLs
-const YOCO_API_BASE = {
-  test: 'https://online.yoco.com/v1',
-  live: 'https://online.yoco.com/v1',
-};
+// Yoco API base URLs (Yoco Online Payments API)
+// Documentation: https://developer.yoco.com/online/api-reference
+const YOCO_API_BASE = 'https://payments.yoco.com/api';
 
 // Get Yoco environment configuration
 export function getYocoConfig() {
@@ -34,7 +32,7 @@ export function getYocoConfig() {
     publicKey,
     secretKey,
     mode,
-    apiBaseUrl: YOCO_API_BASE[mode],
+    apiBaseUrl: YOCO_API_BASE,
   };
 }
 
