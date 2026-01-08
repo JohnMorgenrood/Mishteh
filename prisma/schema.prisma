@@ -129,6 +129,11 @@ model Request {
   @@index([location])
   @@index([createdAt])
   @@index([featured])
+  // Compound indexes for common queries
+  @@index([status, featured])           // Home page featured requests
+  @@index([status, createdAt])          // Recent active requests
+  @@index([status, category])           // Filtered requests by category
+  @@index([status, urgency])            // Filtered requests by urgency
 }
 
 // Social Features - Likes

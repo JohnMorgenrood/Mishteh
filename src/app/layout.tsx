@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import MobileNav from '@/components/MobileNav';
 import { AuthProvider } from '@/components/AuthProvider';
 import LoadingScreen from '@/components/LoadingScreen';
+import { ToastProvider } from '@/components/Toast';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -29,13 +30,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} flex flex-col min-h-screen`}>
         <AuthProvider>
-          <LoadingScreen />
-          <Navbar />
-          <main className="flex-grow pb-20 md:pb-0">
-            {children}
-          </main>
-          <Footer />
-          <MobileNav />
+          <ToastProvider>
+            <LoadingScreen />
+            <Navbar />
+            <main className="flex-grow pb-20 md:pb-0">
+              {children}
+            </main>
+            <Footer />
+            <MobileNav />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

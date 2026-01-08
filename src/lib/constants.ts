@@ -3,6 +3,19 @@
 export const APP_NAME = 'MISHTEH';
 export const APP_DESCRIPTION = 'Connecting donors with people in need';
 
+// Admin/Owner emails - single source of truth
+export const ADMIN_EMAILS = [
+  'mishteh144@gmail.com',
+  'golearnx@gmail.com', 
+  'rubyroyal1@gmail.com',
+];
+
+// Check if email is admin
+export const isAdminEmail = (email: string | null | undefined): boolean => {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+};
+
 // Legacy categories (for backward compatibility with existing requests)
 export const LEGACY_CATEGORIES = [
   { value: 'FOOD', label: 'Food' },

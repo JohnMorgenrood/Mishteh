@@ -6,6 +6,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Metadata } from 'next';
 import { 
   MapPin, Clock, Eye, User, Heart, MessageCircle,
   Share2, Facebook, Twitter, Instagram, Globe, ExternalLink,
@@ -15,6 +16,45 @@ import CommentSection from '@/components/CommentSection';
 import SocialActions from '@/components/SocialActions';
 import TranslateButton from '@/components/TranslateButton';
 import { CountryFlag } from '@/components/CountryBadge';
+
+// Dynamic SEO metadata
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  
+  try {
+    const request = await prisma.request.findUnique({
+      where: { id },
+      select: { title: true, description: true, user: { select: { fullName: true } } },
+    });
+    
+    if (!request) {
+      return {
+        title: 'Request Not Found | MISHTEH',
+        description: 'This request could not be found.',
+      };
+    }
+    
+    return {
+      title: `${request.title} | MISHTEH`,
+      description: request.description.slice(0, 160),
+      openGraph: {
+        title: request.title,
+        description: request.description.slice(0, 160),
+        type: 'article',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: request.title,
+        description: request.description.slice(0, 160),
+      },
+    };
+  } catch {
+    return {
+      title: 'Help Request | MISHTEH',
+      description: 'View and support this help request on MISHTEH.',
+    };
+  }
+}
 
 async function getRequest(id: string) {
   try {

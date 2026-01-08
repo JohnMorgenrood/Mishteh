@@ -14,6 +14,7 @@ import {
   EXCHANGE_RATES,
   Currency,
 } from '@/lib/currency';
+import { useToast } from '@/components/Toast';
 
 interface DonationFormProps {
   requestId: string;
@@ -29,6 +30,7 @@ export default function DonationForm({
   currentAmount,
 }: DonationFormProps) {
   const router = useRouter();
+  const toast = useToast();
   const [amount, setAmount] = useState<string>('');
   const [message, setMessage] = useState('');
   const [anonymous, setAnonymous] = useState(false);
@@ -129,7 +131,7 @@ export default function DonationForm({
       window.open(data.checkoutUrl, '_blank');
       
       // Show success message to user
-      alert('Yoco payment window opened in a new tab. Please complete your payment there.');
+      toast.info('Yoco payment window opened in a new tab. Please complete your payment there.', 8000);
       
     } catch (err: any) {
       console.error('Yoco payment error:', err);
@@ -195,7 +197,7 @@ export default function DonationForm({
 
       console.log('Payment captured successfully:', result);
       // Success - redirect to dashboard with success message
-      alert('Thank you for your donation! Your payment has been processed successfully.');
+      toast.success('Thank you for your donation! Your payment has been processed successfully.', 6000);
       router.push('/dashboard');
       router.refresh();
     } catch (err: any) {

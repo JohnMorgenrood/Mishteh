@@ -50,6 +50,21 @@ export async function POST(request: NextRequest) {
 // GET endpoint for admin to view messages
 export async function GET(request: NextRequest) {
   try {
+    // Import auth for admin check
+    const { getServerSession } = await import('next-auth');
+    const { authOptions } = await import('@/lib/auth');
+    
+    const session = await getServerSession(authOptions);
+    
+    // Only admins can view contact messages
+    const ADMIN_EMAILS = ['mishteh144@gmail.com', 'golearnx@gmail.com', 'rubyroyal1@gmail.com'];
+    if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Admin access required' },
+        { status: 403 }
+      );
+    }
+    
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
