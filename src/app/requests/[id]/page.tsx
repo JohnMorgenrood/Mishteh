@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import CommentSection from '@/components/CommentSection';
 import SocialActions from '@/components/SocialActions';
-import LocationMap from '@/components/LocationMap';
 
 async function getRequest(id: string) {
   try {
@@ -192,11 +191,6 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                     <Eye className="w-4 h-4" />
                     {request.views} views
                   </div>
-                </div>
-
-                {/* Location Map */}
-                <div className="mb-6 pb-6 border-b border-gray-100">
-                  <LocationMap location={request.location} />
                 </div>
 
                 {/* Description */}

@@ -92,13 +92,21 @@ export async function createYocoCheckout(
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Yoco checkout creation failed:', error);
-      throw new Error(error.message || 'Failed to create Yoco checkout');
+    const responseText = await response.text();
+    let data;
+    
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Yoco API returned invalid JSON:', responseText);
+      throw new Error('Invalid response from Yoco API');
     }
 
-    const data = await response.json();
+    if (!response.ok) {
+      console.error('Yoco checkout creation failed:', data);
+      throw new Error(data.message || data.error || 'Failed to create Yoco checkout');
+    }
+
     return {
       checkoutUrl: data.redirectUrl,
       checkoutId: data.id,
