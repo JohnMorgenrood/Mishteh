@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { orderId, requestId, message, anonymous } = await request.json();
+    const { orderId, requestId, message, anonymous, originalAmount, originalCurrency } = await request.json();
 
     if (!orderId) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Get order details
     const orderDetails = await getOrderDetails(orderId);
-    const totalAmount = parseFloat(orderDetails.purchase_units[0].amount.value); // Total paid by donor (donation + fee)
+    const totalAmount = parseFloat(orderDetails.purchase_units[0].amount.value); // Total paid by donor (in USD)
     const currency = orderDetails.purchase_units[0].amount.currency_code;
 
     // Get payer info
@@ -41,11 +41,29 @@ export async function POST(request: NextRequest) {
       ? `${captureResult.payer.name.given_name} ${captureResult.payer.name.surname}`
       : null;
 
-    // Calculate platform fee: $1 USD flat fee
-    // The total amount already includes this fee, so we just need to separate it
-    const feeAmountUSD = 1; // $1 USD flat fee
-    const feeAmount = feeAmountUSD; // Fee is always $1 USD
-    const donationAmount = totalAmount - feeAmount; // This is what the recipient gets
+    // Calculate fees:
+    // PayPal fee: 2.9% + $0.30
+    // Mishteh fee: 1% of original donation
+    // Total paid = donation + paypal fee + mishteh fee
+    // We need to reverse-calculate what the donation amount was
+    
+    // If original amount was sent from client, use it
+    // Otherwise, calculate: donation = (totalAmount - 0.30) / 1.039 (1 + 0.029 + 0.01)
+    let donationAmount: number;
+    let mishtehFee: number;
+    let paypalFee: number;
+    
+    if (originalAmount && typeof originalAmount === 'number') {
+      // Client sent the original donation amount
+      donationAmount = originalAmount;
+      mishtehFee = donationAmount * 0.01; // 1% Mishteh fee
+      paypalFee = totalAmount - donationAmount - mishtehFee; // Remaining is PayPal fee
+    } else {
+      // Reverse calculate
+      donationAmount = (totalAmount - 0.30) / 1.039;
+      mishtehFee = donationAmount * 0.01;
+      paypalFee = (donationAmount + mishtehFee) * 0.029 + 0.30;
+    }
 
     // Get request details if provided
     let request_details = null;
@@ -61,6 +79,16 @@ export async function POST(request: NextRequest) {
       if (request_details) {
         recipientId = request_details.userId;
         recipientName = request_details.user.fullName;
+        
+        // Update request's current amount
+        await prisma.request.update({
+          where: { id: requestId },
+          data: {
+            currentAmount: {
+              increment: donationAmount,
+            },
+          },
+        });
       }
     }
 
@@ -78,13 +106,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create transaction record for the donation (DISBURSEMENT to recipient)
+    // Create transaction record for the donation
     const transaction = await prisma.transaction.create({
       data: {
         type: 'DONATION',
         status: 'COMPLETED',
         amount: totalAmount, // Total amount donor paid
-        feeAmount,
+        feeAmount: paypalFee + mishtehFee, // Total fees
         netAmount: donationAmount, // Amount recipient receives
         currency,
         paymentGateway: 'PAYPAL',
@@ -102,24 +130,24 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create a separate transaction for the platform fee (revenue for platform owner)
+    // Create a separate transaction for the Mishteh platform fee (1% revenue for platform)
     await prisma.transaction.create({
       data: {
         type: 'FEE',
         status: 'COMPLETED',
-        amount: feeAmount, // Platform's revenue ($1 USD)
+        amount: mishtehFee, // Mishteh's 1% revenue
         feeAmount: 0,
-        netAmount: feeAmount, // This goes to platform owner
+        netAmount: mishtehFee, // This goes to Mishteh
         currency,
         paymentGateway: 'PAYPAL',
-        paymentId: `${orderId}-fee`,
+        paymentId: `${orderId}-mishteh-fee`,
         donorId: session.user.id,
         donorName: session.user.name || 'Anonymous',
         donorEmail: session.user.email || null,
         requestId: requestId || null,
         requestTitle: request_details?.title || null,
         completedAt: new Date(),
-        adminNotes: `Platform fee from donation: $${feeAmountUSD.toFixed(2)} USD flat fee. Total paid by donor: ${totalAmount.toFixed(2)} ${currency}. PayPal transaction fees handled separately.`,
+        adminNotes: `Mishteh 1% platform fee. Donation: $${donationAmount.toFixed(2)}, PayPal fee: $${paypalFee.toFixed(2)}, Mishteh fee: $${mishtehFee.toFixed(2)}, Total paid: $${totalAmount.toFixed(2)} ${currency}`,
       },
     });
 
@@ -130,7 +158,7 @@ export async function POST(request: NextRequest) {
           userId: request_details.userId,
           type: 'DONATION_RECEIVED',
           title: 'New Donation Received',
-          message: `${session.user.name} donated ${donationAmount.toFixed(2)} ${currency} to your request "${request_details.title}"`,
+          message: `${session.user.name} donated $${donationAmount.toFixed(2)} ${currency} to your request "${request_details.title}"`,
           read: false,
         },
       });
@@ -141,6 +169,13 @@ export async function POST(request: NextRequest) {
       donation,
       transaction,
       captureResult,
+      fees: {
+        paypalFee,
+        mishtehFee,
+        totalFee: paypalFee + mishtehFee,
+        donationAmount,
+        totalPaid: totalAmount,
+      },
     });
   } catch (error: any) {
     console.error('Error capturing PayPal payment:', error);

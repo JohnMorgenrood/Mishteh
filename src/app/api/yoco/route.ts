@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { amount, requestId, isAnonymous } = body;
+    const { amount, totalAmount, requestId, isAnonymous } = body;
 
     // Validate input
     if (!amount || amount <= 0) {
@@ -50,10 +50,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create donation record with PLEDGED status
+    // Calculate fees if totalAmount not provided
+    // Yoco fee: 2.6% + Mishteh fee: 1% = 3.6%
+    const mishtehFee = amount * 0.01;
+    const yocoFee = (amount + mishtehFee) * 0.026;
+    const calculatedTotal = totalAmount || (amount + mishtehFee + yocoFee);
+
+    // Create donation record with PLEDGED status (store the donation amount, not total with fees)
     const donation = await prisma.donation.create({
       data: {
-        amount,
+        amount, // Store the actual donation amount (what recipient gets)
         status: 'PLEDGED',
         paymentMethod: 'YOCO',
         paymentStatus: 'PENDING',
@@ -63,8 +69,8 @@ export async function POST(request: Request) {
       },
     });
 
-    // Convert amount to cents for Yoco (ZAR)
-    const amountInCents = Math.round(amount * 100);
+    // Convert total amount (with fees) to cents for Yoco (ZAR)
+    const amountInCents = Math.round(calculatedTotal * 100);
 
     // Create Yoco checkout
     const { checkoutUrl, checkoutId } = await createYocoCheckout({
@@ -75,6 +81,10 @@ export async function POST(request: Request) {
         requestId: requestId,
         donorName: isAnonymous ? 'Anonymous' : session.user.name,
         donorEmail: session.user.email,
+        originalAmount: amount,
+        totalWithFees: calculatedTotal,
+        mishtehFee: mishtehFee,
+        yocoFee: yocoFee,
       },
       successUrl: `${process.env.NEXTAUTH_URL}/donations/success?donationId=${donation.id}`,
       cancelUrl: `${process.env.NEXTAUTH_URL}/requests/${requestId}?cancelled=true`,
