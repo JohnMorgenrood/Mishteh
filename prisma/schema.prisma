@@ -341,6 +341,7 @@ enum RequestCategory {
   JOB_ASSISTANCE
   MEDICAL
   EDUCATION
+  OTHER              // Keep for backward compatibility (hidden in UI)
   FOOD_GROCERIES
   RENT_HOUSING
   UTILITIES
