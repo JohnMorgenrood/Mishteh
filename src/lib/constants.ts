@@ -3,8 +3,31 @@
 export const APP_NAME = 'MISHTEH';
 export const APP_DESCRIPTION = 'Connecting donors with people in need';
 
+// Legacy categories (for backward compatibility with existing requests)
+export const LEGACY_CATEGORIES = [
+  { value: 'FOOD', label: 'Food (Legacy)' },
+  { value: 'RENT', label: 'Rent (Legacy)' },
+  { value: 'BILLS', label: 'Bills (Legacy)' },
+  { value: 'FAMILY_SUPPORT', label: 'Family Support (Legacy)' },
+  { value: 'MEDICAL', label: 'Medical (Legacy)' },
+  { value: 'EDUCATION', label: 'Education (Legacy)' },
+  { value: 'OTHER', label: 'Other (Legacy)' },
+];
+
 // Request categories organized by main category
 export const REQUEST_CATEGORY_GROUPS = [
+  {
+    group: 'Legacy Categories',
+    description: 'Original categories (for existing requests)',
+    categories: [
+      { value: 'FOOD', label: 'Food' },
+      { value: 'RENT', label: 'Rent' },
+      { value: 'BILLS', label: 'Bills' },
+      { value: 'FAMILY_SUPPORT', label: 'Family Support' },
+      { value: 'MEDICAL', label: 'Medical' },
+      { value: 'EDUCATION', label: 'Education' },
+    ],
+  },
   {
     group: 'Basic Needs',
     description: 'Essential support for daily living',
