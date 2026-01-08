@@ -36,6 +36,7 @@ export default function DonationForm({
   const [error, setError] = useState('');
   const [showPayPal, setShowPayPal] = useState(false);
   const [userCurrency, setUserCurrency] = useState<Currency>('ZAR');
+  const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'yoco'>('paypal');
 
   // Detect user's currency on mount
   useEffect(() => {
@@ -65,7 +66,53 @@ export default function DonationForm({
       return;
     }
     setError('');
+    
+    // If Yoco is selected, process Yoco payment
+    if (paymentMethod === 'yoco') {
+      handleYocoPayment();
+      return;
+    }
+    
+    // Otherwise show PayPal buttons
     setShowPayPal(true);
+  };
+
+  const handleYocoPayment = async () => {
+    try {
+      setIsSubmitting(true);
+      setError('');
+
+      // Create Yoco checkout session
+      const response = await fetch('/api/yoco', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: donationAmount,
+          requestId,
+          isAnonymous: anonymous,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create Yoco checkout');
+      }
+
+      // Open Yoco checkout in new tab (as per Yoco requirements)
+      window.open(data.checkoutUrl, '_blank');
+      
+      // Show success message to user
+      alert('Yoco payment window opened in a new tab. Please complete your payment there.');
+      
+    } catch (err: any) {
+      console.error('Yoco payment error:', err);
+      setError(err.message || 'Failed to process Yoco payment');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const createOrder = async () => {
@@ -167,6 +214,51 @@ export default function DonationForm({
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* Payment Method Selector */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Payment Method
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentMethod('paypal');
+                  setShowPayPal(false);
+                }}
+                className={`px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                  paymentMethod === 'paypal'
+                    ? 'border-blue-600 bg-blue-50 text-blue-900'
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-lg">💳</span>
+                  <span>PayPal</span>
+                  <span className="text-xs text-gray-500">Global</span>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentMethod('yoco');
+                  setShowPayPal(false);
+                }}
+                className={`px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                  paymentMethod === 'yoco'
+                    ? 'border-green-600 bg-green-50 text-green-900'
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-lg">🇿🇦</span>
+                  <span>Yoco</span>
+                  <span className="text-xs text-gray-500">SA + Apple Pay</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
           {/* Currency Selector */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -276,7 +368,7 @@ export default function DonationForm({
           )}
 
           {/* PayPal Buttons or Confirm Button */}
-          {showPayPal && donationAmount > 0 ? (
+          {showPayPal && donationAmount > 0 && paymentMethod === 'paypal' ? (
             <div className="mb-4">
               {/* Fee Breakdown */}
               <div className="mb-3 p-4 bg-green-50 border border-green-200 rounded-md">
@@ -325,13 +417,18 @@ export default function DonationForm({
               disabled={isSubmitting || !amount || parseFloat(amount) <= 0}
               className="w-full px-6 py-3 bg-primary-600 text-white font-semibold rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Processing...' : `Continue to PayPal - Total: ${formatCurrency(totalAmount, userCurrency)}`}
+              {isSubmitting 
+                ? 'Processing...' 
+                : paymentMethod === 'yoco'
+                  ? `Pay with Yoco - ${formatCurrency(totalAmount, userCurrency)}`
+                  : `Continue to PayPal - ${formatCurrency(totalAmount, userCurrency)}`
+              }
             </button>
           )}
         </form>
 
         <p className="mt-4 text-xs text-gray-500 text-center">
-          Your donation helps those in need. Secure payment powered by PayPal.
+          Your donation helps those in need. Secure payment powered by {paymentMethod === 'yoco' ? 'Yoco (with Apple Pay support)' : 'PayPal'}.
         </p>
       </div>
     </PayPalScriptProvider>

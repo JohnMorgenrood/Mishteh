@@ -6,7 +6,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const slides = [
   {
-    image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&h=900&fit=crop',
+    image: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=1600&h=900&fit=crop',
     title: 'Together, We Can Make a Difference',
     subtitle: 'Connecting hearts through acts of kindness and compassion',
   },
