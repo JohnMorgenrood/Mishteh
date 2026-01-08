@@ -1,12 +1,11 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Loader2 } from 'lucide-react';
 
 function DonationSuccessContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const donationId = searchParams.get('donationId');
   const [isVerifying, setIsVerifying] = useState(true);

@@ -1,12 +1,11 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { XCircle, Loader2 } from 'lucide-react';
 
 function DonationFailedContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const donationId = searchParams.get('donationId');
 
