@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Loader2 } from 'lucide-react';
 
-export default function DonationSuccessPage() {
+function DonationSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const donationId = searchParams.get('donationId');
@@ -94,5 +94,20 @@ export default function DonationSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DonationSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <Loader2 className="w-16 h-16 text-primary-600 animate-spin mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Loading...</h1>
+        </div>
+      </div>
+    }>
+      <DonationSuccessContent />
+    </Suspense>
   );
 }
