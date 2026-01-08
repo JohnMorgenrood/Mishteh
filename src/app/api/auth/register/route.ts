@@ -4,9 +4,15 @@ import bcrypt from 'bcryptjs';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { getClientIP, getGeoLocation, logSecurityEvent, checkSuspiciousActivity, getUserAgent, updateUserSecurityInfo } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
+    // Capture security info FIRST
+    const ip = getClientIP(request);
+    const userAgent = getUserAgent(request);
+    const geoLocation = await getGeoLocation(ip);
+    
     const formData = await request.formData();
     
     // Extract form fields
@@ -75,7 +81,10 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new user
+    // Check for suspicious activity
+    const suspiciousCheck = await checkSuspiciousActivity(email, ip, geoLocation);
+
+    // Create new user with security tracking
     const user = await prisma.user.create({
       data: {
         fullName,
@@ -87,6 +96,12 @@ export async function POST(request: NextRequest) {
         sponsorType: sponsorType as any,
         companyName,
         industry,
+        // Security tracking
+        signupIp: ip,
+        signupCountry: geoLocation.country,
+        signupCity: geoLocation.city,
+        isSuspicious: suspiciousCheck.suspicious,
+        suspiciousReason: suspiciousCheck.reasons.join('; ') || null,
       },
       select: {
         id: true,
@@ -97,6 +112,17 @@ export async function POST(request: NextRequest) {
         companyName: true,
       },
     });
+
+    // Log the security event
+    await logSecurityEvent(
+      'SIGNUP_CREDENTIALS',
+      user.id,
+      email,
+      ip,
+      geoLocation,
+      userAgent,
+      suspiciousCheck.suspicious ? `SUSPICIOUS: ${suspiciousCheck.reasons.join(', ')}` : 'Normal signup'
+    );
 
     // If user is a donor or sponsor, create default preferences
     if (userType === 'DONOR' || userType === 'SPONSOR') {

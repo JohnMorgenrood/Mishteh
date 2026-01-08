@@ -12,6 +12,23 @@ function isAdminEmail(email: string): boolean {
   return ADMIN_EMAILS.includes(email.toLowerCase().trim());
 }
 
+// Security logging helper (inline to avoid circular dependencies)
+async function logAuthEvent(eventType: string, email: string, userId?: string | null, details?: string) {
+  try {
+    await prisma.securityLog.create({
+      data: {
+        eventType,
+        email,
+        userId: userId || null,
+        ipAddress: 'server-side', // IP captured at API level
+        details,
+      },
+    });
+  } catch (e) {
+    console.error('Failed to log auth event:', e);
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -34,6 +51,8 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
+          // Log failed login attempt
+          await logAuthEvent('LOGIN_FAILED', credentials.email, null, 'User not found or no password');
           throw new Error('Invalid credentials');
         }
 
@@ -43,8 +62,19 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
+          // Log failed login attempt
+          await logAuthEvent('LOGIN_FAILED', credentials.email, user.id, 'Invalid password');
           throw new Error('Invalid credentials');
         }
+
+        // Log successful login
+        await logAuthEvent('LOGIN_SUCCESS', user.email, user.id, 'Credentials login');
+        
+        // Update last login time
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLoginAt: new Date() },
+        }).catch(() => {});
 
         // SECURITY: Check if user is an admin using whitelist
         const userType = isAdminEmail(user.email) ? 'ADMIN' : user.userType;
@@ -86,6 +116,18 @@ export const authOptions: NextAuthOptions = {
                 image: user.image,
               },
             });
+            
+            // Log Google signup
+            await logAuthEvent('SIGNUP_GOOGLE', email, dbUser.id, 'New Google OAuth user');
+          } else {
+            // Log Google login
+            await logAuthEvent('LOGIN_SUCCESS', email, dbUser.id, 'Google OAuth login');
+            
+            // Update last login time
+            await prisma.user.update({
+              where: { id: dbUser.id },
+              data: { lastLoginAt: new Date() },
+            }).catch(() => {});
           }
 
           // SECURITY: Override userType - only allow ADMIN if email is in whitelist

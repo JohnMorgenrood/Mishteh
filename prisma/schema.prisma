@@ -47,10 +47,54 @@ model User {
   comments         Comment[]
   tiktokUrl        String?
   websiteUrl       String?
+  
+  // Security tracking fields
+  signupIp         String?
+  signupCountry    String?
+  signupCity       String?
+  lastLoginIp      String?
+  lastLoginAt      DateTime?
+  securityQuestion String?
+  securityAnswer   String?
+  isSuspicious     Boolean          @default(false)
+  suspiciousReason String?
+  securityLogs     SecurityLog[]
 
   @@index([email])
   @@index([userType])
   @@index([ficaVerified])
+  @@index([signupCountry])
+  @@index([isSuspicious])
+}
+
+// Security Log - tracks all security events
+model SecurityLog {
+  id          String   @id @default(cuid())
+  eventType   String   // SIGNUP_CREDENTIALS, SIGNUP_GOOGLE, LOGIN_SUCCESS, LOGIN_FAILED, etc.
+  userId      String?
+  email       String
+  ipAddress   String?
+  country     String?
+  countryCode String?
+  city        String?
+  region      String?
+  timezone    String?
+  isp         String?
+  isVpn       Boolean  @default(false)
+  isProxy     Boolean  @default(false)
+  latitude    Float?
+  longitude   Float?
+  userAgent   String?
+  details     String?
+  createdAt   DateTime @default(now())
+  
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([ipAddress])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([country])
 }
 
 model Request {
