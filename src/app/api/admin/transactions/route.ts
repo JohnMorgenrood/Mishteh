@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getYocoPaymentDetails } from '@/lib/yoco';
+import { calculateYocoBreakdown } from '@/lib/payment-fees';
 
 function buildLegacyBackfillNote(paymentMethod?: string | null) {
   const gateway = paymentMethod || 'UNKNOWN';
@@ -88,6 +90,132 @@ async function backfillMissingDonationTransactions() {
   }
 }
 
+async function finalizePendingYocoDonations() {
+  const pendingDonations = await prisma.donation.findMany({
+    where: {
+      paymentMethod: 'YOCO',
+      status: 'PLEDGED',
+      paymentStatus: {
+        in: ['PENDING', 'PROCESSING'],
+      },
+      paymentIntentId: {
+        not: null,
+      },
+    },
+    include: {
+      donor: true,
+      request: {
+        include: {
+          user: true,
+        },
+      },
+    },
+    take: 50,
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  for (const donation of pendingDonations) {
+    try {
+      const paymentDetails = await getYocoPaymentDetails(donation.paymentIntentId!);
+
+      if (paymentDetails.status === 'succeeded') {
+        const alreadyTracked = await prisma.transaction.findFirst({
+          where: {
+            paymentId: donation.paymentIntentId,
+            type: 'DONATION',
+          },
+        });
+
+        if (donation.status !== 'COMPLETED') {
+          await prisma.request.update({
+            where: { id: donation.requestId },
+            data: {
+              currentAmount: {
+                increment: donation.amount,
+              },
+            },
+          });
+        }
+
+        await prisma.donation.update({
+          where: { id: donation.id },
+          data: {
+            status: 'COMPLETED',
+            paymentStatus: 'COMPLETED',
+          },
+        });
+
+        if (!alreadyTracked) {
+          const totalPaid = typeof paymentDetails.amount === 'number'
+            ? paymentDetails.amount / 100
+            : Math.round((donation.amount / 0.964) * 100) / 100;
+          const feeBreakdown = calculateYocoBreakdown(totalPaid);
+
+          await prisma.transaction.create({
+            data: {
+              type: 'DONATION',
+              status: 'COMPLETED',
+              amount: totalPaid,
+              feeAmount: feeBreakdown.totalFees,
+              netAmount: donation.amount,
+              currency: paymentDetails.currency || 'ZAR',
+              paymentGateway: 'YOCO',
+              paymentId: donation.paymentIntentId,
+              gatewayResponse: JSON.stringify(paymentDetails),
+              gatewayFee: feeBreakdown.processingFee,
+              donorId: donation.donorId,
+              donorName: donation.anonymous ? 'Anonymous' : donation.donor.fullName,
+              donorEmail: donation.donor.email,
+              recipientId: donation.request.userId,
+              recipientName: donation.request.user.fullName,
+              recipientEmail: donation.request.user.email,
+              requestId: donation.requestId,
+              requestTitle: donation.request.title,
+              completedAt: new Date(),
+              adminNotes: `Yoco donation auto-finalized from admin transactions. Donor paid: R${totalPaid.toFixed(2)}, requester receives: R${donation.amount.toFixed(2)}, Yoco fee: R${feeBreakdown.processingFee.toFixed(2)}, Mishteh fee: R${feeBreakdown.platformFee.toFixed(2)}.`,
+            },
+          });
+
+          await prisma.transaction.create({
+            data: {
+              type: 'FEE',
+              status: 'COMPLETED',
+              amount: feeBreakdown.platformFee,
+              feeAmount: 0,
+              netAmount: feeBreakdown.platformFee,
+              currency: paymentDetails.currency || 'ZAR',
+              paymentGateway: 'YOCO',
+              paymentId: `${donation.paymentIntentId}-mishteh-fee`,
+              donorId: donation.donorId,
+              donorName: donation.donor.fullName,
+              donorEmail: donation.donor.email,
+              recipientId: donation.request.userId,
+              recipientName: donation.request.user.fullName,
+              recipientEmail: donation.request.user.email,
+              requestId: donation.requestId,
+              requestTitle: donation.request.title,
+              completedAt: new Date(),
+              adminNotes: `Mishteh 1% platform fee on Yoco donation ${donation.paymentIntentId}.`,
+            },
+          });
+        }
+      } else if (paymentDetails.status === 'failed' || paymentDetails.status === 'cancelled') {
+        await prisma.donation.update({
+          where: { id: donation.id },
+          data: {
+            status: 'REFUNDED',
+            paymentStatus: 'FAILED',
+          },
+        });
+      }
+    } catch (error) {
+      console.error(`Failed to finalize pending Yoco donation ${donation.id}:`, error);
+    }
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -96,6 +224,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    await finalizePendingYocoDonations();
     await backfillMissingDonationTransactions();
 
     const { searchParams } = new URL(request.url);

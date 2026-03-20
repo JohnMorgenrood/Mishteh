@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Search, Filter, Download, ChevronDown, ChevronUp, Loader } from 'lucide-react';
 import Link from 'next/link';
-import { CurrencyDisplay } from '@/components/CurrencyDisplay';
+import { formatCurrency, Currency } from '@/lib/currency';
 
 export default function AdminTransactionsPage() {
   const { data: session, status } = useSession();
@@ -97,6 +97,11 @@ export default function AdminTransactionsPage() {
       FEE: 'bg-gray-100 text-gray-800',
     };
     return styles[type as keyof typeof styles] || 'bg-gray-100 text-gray-800';
+  };
+
+  const renderAmount = (transaction: any) => {
+    const currency = (transaction.currency || 'ZAR') as Currency;
+    return formatCurrency(transaction.amount, currency);
   };
 
   if (status === 'loading' || loading) {
@@ -270,7 +275,7 @@ export default function AdminTransactionsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        <CurrencyDisplay amount={transaction.amount} />
+                        {renderAmount(transaction)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(transaction.status)}`}>
