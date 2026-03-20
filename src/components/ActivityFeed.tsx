@@ -8,6 +8,7 @@ import {
   TrendingUp, User, MapPin, Loader2, RefreshCw 
 } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
+import { getAvatarInitial, isUploadedProfileImage } from '@/lib/avatar';
 
 interface Activity {
   id: string;
@@ -191,14 +192,14 @@ export default function ActivityFeed({
   const renderActivityAvatar = (activity: Activity) => {
     const config = activityConfig[activity.type];
     const Icon = config.icon;
-    const initial = (activity.user?.fullName || activity.metadata?.userName || 'S').charAt(0).toUpperCase();
+    const initial = getAvatarInitial(activity.user?.fullName || activity.metadata?.userName);
 
-    if (activity.user?.image) {
+    if (isUploadedProfileImage(activity.user?.image)) {
       return (
         <div className="h-9 w-9 overflow-hidden rounded-full ring-2 ring-white shadow-sm">
           <Image
-            src={activity.user.image}
-            alt={activity.user.fullName}
+            src={activity.user?.image || ''}
+            alt={activity.user?.fullName || 'User avatar'}
             width={36}
             height={36}
             className="h-full w-full object-cover"

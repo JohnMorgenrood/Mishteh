@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
 import { formatCurrency } from '@/lib/currency';
+import { getAvatarInitial, isUploadedProfileImage } from '@/lib/avatar';
 
 interface Activity {
   id: string;
@@ -167,14 +168,14 @@ export default function ActivityPage() {
   const renderActivityAvatar = (activity: Activity) => {
     const config = activityConfig[activity.type];
     const Icon = config.icon;
-    const initial = (activity.user?.fullName || activity.metadata?.userName || 'S').charAt(0).toUpperCase();
+    const initial = getAvatarInitial(activity.user?.fullName || activity.metadata?.userName);
 
-    if (activity.user?.image) {
+    if (isUploadedProfileImage(activity.user?.image)) {
       return (
         <div className="h-12 w-12 overflow-hidden rounded-2xl ring-2 ring-white shadow-sm">
           <Image
-            src={activity.user.image}
-            alt={activity.user.fullName}
+            src={activity.user?.image || ''}
+            alt={activity.user?.fullName || 'User avatar'}
             width={48}
             height={48}
             className="h-full w-full object-cover"

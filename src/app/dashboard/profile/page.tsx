@@ -526,6 +526,9 @@ export default function ProfileSettingsPage() {
             {/* Profile Photo */}
             <div className="border-t border-gray-200 pt-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Profile Photo</h2>
+              <p className="mb-4 text-sm text-gray-600">
+                Community activity and comment areas use uploaded profile photos only. If you signed in with Google, upload a profile photo here for a cleaner public avatar.
+              </p>
               
               {profileData?.image && (
                 <div className="mb-4">

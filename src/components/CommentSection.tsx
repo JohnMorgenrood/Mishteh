@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { User, Send, Loader2, MessageCircle, AlertCircle } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
 import { TranslateLink } from './TranslateButton';
+import { getAvatarInitial, isUploadedProfileImage } from '@/lib/avatar';
 
 interface Comment {
   id: string;
@@ -124,6 +125,7 @@ export default function CommentSection({
 
   const displayedComments = showAll ? comments : comments.slice(0, 3);
   const hasMoreComments = comments.length > 3;
+  const sessionInitial = getAvatarInitial(session?.user?.name);
 
   return (
     <div className="p-5 bg-gray-50/50">
@@ -133,14 +135,18 @@ export default function CommentSection({
           {/* User Avatar */}
           <div className="flex-shrink-0">
             <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary-100 to-secondary-100">
-              {session?.user?.image ? (
+              {isUploadedProfileImage(session?.user?.image) ? (
                 <Image
-                  src={session.user.image}
-                  alt={session.user.name || 'User'}
+                  src={session?.user?.image || ''}
+                  alt={session?.user?.name || 'User'}
                   width={40}
                   height={40}
                   className="object-cover"
                 />
+              ) : session?.user ? (
+                <div className="flex items-center justify-center w-full h-full text-sm font-bold text-primary-700">
+                  {sessionInitial}
+                </div>
               ) : (
                 <div className="flex items-center justify-center w-full h-full">
                   <User className="w-5 h-5 text-primary-400" />
@@ -217,17 +223,17 @@ export default function CommentSection({
                 {/* Comment Avatar */}
                 <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
                   <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-primary-100 to-secondary-100 ring-2 ring-white shadow-sm hover:ring-primary-200 transition-all">
-                    {comment.user.image ? (
+                    {isUploadedProfileImage(comment.user.image) ? (
                       <Image
-                        src={comment.user.image}
+                        src={comment.user.image!}
                         alt={comment.user.fullName}
                         width={36}
                         height={36}
                         className="object-cover"
                       />
                     ) : (
-                      <div className="flex items-center justify-center w-full h-full">
-                        <User className="w-4 h-4 text-primary-400" />
+                      <div className="flex items-center justify-center w-full h-full text-xs font-bold text-primary-700">
+                        {getAvatarInitial(comment.user.fullName)}
                       </div>
                     )}
                   </div>
