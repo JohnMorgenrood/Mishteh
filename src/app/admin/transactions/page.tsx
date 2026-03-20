@@ -34,7 +34,7 @@ export default function AdminTransactionsPage() {
       const response = await fetch('/api/admin/transactions');
       if (response.ok) {
         const data = await response.json();
-        setTransactions(data.transactions || []);
+        setTransactions(Array.isArray(data) ? data : data.transactions || []);
       }
     } catch (error) {
       console.error('Error fetching transactions:', error);
