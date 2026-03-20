@@ -96,8 +96,10 @@ export async function PUT(request: NextRequest) {
     const instagramUrl = formData.get('instagramUrl') as string | null;
     const tiktokUrl = formData.get('tiktokUrl') as string | null;
     const websiteUrl = formData.get('websiteUrl') as string | null;
+    const showDonorNamePublicValue = formData.get('showDonorNamePublic');
+    const showDonorNamePublic = showDonorNamePublicValue === 'true';
 
-    console.log('Form data received:', { fullName, phone, location, bio, paypalEmail, facebookUrl, twitterUrl, instagramUrl, tiktokUrl, websiteUrl });
+    console.log('Form data received:', { fullName, phone, location, bio, paypalEmail, facebookUrl, twitterUrl, instagramUrl, tiktokUrl, websiteUrl, showDonorNamePublic });
 
     // Extract files
     const profilePhoto = formData.get('profilePhoto') as File | null;
@@ -173,6 +175,22 @@ export async function PUT(request: NextRequest) {
         ficaVerified: true,
       },
     });
+
+    if (session.user.userType === 'DONOR' || session.user.userType === 'SPONSOR') {
+      await prisma.donorPreference.upsert({
+        where: { userId: session.user.id },
+        update: {
+          showDonorNamePublic,
+        },
+        create: {
+          userId: session.user.id,
+          preferredCategories: [],
+          preferredLocations: [],
+          emailNotifications: true,
+          showDonorNamePublic,
+        },
+      });
+    }
 
     return NextResponse.json({
       message: 'Profile updated successfully',

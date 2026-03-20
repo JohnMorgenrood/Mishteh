@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const requestData = await prisma.request.findUnique({
+    const requestData: any = await prisma.request.findUnique({
       where: { id: params.id },
       include: {
         user: {
@@ -32,6 +32,11 @@ export async function GET(
             donor: {
               select: {
                 fullName: true,
+                preferences: {
+                  select: {
+                    showDonorNamePublic: true,
+                  },
+                },
               },
             },
           },
@@ -70,7 +75,21 @@ export async function GET(
       data: { views: { increment: 1 } },
     });
 
-    return NextResponse.json(requestData);
+    const sanitizedRequestData = {
+      ...requestData,
+      donations: requestData.donations.map((donation: any) => {
+        const donorIsPublic = Boolean(donation.donor.preferences?.showDonorNamePublic);
+
+        return {
+          ...donation,
+          donor: {
+            fullName: donorIsPublic ? donation.donor.fullName : 'Private Donor',
+          },
+        };
+      }),
+    };
+
+    return NextResponse.json(sanitizedRequestData);
   } catch (error) {
     console.error('Error fetching request:', error);
     return NextResponse.json(

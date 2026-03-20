@@ -33,7 +33,7 @@ export default function DonationForm({
   const toast = useToast();
   const [amount, setAmount] = useState<string>('');
   const [message, setMessage] = useState('');
-  const [anonymous, setAnonymous] = useState(false);
+  const [anonymous, setAnonymous] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showPayPal, setShowPayPal] = useState(false);
@@ -382,8 +382,13 @@ export default function DonationForm({
                 onChange={(e) => setAnonymous(e.target.checked)}
                 className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
               />
-              <span className="ml-2 text-sm text-gray-700">Make this donation anonymous</span>
+              <span className="ml-2 text-sm text-gray-700">
+                Keep my donation private
+              </span>
             </label>
+            <p className="mt-2 text-xs text-gray-500">
+              Donor names are hidden by default unless you choose to show them in your dashboard privacy settings and uncheck this box for this donation.
+            </p>
           </div>
 
           {/* Error Message */}

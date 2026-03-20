@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
           preferredCategories: [],
           preferredLocations: [],
           emailNotifications: true,
+          showDonorNamePublic: false,
         },
       });
     }

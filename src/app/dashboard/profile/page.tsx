@@ -35,6 +35,7 @@ export default function ProfileSettingsPage() {
     instagramUrl: '',
     tiktokUrl: '',
     websiteUrl: '',
+    showDonorNamePublic: false,
   });
 
   const [files, setFiles] = useState<{
@@ -149,6 +150,7 @@ export default function ProfileSettingsPage() {
           instagramUrl: data.user.instagramUrl || '',
           tiktokUrl: data.user.tiktokUrl || '',
           websiteUrl: data.user.websiteUrl || '',
+          showDonorNamePublic: Boolean(data.user.preferences?.showDonorNamePublic),
         });
       }
     } catch (error) {
@@ -176,6 +178,7 @@ export default function ProfileSettingsPage() {
       submitData.append('instagramUrl', formData.instagramUrl);
       submitData.append('tiktokUrl', formData.tiktokUrl);
       submitData.append('websiteUrl', formData.websiteUrl);
+      submitData.append('showDonorNamePublic', String(formData.showDonorNamePublic));
 
       if (files.profilePhoto) {
         submitData.append('profilePhoto', files.profilePhoto);
@@ -491,6 +494,32 @@ export default function ProfileSettingsPage() {
                     />
                   </div>
                 </div>
+              </div>
+            )}
+
+            {(session?.user.userType === 'DONOR' || session?.user.userType === 'SPONSOR') && (
+              <div className="border-t border-gray-200 pt-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Privacy Settings</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Donor names stay private by default. Turn this on only if you want your name shown publicly on donations you make.
+                </p>
+
+                <label className="flex items-start gap-3 rounded-lg border border-gray-200 p-4">
+                  <input
+                    type="checkbox"
+                    checked={formData.showDonorNamePublic}
+                    onChange={(e) => setFormData({ ...formData, showDonorNamePublic: e.target.checked })}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <div>
+                    <span className="block text-sm font-medium text-gray-900">
+                      Show my name on public supporter lists
+                    </span>
+                    <span className="block text-sm text-gray-500">
+                      If this stays off, your donations will appear as Private Donor unless you change the setting later.
+                    </span>
+                  </div>
+                </label>
               </div>
             )}
 

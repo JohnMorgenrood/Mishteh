@@ -59,13 +59,14 @@ SET "currentAmount" = "currentAmount" + 50.00,
 WHERE id = (SELECT id FROM "Request" LIMIT 1);
 
 -- Create donor preferences
-INSERT INTO "DonorPreference" (id, "userId", "preferredCategories", "preferredLocations", "emailNotifications", "createdAt", "updatedAt")
+INSERT INTO "DonorPreference" (id, "userId", "preferredCategories", "preferredLocations", "emailNotifications", "showDonorNamePublic", "createdAt", "updatedAt")
 SELECT 
   gen_random_uuid(),
   id,
   ARRAY['FOOD', 'RENT']::text[],
   ARRAY['Los Angeles, CA', 'New York, NY']::text[],
   true,
+  false,
   NOW(),
   NOW()
 FROM "User" 

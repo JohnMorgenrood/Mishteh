@@ -88,6 +88,11 @@ async function getRequest(id: string) {
               select: {
                 fullName: true,
                 image: true,
+                preferences: {
+                  select: {
+                    showDonorNamePublic: true,
+                  },
+                },
               },
             },
           },
@@ -142,7 +147,7 @@ async function getRequest(id: string) {
 
 export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const request = await getRequest(id);
+  const request: any = await getRequest(id);
   const session = await getServerSession(authOptions);
 
   if (!request) {
@@ -178,9 +183,19 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
   // Check if current user has liked this request
   // Note: likes relation will be available after running prisma db push
-  const userLiked = session?.user?.id && (request as any).likes
-    ? (request as any).likes.some((like: { userId: string }) => like.userId === session.user.id)
+  const userLiked = session?.user?.id && request.likes
+    ? request.likes.some((like: { userId: string }) => like.userId === session.user.id)
     : false;
+
+  const recentSupporters = request.donations.slice(0, 5).map((donation: any) => {
+    const donorIsPublic = Boolean(donation.donor?.preferences?.showDonorNamePublic);
+
+    return {
+      ...donation,
+      donorDisplayName: donorIsPublic ? donation.donor.fullName : 'Private Donor',
+      donorImage: donorIsPublic ? donation.donor.image : null,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 md:py-12">
@@ -204,7 +219,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-3">
                       <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-800">
-                        {request.category.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+                        {request.category.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (letter: string) => letter.toUpperCase())}
                       </span>
                       <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${
                         request.urgency === 'CRITICAL' ? 'bg-red-100 text-red-800' :
@@ -337,14 +352,14 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                   </h2>
                 </div>
                 <div className="divide-y divide-gray-50">
-                  {request.donations.slice(0, 5).map((donation: any) => (
+                  {recentSupporters.map((donation: any) => (
                     <div key={donation.id} className="p-4 hover:bg-gray-50/50 transition-colors">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-primary-100 flex items-center justify-center flex-shrink-0">
-                          {donation.donor.image ? (
+                          {donation.donorImage ? (
                             <Image
-                              src={donation.donor.image}
-                              alt={donation.donor.fullName}
+                              src={donation.donorImage}
+                              alt={donation.donorDisplayName}
                               width={40}
                               height={40}
                               className="object-cover"
@@ -355,7 +370,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
-                            <p className="font-semibold text-gray-900 truncate">{donation.donor.fullName}</p>
+                            <p className="font-semibold text-gray-900 truncate">{donation.donorDisplayName}</p>
                             <CurrencyDisplay amount={donation.amount} className="text-green-600 font-bold whitespace-nowrap" />
                           </div>
                           {donation.message && (
