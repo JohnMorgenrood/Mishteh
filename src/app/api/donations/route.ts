@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { formatCurrency } from '@/lib/currency';
 
 // Validation schema for creating donations
 const createDonationSchema = z.object({
@@ -138,8 +139,8 @@ export async function POST(request: NextRequest) {
         userId: helpRequest.userId,
         title: 'New Donation Received!',
         message: anonymous
-          ? `You received a donation of $${amount} from an anonymous donor.`
-          : `You received a donation of $${amount}.`,
+          ? `You received a donation payout of ${formatCurrency(amount, 'ZAR')} from an anonymous donor.`
+          : `You received a donation payout of ${formatCurrency(amount, 'ZAR')}.`,
         type: 'donation_received',
         link: `/dashboard/requests/${requestId}`,
       },

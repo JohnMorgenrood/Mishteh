@@ -92,8 +92,9 @@ export default function TermsOfServicePage() {
 
                 <h3 className="text-xl font-medium text-gray-800">4.4 Platform Fees</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  MISHTEH may deduct a small platform fee (currently 0%) from donations to cover operational 
-                  costs. Any fees will be clearly disclosed before creating a request.
+                  MISHTEH currently charges a small platform fee of 1% on supported payments to help cover
+                  operational costs. Payment gateway fees may also apply. All fees and net payout amounts
+                  will be shown before payment is completed.
                 </p>
               </div>
             </section>

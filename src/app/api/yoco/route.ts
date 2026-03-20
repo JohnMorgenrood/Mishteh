@@ -3,6 +3,7 @@ import { createYocoCheckout, getYocoPaymentDetails } from '@/lib/yoco';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { calculateYocoBreakdown } from '@/lib/payment-fees';
 
 /**
  * POST /api/yoco/create-checkout
@@ -50,16 +51,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Calculate fees if totalAmount not provided
-    // Yoco fee: 2.6% + Mishteh fee: 1% = 3.6%
-    const mishtehFee = amount * 0.01;
-    const yocoFee = (amount + mishtehFee) * 0.026;
-    const calculatedTotal = totalAmount || (amount + mishtehFee + yocoFee);
+    const feeBreakdown = calculateYocoBreakdown(amount);
+    const calculatedTotal = totalAmount || feeBreakdown.grossAmount;
 
-    // Create donation record with PLEDGED status (store the donation amount, not total with fees)
+    // Store the net amount that will be available to the requester after fees.
     const donation = await prisma.donation.create({
       data: {
-        amount, // Store the actual donation amount (what recipient gets)
+        amount: feeBreakdown.netAmount,
         status: 'PLEDGED',
         paymentMethod: 'YOCO',
         paymentStatus: 'PENDING',
@@ -81,10 +79,11 @@ export async function POST(request: Request) {
         requestId: requestId,
         donorName: isAnonymous ? 'Anonymous' : session.user.name,
         donorEmail: session.user.email,
-        originalAmount: amount,
+        originalAmount: feeBreakdown.grossAmount,
         totalWithFees: calculatedTotal,
-        mishtehFee: mishtehFee,
-        yocoFee: yocoFee,
+        mishtehFee: feeBreakdown.platformFee,
+        yocoFee: feeBreakdown.processingFee,
+        recipientAmount: feeBreakdown.netAmount,
       },
       successUrl: `${process.env.NEXTAUTH_URL}/donations/success?donationId=${donation.id}`,
       cancelUrl: `${process.env.NEXTAUTH_URL}/requests/${requestId}?cancelled=true`,
@@ -171,7 +170,7 @@ export async function GET(request: Request) {
       status = 'COMPLETED';
       paymentStatus = 'COMPLETED';
       
-      // Update request current amount
+      // Update request current amount with the net payout amount.
       await prisma.request.update({
         where: { id: donation.requestId },
         data: {
@@ -182,9 +181,8 @@ export async function GET(request: Request) {
       });
       const totalPaid = typeof paymentDetails.amount === 'number'
         ? paymentDetails.amount / 100
-        : donation.amount;
-      const mishtehFee = Number((donation.amount * 0.01).toFixed(2));
-      const yocoFee = Number(((donation.amount + mishtehFee) * 0.026).toFixed(2));
+        : Math.round((donation.amount / 0.964) * 100) / 100;
+      const feeBreakdown = calculateYocoBreakdown(totalPaid);
       const existingDonationTransaction = await prisma.transaction.findFirst({
         where: {
           paymentId: checkoutId,
@@ -198,7 +196,7 @@ export async function GET(request: Request) {
             type: 'DONATION',
             status: 'COMPLETED',
             amount: totalPaid,
-            feeAmount: yocoFee + mishtehFee,
+            feeAmount: feeBreakdown.totalFees,
             netAmount: donation.amount,
             currency: paymentDetails.currency || 'ZAR',
             paymentGateway: 'YOCO',
@@ -213,7 +211,8 @@ export async function GET(request: Request) {
             requestId: donation.requestId,
             requestTitle: donation.request.title,
             completedAt: new Date(),
-            adminNotes: `Yoco donation. Donation amount: R${donation.amount.toFixed(2)}, Yoco fee: R${yocoFee.toFixed(2)}, Mishteh fee: R${mishtehFee.toFixed(2)}, total paid: R${totalPaid.toFixed(2)}.`,
+            gatewayFee: feeBreakdown.processingFee,
+            adminNotes: `Yoco donation. Donor paid: R${totalPaid.toFixed(2)}, requester receives: R${donation.amount.toFixed(2)}, Yoco fee: R${feeBreakdown.processingFee.toFixed(2)}, Mishteh fee: R${feeBreakdown.platformFee.toFixed(2)}.`,
           },
         });
 
@@ -221,9 +220,9 @@ export async function GET(request: Request) {
           data: {
             type: 'FEE',
             status: 'COMPLETED',
-            amount: mishtehFee,
+            amount: feeBreakdown.platformFee,
             feeAmount: 0,
-            netAmount: mishtehFee,
+            netAmount: feeBreakdown.platformFee,
             currency: paymentDetails.currency || 'ZAR',
             paymentGateway: 'YOCO',
             paymentId: `${checkoutId}-mishteh-fee`,

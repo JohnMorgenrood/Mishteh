@@ -18,8 +18,7 @@ export function CurrencyDisplay({ amount, className = '' }: CurrencyDisplayProps
   }, []);
 
   if (!mounted) {
-    // Show USD on server-side render to avoid hydration mismatch
-    return <span className={className}>${amount.toFixed(2)}</span>;
+    return <span className={className}>{formatCurrency(amount, 'ZAR')}</span>;
   }
 
   return <span className={className}>{formatCurrency(amount, userCurrency)}</span>;
@@ -48,10 +47,10 @@ export function CurrencyProgressBar({ currentAmount, targetAmount }: ProgressBar
       <div className="mb-6">
         <div className="flex justify-between text-sm mb-2">
           <span className="font-semibold text-gray-700">
-            ${currentAmount.toFixed(2)}
+            {formatCurrency(currentAmount, 'ZAR')}
           </span>
           <span className="text-gray-500">
-            of ${targetAmount.toFixed(2)}
+            of {formatCurrency(targetAmount, 'ZAR')}
           </span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">

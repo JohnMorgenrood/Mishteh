@@ -173,7 +173,7 @@ export default function AboutPage() {
               <TrendingUp className="w-10 h-10 text-primary-600 mb-4" />
               <h3 className="font-semibold text-gray-900 mb-2">Direct Impact</h3>
               <p className="text-gray-600 text-sm">
-                100% of donations go directly to recipients. No hidden fees or administrative costs eating into your generosity.
+                Donation breakdowns are shown clearly before payment, including gateway costs and the small platform fee used to keep MISHTEH running.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">

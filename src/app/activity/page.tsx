@@ -15,6 +15,7 @@ import {
   PlayCircle,
 } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/currency';
 
 interface Activity {
   id: string;
@@ -112,7 +113,7 @@ function renderBody(activity: Activity) {
   }
 
   if (activity.type === 'DONATION' && activity.metadata?.amount) {
-    return `Support amount recorded: $${Number(activity.metadata.amount).toFixed(2)}`;
+    return `Support amount recorded: ${formatCurrency(Number(activity.metadata.amount), 'ZAR')}`;
   }
 
   if (activity.request?.title) {

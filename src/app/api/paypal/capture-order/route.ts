@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { captureOrder, getOrderDetails } from '@/lib/paypal';
 import { prisma } from '@/lib/prisma';
 import { convertCurrency, Currency } from '@/lib/currency';
+import { calculatePayPalBreakdown } from '@/lib/payment-fees';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,29 +42,14 @@ export async function POST(request: NextRequest) {
       ? `${captureResult.payer.name.given_name} ${captureResult.payer.name.surname}`
       : null;
 
-    // Calculate fees:
-    // PayPal fee: 2.9% + $0.30
-    // Mishteh fee: 1% of original donation
-    // Total paid = donation + paypal fee + mishteh fee
-    // We need to reverse-calculate what the donation amount was
-    
-    // If original amount was sent from client, use it
-    // Otherwise, calculate: donation = (totalAmount - 0.30) / 1.039 (1 + 0.029 + 0.01)
-    let donationAmount: number;
-    let mishtehFee: number;
-    let paypalFee: number;
-    
-    if (originalAmount && typeof originalAmount === 'number') {
-      // Client sent the original donation amount
-      donationAmount = originalAmount;
-      mishtehFee = donationAmount * 0.01; // 1% Mishteh fee
-      paypalFee = totalAmount - donationAmount - mishtehFee; // Remaining is PayPal fee
-    } else {
-      // Reverse calculate
-      donationAmount = (totalAmount - 0.30) / 1.039;
-      mishtehFee = donationAmount * 0.01;
-      paypalFee = (donationAmount + mishtehFee) * 0.029 + 0.30;
-    }
+    const localCurrency = (originalCurrency || currency || 'USD') as Currency;
+    const grossAmount = originalAmount && typeof originalAmount === 'number'
+      ? originalAmount
+      : totalAmount;
+    const feeBreakdown = calculatePayPalBreakdown(grossAmount, localCurrency);
+    const donationAmount = feeBreakdown.netAmount;
+    const mishtehFee = feeBreakdown.platformFee;
+    const paypalFee = feeBreakdown.processingFee;
 
     // Get request details if provided
     let request_details = null;
@@ -99,7 +85,7 @@ export async function POST(request: NextRequest) {
       data: {
         requestId: requestId || null,
         donorId: session.user.id,
-        amount: donationAmount, // Amount recipient receives
+        amount: donationAmount,
         message: message || null,
         anonymous: anonymous || false,
         paymentMethod: 'PAYPAL',
@@ -113,14 +99,15 @@ export async function POST(request: NextRequest) {
       data: {
         type: 'DONATION',
         status: 'COMPLETED',
-        amount: totalAmount, // Total amount donor paid
-        feeAmount: paypalFee + mishtehFee, // Total fees
-        netAmount: donationAmount, // Amount recipient receives
-        currency,
+        amount: grossAmount,
+        feeAmount: feeBreakdown.totalFees,
+        netAmount: donationAmount,
+        currency: localCurrency,
         paymentGateway: 'PAYPAL',
         paymentId: orderId,
         payerId,
         gatewayResponse: JSON.stringify(captureResult),
+        gatewayFee: paypalFee,
         donorId: session.user.id,
         donorName: anonymous ? 'Anonymous' : session.user.name || 'Anonymous',
         donorEmail: session.user.email || null,
@@ -138,10 +125,10 @@ export async function POST(request: NextRequest) {
       data: {
         type: 'FEE',
         status: 'COMPLETED',
-        amount: mishtehFee, // Mishteh's 1% revenue
+        amount: mishtehFee,
         feeAmount: 0,
-        netAmount: mishtehFee, // This goes to Mishteh
-        currency,
+        netAmount: mishtehFee,
+        currency: localCurrency,
         paymentGateway: 'PAYPAL',
         paymentId: `${orderId}-mishteh-fee`,
         donorId: session.user.id,
@@ -150,7 +137,7 @@ export async function POST(request: NextRequest) {
         requestId: requestId || null,
         requestTitle: request_details?.title || null,
         completedAt: new Date(),
-        adminNotes: `Mishteh 1% platform fee. Donation: $${donationAmount.toFixed(2)}, PayPal fee: $${paypalFee.toFixed(2)}, Mishteh fee: $${mishtehFee.toFixed(2)}, Total paid: $${totalAmount.toFixed(2)} ${currency}`,
+        adminNotes: `Mishteh 1% platform fee. Donor paid: ${localCurrency} ${grossAmount.toFixed(2)}, PayPal fee: ${localCurrency} ${paypalFee.toFixed(2)}, Mishteh fee: ${localCurrency} ${mishtehFee.toFixed(2)}, requester receives: ${localCurrency} ${donationAmount.toFixed(2)}. PayPal capture total: ${currency} ${totalAmount.toFixed(2)}.`,
       },
     });
 
@@ -161,7 +148,7 @@ export async function POST(request: NextRequest) {
           userId: request_details.userId,
           type: 'DONATION_RECEIVED',
           title: 'New Donation Received',
-          message: `${session.user.name} donated $${donationAmount.toFixed(2)} ${currency} to your request "${request_details.title}"`,
+          message: `${session.user.name} donated ${localCurrency} ${donationAmount.toFixed(2)} to your request "${request_details.title}"`,
           read: false,
         },
       });
@@ -175,9 +162,9 @@ export async function POST(request: NextRequest) {
       fees: {
         paypalFee,
         mishtehFee,
-        totalFee: paypalFee + mishtehFee,
+        totalFee: feeBreakdown.totalFees,
         donationAmount,
-        totalPaid: totalAmount,
+        totalPaid: grossAmount,
       },
     });
   } catch (error: any) {

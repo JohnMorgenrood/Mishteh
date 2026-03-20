@@ -17,14 +17,11 @@ import {
   Wallet,
 } from 'lucide-react';
 import { authOptions } from '@/lib/auth';
+import { formatCurrency } from '@/lib/currency';
 import { prisma } from '@/lib/prisma';
 
 function formatMoney(amount: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(amount);
+  return formatCurrency(amount, 'ZAR');
 }
 
 function formatLabel(value: string) {
