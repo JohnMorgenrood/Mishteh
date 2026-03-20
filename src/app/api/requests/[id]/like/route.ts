@@ -45,32 +45,47 @@ export async function POST(
     let liked: boolean;
 
     if (existingLike) {
-      // Unlike - remove the like
-      await prisma.like.delete({
-        where: { id: existingLike.id },
-      });
+      await prisma.$transaction([
+        prisma.like.delete({
+          where: { id: existingLike.id },
+        }),
+        prisma.activity.deleteMany({
+          where: {
+            type: 'LIKE',
+            userId: session.user.id,
+            requestId,
+          },
+        }),
+      ]);
       liked = false;
     } else {
-      // Like - create new like
-      await prisma.like.create({
-        data: {
-          userId: session.user.id,
-          requestId: requestId,
-        },
-      });
+      await prisma.$transaction([
+        prisma.like.create({
+          data: {
+            userId: session.user.id,
+            requestId,
+          },
+        }),
+        // Keep only one activity row per user/request like action.
+        prisma.activity.deleteMany({
+          where: {
+            type: 'LIKE',
+            userId: session.user.id,
+            requestId,
+          },
+        }),
+        prisma.activity.create({
+          data: {
+            type: 'LIKE',
+            userId: session.user.id,
+            requestId,
+            metadata: JSON.stringify({
+              userName: session.user.name || 'Someone',
+            }),
+          },
+        }),
+      ]);
       liked = true;
-
-      // Create activity entry for the like
-      await prisma.activity.create({
-        data: {
-          type: 'LIKE',
-          userId: session.user.id,
-          requestId: requestId,
-          metadata: JSON.stringify({
-            userName: session.user.name || 'Someone',
-          }),
-        },
-      });
     }
 
     // Get updated like count

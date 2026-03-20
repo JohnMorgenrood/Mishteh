@@ -20,6 +20,22 @@ export async function GET(request: NextRequest) {
     // Enrich activities with request and user info
     const enrichedActivities = await Promise.all(
       activities.map(async (activity) => {
+        if (activity.type === 'LIKE' && activity.userId && activity.requestId) {
+          const activeLike = await prisma.like.findUnique({
+            where: {
+              userId_requestId: {
+                userId: activity.userId,
+                requestId: activity.requestId,
+              },
+            },
+            select: { id: true },
+          });
+
+          if (!activeLike) {
+            return null;
+          }
+        }
+
         let requestInfo = null;
         let userInfo = null;
 
@@ -73,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     // Filter out activities with missing data
     const validActivities = enrichedActivities.filter(
-      (a) => a.request || a.type === 'NEW_REQUEST'
+      (a) => a && (a.request || a.type === 'NEW_REQUEST')
     );
 
     const nextCursor =

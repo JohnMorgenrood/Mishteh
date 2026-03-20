@@ -27,6 +27,22 @@ export async function GET(request: Request) {
     // Enrich activities with user and request data
     const enrichedActivities = await Promise.all(
       activities.map(async (activity) => {
+        if (activity.type === 'LIKE' && activity.userId && activity.requestId) {
+          const activeLike = await prisma.like.findUnique({
+            where: {
+              userId_requestId: {
+                userId: activity.userId,
+                requestId: activity.requestId,
+              },
+            },
+            select: { id: true },
+          });
+
+          if (!activeLike) {
+            return null;
+          }
+        }
+
         let user = null;
         let request = null;
 
@@ -48,7 +64,7 @@ export async function GET(request: Request) {
       })
     );
 
-    return NextResponse.json({ activities: enrichedActivities });
+    return NextResponse.json({ activities: enrichedActivities.filter(Boolean) });
   } catch (error) {
     console.error('Error fetching activities:', error);
     return NextResponse.json({ error: 'Failed to fetch activities' }, { status: 500 });
