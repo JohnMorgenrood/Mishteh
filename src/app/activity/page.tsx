@@ -305,11 +305,17 @@ export default function ActivityPage() {
 
           <aside className="space-y-6">
             <div className="rounded-2xl bg-white p-6 shadow-soft">
-              <h2 className="text-lg font-bold text-gray-900">How This Feed Works</h2>
+              <h2 className="text-lg font-bold text-gray-900">What You&apos;ll See Here</h2>
               <div className="mt-4 space-y-3 text-sm text-gray-600">
-                <div className="rounded-xl bg-gray-50 p-4">Request likes and comments already flow into this page.</div>
-                <div className="rounded-xl bg-gray-50 p-4">Donations can appear as support events without exposing private donor names publicly.</div>
-                <div className="rounded-xl bg-gray-50 p-4">This is the right place to add future post, image, and video cards.</div>
+                <div className="rounded-xl border border-primary-100 bg-primary-50 p-4">
+                  Support, encouragement, and kind engagement from the community appear here as the feed grows.
+                </div>
+                <div className="rounded-xl bg-gray-50 p-4">
+                  Likes, comments, and visible support moments can surface here without making the page feel noisy.
+                </div>
+                <div className="rounded-xl bg-gray-50 p-4">
+                  As more people use Mishteh, this space can highlight uplifting stories, milestones, and answered needs.
+                </div>
               </div>
             </div>
 
@@ -317,10 +323,22 @@ export default function ActivityPage() {
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-700" />
                 <div>
-                  <h2 className="text-lg font-bold text-emerald-900">Admin Approval Ready</h2>
+                  <h2 className="text-lg font-bold text-emerald-900">Privacy Still Comes First</h2>
                   <p className="mt-2 text-sm text-emerald-800">
-                    The next step is to add a post model and moderation queue so videos and community posts only go live after admin approval.
+                    Donor privacy stays protected here. Private supporters remain private, and only safe, positive community activity should be visible publicly.
                   </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <h2 className="text-lg font-bold text-gray-900">Coming Into View</h2>
+              <div className="mt-4 space-y-3 text-sm text-gray-600">
+                <div className="rounded-xl bg-gray-50 p-4">
+                  Interesting updates, stronger community stories, and bigger progress moments can be featured here next.
+                </div>
+                <div className="rounded-xl bg-gray-50 p-4">
+                  This is also the right place for future approved photo posts, video updates, and community announcements.
                 </div>
               </div>
             </div>
