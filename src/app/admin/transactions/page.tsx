@@ -101,7 +101,11 @@ export default function AdminTransactionsPage() {
 
   const renderAmount = (transaction: any) => {
     const currency = (transaction.currency || 'ZAR') as Currency;
-    return formatCurrency(transaction.amount, currency);
+    return {
+      gross: formatCurrency(transaction.amount, currency),
+      fees: formatCurrency(transaction.feeAmount || 0, currency),
+      net: formatCurrency(transaction.netAmount || 0, currency),
+    };
   };
 
   if (status === 'loading' || loading) {
@@ -212,7 +216,7 @@ export default function AdminTransactionsPage() {
                       onClick={() => handleSort('amount')}
                       className="flex items-center gap-1 hover:text-gray-700"
                     >
-                      Amount
+                      Amounts
                       {sortField === 'amount' && (
                         sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                       )}
@@ -234,7 +238,10 @@ export default function AdminTransactionsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredAndSortedTransactions.map((transaction) => (
+                  filteredAndSortedTransactions.map((transaction) => {
+                    const amounts = renderAmount(transaction);
+
+                    return (
                     <tr key={transaction.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                         {transaction.id.substring(0, 8)}...
@@ -274,8 +281,12 @@ export default function AdminTransactionsPage() {
                           {transaction.type}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        {renderAmount(transaction)}
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="space-y-1">
+                          <p className="font-semibold text-gray-900">Paid: {amounts.gross}</p>
+                          <p className="text-xs text-red-600">Fees: {amounts.fees}</p>
+                          <p className="text-xs font-semibold text-green-700">Net to requester: {amounts.net}</p>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(transaction.status)}`}>
@@ -291,7 +302,7 @@ export default function AdminTransactionsPage() {
                         </Link>
                       </td>
                     </tr>
-                  ))
+                  )})
                 )}
               </tbody>
             </table>
