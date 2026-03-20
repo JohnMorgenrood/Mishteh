@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  Heart,
-  MessageCircle,
+  ArrowLeft,
   HandHeart,
+  Heart,
+  Loader2,
+  MessageCircle,
+  ShieldCheck,
   Sparkles,
   TrendingUp,
-  Loader2,
-  ArrowLeft,
-  ShieldCheck,
-  PlayCircle,
 } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
 import { formatCurrency } from '@/lib/currency';
@@ -20,12 +19,13 @@ import { getAvatarInitial, isUploadedProfileImage } from '@/lib/avatar';
 
 interface Activity {
   id: string;
-  type: 'LIKE' | 'COMMENT' | 'DONATION' | 'NEW_REQUEST' | 'REQUEST_FUNDED';
+  type: 'LIKE' | 'COMMENT' | 'DONATION' | 'NEW_REQUEST' | 'REQUEST_FUNDED' | 'THANK_YOU';
   createdAt: string;
   metadata?: {
     userName?: string;
     amount?: number;
     commentPreview?: string;
+    messagePreview?: string;
   };
   request?: {
     id: string;
@@ -74,6 +74,12 @@ const activityConfig = {
     bgColor: 'bg-amber-100',
     label: 'Goal Reached',
   },
+  THANK_YOU: {
+    icon: HandHeart,
+    color: 'text-emerald-700',
+    bgColor: 'bg-emerald-100',
+    label: 'Thank You',
+  },
 };
 
 function formatTimeAgo(dateString: string) {
@@ -103,6 +109,8 @@ function renderHeadline(activity: Activity) {
       return `${recipientName} shared a new story`;
     case 'REQUEST_FUNDED':
       return `${recipientName}'s request reached its goal`;
+    case 'THANK_YOU':
+      return `${actor} shared a thank-you note with supporters`;
     default:
       return 'Community activity';
   }
@@ -115,6 +123,10 @@ function renderBody(activity: Activity) {
 
   if (activity.type === 'DONATION' && activity.metadata?.amount) {
     return `Support amount recorded: ${formatCurrency(Number(activity.metadata.amount), 'ZAR')}`;
+  }
+
+  if (activity.type === 'THANK_YOU' && activity.metadata?.messagePreview) {
+    return activity.metadata.messagePreview;
   }
 
   if (activity.request?.title) {
@@ -216,24 +228,10 @@ export default function ActivityPage() {
           <div>
             <div className="mb-6 rounded-3xl bg-gradient-to-r from-primary-700 via-primary-600 to-secondary-600 p-8 text-white shadow-soft-lg">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-100">Community Feed</p>
-              <h1 className="mt-2 text-3xl font-bold md:text-4xl">Activity, support, and momentum</h1>
+              <h1 className="mt-2 text-3xl font-bold md:text-4xl">Activity, support, and gratitude</h1>
               <p className="mt-3 max-w-3xl text-sm text-primary-50 md:text-base">
-                This page now acts more like a social feed. Full standalone posts, video uploads, and admin approval can build on this next without changing the rest of the app structure.
+                Follow the small moments that show a community caring for one another, including support, comments, and thankful updates from people who received help.
               </p>
-            </div>
-
-            <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-soft">
-              <div className="flex items-start gap-4">
-                <div className="rounded-2xl bg-primary-50 p-3">
-                  <PlayCircle className="h-6 w-6 text-primary-600" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">Next Social Phase</h2>
-                  <p className="mt-1 text-sm text-gray-600">
-                    Video posts, image posts, and public status updates can sit here with likes, comments, and admin approval before they go live.
-                  </p>
-                </div>
-              </div>
             </div>
 
             <div className="space-y-5">
@@ -245,20 +243,17 @@ export default function ActivityPage() {
                 <div className="rounded-2xl bg-white px-6 py-16 text-center shadow-soft">
                   <Sparkles className="mx-auto mb-4 h-12 w-12 text-gray-300" />
                   <p className="text-gray-600">No activity yet</p>
-                  <p className="mt-1 text-sm text-gray-400">Once people like, comment, donate, and share requests, activity will appear here.</p>
+                  <p className="mt-1 text-sm text-gray-400">Once people like, comment, donate, and share updates, activity will appear here.</p>
                 </div>
               ) : (
                 activities.map((activity) => {
                   const config = activityConfig[activity.type];
-                  const Icon = config.icon;
 
                   return (
                     <article key={activity.id} className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-soft transition hover:shadow-soft-lg">
                       <div className="p-6">
                         <div className="flex items-start gap-4">
-                          <div className="flex-shrink-0">
-                            {renderActivityAvatar(activity)}
-                          </div>
+                          <div className="flex-shrink-0">{renderActivityAvatar(activity)}</div>
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                               <div>
@@ -311,10 +306,10 @@ export default function ActivityPage() {
                   Support, encouragement, and kind engagement from the community appear here as the feed grows.
                 </div>
                 <div className="rounded-xl bg-gray-50 p-4">
-                  Likes, comments, and visible support moments can surface here without making the page feel noisy.
+                  Thank-you notes from requesters can help donors see that their support truly reached someone.
                 </div>
                 <div className="rounded-xl bg-gray-50 p-4">
-                  As more people use Mishteh, this space can highlight uplifting stories, milestones, and answered needs.
+                  Likes, comments, and visible support moments can surface here without making the page feel noisy.
                 </div>
               </div>
             </div>
@@ -325,20 +320,8 @@ export default function ActivityPage() {
                 <div>
                   <h2 className="text-lg font-bold text-emerald-900">Privacy Still Comes First</h2>
                   <p className="mt-2 text-sm text-emerald-800">
-                    Donor privacy stays protected here. Private supporters remain private, and only safe, positive community activity should be visible publicly.
+                    Donor privacy stays protected here. Private supporters remain private, and thankful updates can still be shared without exposing hidden donor names.
                   </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-white p-6 shadow-soft">
-              <h2 className="text-lg font-bold text-gray-900">Coming Into View</h2>
-              <div className="mt-4 space-y-3 text-sm text-gray-600">
-                <div className="rounded-xl bg-gray-50 p-4">
-                  Interesting updates, stronger community stories, and bigger progress moments can be featured here next.
-                </div>
-                <div className="rounded-xl bg-gray-50 p-4">
-                  This is also the right place for future approved photo posts, video updates, and community announcements.
                 </div>
               </div>
             </div>

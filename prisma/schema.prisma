@@ -112,6 +112,8 @@ model Request {
   views          Int             @default(0)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  gratitudeMessage String?
+  gratitudePostedAt DateTime?
   expiresAt      DateTime?
   featured       Boolean         @default(false)
   isAnonymous    Boolean         @default(false)
@@ -460,4 +462,5 @@ enum ActivityType {
   DONATION
   NEW_REQUEST
   REQUEST_FUNDED
+  THANK_YOU
 }

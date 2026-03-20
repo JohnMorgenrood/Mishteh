@@ -1,23 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  Heart, MessageCircle, HandHeart, Sparkles, 
-  TrendingUp, User, MapPin, Loader2, RefreshCw 
+import {
+  HandHeart,
+  Heart,
+  Loader2,
+  MessageCircle,
+  RefreshCw,
+  Sparkles,
+  TrendingUp,
 } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
 import { getAvatarInitial, isUploadedProfileImage } from '@/lib/avatar';
 
 interface Activity {
   id: string;
-  type: 'LIKE' | 'COMMENT' | 'DONATION' | 'NEW_REQUEST' | 'REQUEST_FUNDED';
+  type: 'LIKE' | 'COMMENT' | 'DONATION' | 'NEW_REQUEST' | 'REQUEST_FUNDED' | 'THANK_YOU';
   createdAt: string;
   metadata?: {
     userName?: string;
     amount?: number;
     commentPreview?: string;
+    messagePreview?: string;
   };
   request?: {
     id: string;
@@ -77,12 +83,19 @@ const activityConfig = {
     verb: 'reached its goal!',
     emoji: '🎉',
   },
+  THANK_YOU: {
+    icon: HandHeart,
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-100',
+    verb: 'shared thanks for',
+    emoji: '💚',
+  },
 };
 
-export default function ActivityFeed({ 
-  limit = 10, 
+export default function ActivityFeed({
+  limit = 10,
   showTitle = true,
-  className = '' 
+  className = '',
 }: ActivityFeedProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -113,8 +126,6 @@ export default function ActivityFeed({
 
   useEffect(() => {
     fetchActivities();
-    
-    // Auto-refresh every 30 seconds
     const interval = setInterval(() => fetchActivities(true), 30000);
     return () => clearInterval(interval);
   }, [limit]);
@@ -180,8 +191,14 @@ export default function ActivityFeed({
       case 'REQUEST_FUNDED':
         return (
           <>
-            <span className="font-semibold">{recipientName}&apos;s</span> request {config.emoji}{' '}
-            {config.verb}
+            <span className="font-semibold">{recipientName}&apos;s</span> request {config.emoji} {config.verb}
+          </>
+        );
+      case 'THANK_YOU':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> {config.emoji} {config.verb}{' '}
+            <span className="font-medium">{requestTitle || 'their supporters'}</span>
           </>
         );
       default:
@@ -226,9 +243,7 @@ export default function ActivityFeed({
   if (isLoading) {
     return (
       <div className={`bg-white rounded-2xl shadow-soft p-6 ${className}`}>
-        {showTitle && (
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Community Activity</h3>
-        )}
+        {showTitle && <h3 className="text-lg font-bold text-gray-900 mb-4">Community Activity</h3>}
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
         </div>
@@ -239,9 +254,7 @@ export default function ActivityFeed({
   if (error) {
     return (
       <div className={`bg-white rounded-2xl shadow-soft p-6 ${className}`}>
-        {showTitle && (
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Community Activity</h3>
-        )}
+        {showTitle && <h3 className="text-lg font-bold text-gray-900 mb-4">Community Activity</h3>}
         <div className="text-center py-8">
           <p className="text-gray-500 text-sm">{error}</p>
           <button
@@ -282,47 +295,37 @@ export default function ActivityFeed({
             <p className="text-gray-400 text-xs">Be the first to interact!</p>
           </div>
         ) : (
-          activities.map((activity, index) => {
-            const config = activityConfig[activity.type];
-            const Icon = config.icon;
-
-            return (
-              <div
-                key={activity.id}
-                className="px-6 py-3 hover:bg-gray-50/50 transition-colors animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="flex items-start gap-3">
-                  {/* Activity Icon or User Avatar */}
-                  <div className="flex-shrink-0">
-                    {renderActivityAvatar(activity)}
-                  </div>
-
-                  {/* Activity Content */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-700 leading-snug">
-                      {renderActivityText(activity)}
+          activities.map((activity, index) => (
+            <div
+              key={activity.id}
+              className="px-6 py-3 hover:bg-gray-50/50 transition-colors animate-fade-in"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">{renderActivityAvatar(activity)}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-700 leading-snug">{renderActivityText(activity)}</p>
+                  {activity.request && (
+                    <Link
+                      href={`/requests/${activity.request.id}`}
+                      className="text-xs text-primary-600 hover:text-primary-700 font-medium mt-0.5 line-clamp-1 block"
+                    >
+                      &quot;{activity.request.title}&quot;
+                    </Link>
+                  )}
+                  {activity.type === 'THANK_YOU' && activity.metadata?.messagePreview && (
+                    <p className="mt-1 text-xs italic text-gray-500 line-clamp-2">
+                      &ldquo;{activity.metadata.messagePreview}&rdquo;
                     </p>
-                    {activity.request && (
-                      <Link
-                        href={`/requests/${activity.request.id}`}
-                        className="text-xs text-primary-600 hover:text-primary-700 font-medium mt-0.5 line-clamp-1 block"
-                      >
-                        &quot;{activity.request.title}&quot;
-                      </Link>
-                    )}
-                    <span className="text-xs text-gray-400 mt-1 block">
-                      {formatTimeAgo(activity.createdAt)}
-                    </span>
-                  </div>
+                  )}
+                  <span className="text-xs text-gray-400 mt-1 block">{formatTimeAgo(activity.createdAt)}</span>
                 </div>
               </div>
-            );
-          })
+            </div>
+          ))
         )}
       </div>
 
-      {/* View All Link */}
       {activities.length > 0 && (
         <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/50">
           <Link

@@ -19,6 +19,7 @@ import {
 import { authOptions } from '@/lib/auth';
 import { formatCurrency } from '@/lib/currency';
 import { prisma } from '@/lib/prisma';
+import RequesterGratitudePrompt from '@/components/RequesterGratitudePrompt';
 
 function formatMoney(amount: number) {
   return formatCurrency(amount, 'ZAR');
@@ -133,15 +134,25 @@ async function getDashboardData(userId: string, userType: string) {
   const activeRequests = requests.filter((request) =>
     ['ACTIVE', 'PARTIALLY_FUNDED', 'PENDING'].includes(request.status)
   );
+  const completedDonationRequestIds = new Set(receivedDonations.map((donation) => donation.request.id));
   const fundedRequests = requests.filter((request) => request.status === 'FUNDED').length;
   const openGoalAmount = activeRequests.reduce(
     (sum, request) => sum + Math.max((request.targetAmount || 0) - request.currentAmount, 0),
     0
   );
+  const gratitudeRequests = requests
+    .filter((request) => completedDonationRequestIds.has(request.id) && !request.gratitudePostedAt)
+    .map((request) => ({
+      id: request.id,
+      title: request.title,
+      currentAmount: request.currentAmount,
+      targetAmount: request.targetAmount,
+    }));
 
   return {
     requests,
     receivedDonations,
+    gratitudeRequests,
     totals: {
       totalReceived: receivedSummary._sum.amount || 0,
       receivedDonationCount: receivedSummary._count,
@@ -605,6 +616,9 @@ export default async function DashboardPage() {
             </div>
 
             {!isDonor && (
+              <>
+                <RequesterGratitudePrompt requests={data.gratitudeRequests || []} />
+
               <div className="rounded-2xl bg-white shadow-soft">
                 <div className="border-b border-gray-100 px-6 py-5">
                   <h2 className="text-lg font-bold text-gray-900">Recent Support Received</h2>
@@ -631,6 +645,7 @@ export default async function DashboardPage() {
                   )}
                 </div>
               </div>
+              </>
             )}
           </div>
         </div>
