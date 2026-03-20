@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+function getActivityDedupKey(activity: {
+  type: string;
+  userId: string | null;
+  requestId: string | null;
+  metadata: string | null;
+  id: string;
+}) {
+  if (activity.type === 'LIKE') {
+    return `LIKE:${activity.userId || 'anonymous'}:${activity.requestId || 'none'}`;
+  }
+
+  return activity.id;
+}
+
 // GET /api/activity - Get recent activity feed
 export async function GET(request: NextRequest) {
   try {
@@ -16,10 +30,14 @@ export async function GET(request: NextRequest) {
       }),
       orderBy: { createdAt: 'desc' },
     });
+    const dedupedActivities = activities.filter((activity, index, list) => {
+      const key = getActivityDedupKey(activity);
+      return index === list.findIndex((candidate) => getActivityDedupKey(candidate) === key);
+    });
 
     // Enrich activities with request and user info
     const enrichedActivities = await Promise.all(
-      activities.map(async (activity) => {
+      dedupedActivities.map(async (activity) => {
         if (activity.type === 'LIKE' && activity.userId && activity.requestId) {
           const activeLike = await prisma.like.findUnique({
             where: {
@@ -93,7 +111,7 @@ export async function GET(request: NextRequest) {
     );
 
     const nextCursor =
-      activities.length === limit ? activities[activities.length - 1].id : null;
+      dedupedActivities.length === limit ? dedupedActivities[dedupedActivities.length - 1].id : null;
 
     return NextResponse.json({
       activities: validActivities,

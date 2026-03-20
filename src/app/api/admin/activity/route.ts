@@ -5,6 +5,20 @@ import { prisma } from '@/lib/prisma';
 
 const OWNER_EMAILS = ['mishteh144@gmail.com', 'golearnx@gmail.com'];
 
+function getActivityDedupKey(activity: {
+  type: string;
+  userId: string | null;
+  requestId: string | null;
+  metadata: string | null;
+  id: string;
+}) {
+  if (activity.type === 'LIKE') {
+    return `LIKE:${activity.userId || 'anonymous'}:${activity.requestId || 'none'}`;
+  }
+
+  return activity.id;
+}
+
 // GET /api/admin/activity - Get all activities
 export async function GET(request: Request) {
   try {
@@ -23,10 +37,14 @@ export async function GET(request: Request) {
       take: limit,
       orderBy: { createdAt: 'desc' },
     });
+    const dedupedActivities = activities.filter((activity, index, list) => {
+      const key = getActivityDedupKey(activity);
+      return index === list.findIndex((candidate) => getActivityDedupKey(candidate) === key);
+    });
 
     // Enrich activities with user and request data
     const enrichedActivities = await Promise.all(
-      activities.map(async (activity) => {
+      dedupedActivities.map(async (activity) => {
         if (activity.type === 'LIKE' && activity.userId && activity.requestId) {
           const activeLike = await prisma.like.findUnique({
             where: {

@@ -62,7 +62,7 @@ export default function LoadingScreen({ minDisplayTime = 2500 }: LoadingScreenPr
       <div className="relative z-10 flex flex-col items-center gap-8">
         <div className="relative">
           <div className="absolute inset-0 scale-150 rounded-full bg-primary-400/30 blur-xl animate-pulse-glow" />
-          <div className="relative h-24 w-24 animate-logo-entrance">
+          <div className="relative h-32 w-32 animate-logo-entrance md:h-36 md:w-36">
             <Image
               src="/assets/logo.png"
               alt="Mishteh Logo"
