@@ -52,8 +52,8 @@ function DonationSuccessContent() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">❌</span>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+            <span className="text-3xl font-semibold text-red-600">X</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
           <p className="text-gray-600 mb-6">{error}</p>
@@ -72,18 +72,18 @@ function DonationSuccessContent() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
         <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Thank You! 💚</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Thank You</h1>
         <p className="text-gray-600 mb-2">Your donation has been received successfully.</p>
         <p className="text-sm text-gray-500 mb-6">
-          Your generosity makes a real difference in someone's life.
+          Your generosity makes a real difference in someone&apos;s life.
         </p>
-        
+
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-green-800 font-medium">
-            🎉 Your payment is being processed
+            Your payment is being processed
           </p>
           <p className="text-xs text-green-600 mt-1">
-            You'll receive a confirmation email shortly.
+            You&apos;ll receive a confirmation email shortly.
           </p>
         </div>
 
@@ -108,14 +108,16 @@ function DonationSuccessContent() {
 
 export default function DonationSuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <Loader2 className="w-16 h-16 text-primary-600 animate-spin mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Loading...</h1>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+            <Loader2 className="w-16 h-16 text-primary-600 animate-spin mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Loading...</h1>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <DonationSuccessContent />
     </Suspense>
   );
