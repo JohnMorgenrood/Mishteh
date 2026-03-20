@@ -121,10 +121,10 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const checkoutId = searchParams.get('checkoutId');
+    const checkoutIdParam = searchParams.get('checkoutId');
     const donationId = searchParams.get('donationId');
 
-    if (!checkoutId || !donationId) {
+    if (!donationId) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 }
@@ -134,13 +134,29 @@ export async function GET(request: Request) {
     // Get donation record
     const donation = await prisma.donation.findUnique({
       where: { id: donationId },
-      include: { request: true },
+      include: {
+        donor: true,
+        request: {
+          include: {
+            user: true,
+          },
+        },
+      },
     });
 
     if (!donation) {
       return NextResponse.json(
         { error: 'Donation not found' },
         { status: 404 }
+      );
+    }
+
+    const checkoutId = checkoutIdParam || donation.paymentIntentId;
+
+    if (!checkoutId) {
+      return NextResponse.json(
+        { error: 'Checkout ID not found for donation' },
+        { status: 400 }
       );
     }
 
@@ -151,7 +167,7 @@ export async function GET(request: Request) {
     let status: 'PLEDGED' | 'COMPLETED' | 'REFUNDED' = 'PLEDGED';
     let paymentStatus = 'PENDING';
     
-    if (paymentDetails.status === 'succeeded') {
+    if (paymentDetails.status === 'succeeded' && donation.status !== 'COMPLETED') {
       status = 'COMPLETED';
       paymentStatus = 'COMPLETED';
       
@@ -164,6 +180,66 @@ export async function GET(request: Request) {
           },
         },
       });
+      const totalPaid = typeof paymentDetails.amount === 'number'
+        ? paymentDetails.amount / 100
+        : donation.amount;
+      const mishtehFee = Number((donation.amount * 0.01).toFixed(2));
+      const yocoFee = Number(((donation.amount + mishtehFee) * 0.026).toFixed(2));
+      const existingDonationTransaction = await prisma.transaction.findFirst({
+        where: {
+          paymentId: checkoutId,
+          type: 'DONATION',
+        },
+      });
+
+      if (!existingDonationTransaction) {
+        await prisma.transaction.create({
+          data: {
+            type: 'DONATION',
+            status: 'COMPLETED',
+            amount: totalPaid,
+            feeAmount: yocoFee + mishtehFee,
+            netAmount: donation.amount,
+            currency: paymentDetails.currency || 'ZAR',
+            paymentGateway: 'YOCO',
+            paymentId: checkoutId,
+            gatewayResponse: JSON.stringify(paymentDetails),
+            donorId: donation.donorId,
+            donorName: donation.anonymous ? 'Anonymous' : donation.donor.fullName,
+            donorEmail: donation.donor.email,
+            recipientId: donation.request.userId,
+            recipientName: donation.request.user.fullName,
+            recipientEmail: donation.request.user.email,
+            requestId: donation.requestId,
+            requestTitle: donation.request.title,
+            completedAt: new Date(),
+            adminNotes: `Yoco donation. Donation amount: R${donation.amount.toFixed(2)}, Yoco fee: R${yocoFee.toFixed(2)}, Mishteh fee: R${mishtehFee.toFixed(2)}, total paid: R${totalPaid.toFixed(2)}.`,
+          },
+        });
+
+        await prisma.transaction.create({
+          data: {
+            type: 'FEE',
+            status: 'COMPLETED',
+            amount: mishtehFee,
+            feeAmount: 0,
+            netAmount: mishtehFee,
+            currency: paymentDetails.currency || 'ZAR',
+            paymentGateway: 'YOCO',
+            paymentId: `${checkoutId}-mishteh-fee`,
+            donorId: donation.donorId,
+            donorName: donation.donor.fullName,
+            donorEmail: donation.donor.email,
+            recipientId: donation.request.userId,
+            recipientName: donation.request.user.fullName,
+            recipientEmail: donation.request.user.email,
+            requestId: donation.requestId,
+            requestTitle: donation.request.title,
+            completedAt: new Date(),
+            adminNotes: `Mishteh 1% platform fee on Yoco donation ${checkoutId}.`,
+          },
+        });
+      }
     } else if (paymentDetails.status === 'failed' || paymentDetails.status === 'cancelled') {
       status = 'REFUNDED';
       paymentStatus = 'FAILED';

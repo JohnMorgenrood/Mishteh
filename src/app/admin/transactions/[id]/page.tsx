@@ -252,6 +252,27 @@ export default function TransactionDetailPage({ params }: { params: { id: string
               )}
             </div>
 
+            <div className="bg-white rounded-2xl shadow-soft p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Trail</h2>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">Payer:</span> {transaction.donorName || 'Anonymous'}
+                </p>
+                <p className="mt-2 text-sm text-gray-700">
+                  <span className="font-semibold">Recipient:</span> {transaction.recipientName || 'Platform / Unassigned'}
+                </p>
+                <p className="mt-2 text-sm text-gray-700">
+                  <span className="font-semibold">For:</span> {transaction.requestTitle || 'General platform transaction'}
+                </p>
+                <p className="mt-2 text-sm text-gray-700">
+                  <span className="font-semibold">Gateway Reference:</span> {transaction.paymentId || 'N/A'}
+                </p>
+                <p className="mt-2 text-sm text-gray-700">
+                  <span className="font-semibold">Type:</span> {transaction.type}
+                </p>
+              </div>
+            </div>
+
             {/* Payment Gateway Info */}
             {transaction.paymentGateway && (
               <div className="bg-white rounded-2xl shadow-soft p-6">

@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
     let request_details = null;
     let recipientId = null;
     let recipientName = null;
+    let recipientEmail = null;
 
     if (requestId) {
       request_details = await prisma.request.findUnique({
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
       if (request_details) {
         recipientId = request_details.userId;
         recipientName = request_details.user.fullName;
+        recipientEmail = request_details.user.email;
         
         // Update request's current amount
         await prisma.request.update({
@@ -124,6 +126,7 @@ export async function POST(request: NextRequest) {
         donorEmail: session.user.email || null,
         recipientId,
         recipientName,
+        recipientEmail,
         requestId: requestId || null,
         requestTitle: request_details?.title || null,
         completedAt: new Date(),

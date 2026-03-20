@@ -18,12 +18,22 @@ function DonationSuccessContent() {
       return;
     }
 
-    // Give user a moment to see the success message before redirecting
-    const timer = setTimeout(() => {
-      setIsVerifying(false);
-    }, 2000);
+    const verify = async () => {
+      try {
+        const response = await fetch(`/api/yoco?donationId=${encodeURIComponent(donationId)}`);
+        const data = await response.json();
 
-    return () => clearTimeout(timer);
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to verify payment');
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to verify donation');
+      } finally {
+        setIsVerifying(false);
+      }
+    };
+
+    verify();
   }, [donationId]);
 
   if (isVerifying) {

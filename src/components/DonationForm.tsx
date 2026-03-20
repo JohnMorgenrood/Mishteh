@@ -38,12 +38,13 @@ export default function DonationForm({
   const [error, setError] = useState('');
   const [showPayPal, setShowPayPal] = useState(false);
   const [userCurrency, setUserCurrency] = useState<Currency>('ZAR');
-  const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'yoco'>('paypal');
+  const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'yoco'>('yoco');
 
   // Detect user's currency on mount
   useEffect(() => {
     const currency = detectUserCurrency();
     setUserCurrency(currency);
+    setPaymentMethod(currency === 'ZAR' ? 'yoco' : 'paypal');
   }, []);
 
   const quickAmounts = getQuickAmounts(userCurrency);
@@ -84,10 +85,17 @@ export default function DonationForm({
   
   // Convert total to USD for PayPal using the proper conversion function
   const usdAmount = toPayPalAmount(totalAmount, userCurrency);
+  const paypalMinimumUsd = 5;
+  const paypalBelowMinimum = paymentMethod === 'paypal' && usdAmount < paypalMinimumUsd;
 
   const handleAmountConfirm = () => {
     if (donationAmount <= 0) {
       setError('Please enter a valid amount');
+      return;
+    }
+
+    if (paypalBelowMinimum) {
+      setError(`PayPal is only available for totals of at least ${formatCurrency(paypalMinimumUsd, 'USD')}. Please use Yoco for smaller donations.`);
       return;
     }
     setError('');
@@ -251,6 +259,7 @@ export default function DonationForm({
                 onClick={() => {
                   setPaymentMethod('paypal');
                   setShowPayPal(false);
+                  setError('');
                 }}
                 className={`px-4 py-3 border-2 rounded-lg font-medium transition-all ${
                   paymentMethod === 'paypal'
@@ -269,6 +278,7 @@ export default function DonationForm({
                 onClick={() => {
                   setPaymentMethod('yoco');
                   setShowPayPal(false);
+                  setError('');
                 }}
                 className={`px-4 py-3 border-2 rounded-lg font-medium transition-all ${
                   paymentMethod === 'yoco'
@@ -418,7 +428,7 @@ export default function DonationForm({
                     <span>+{formatCurrency(fees.mishtehFee, userCurrency)}</span>
                   </div>
                   <div className="text-xs text-green-600 italic">
-                    100% of your donation goes to the recipient
+                    PayPal works best for larger international donations because fixed fees apply.
                   </div>
                   <div className="flex justify-between pt-2 border-t border-green-300">
                     <span className="font-semibold text-green-900">Total you'll pay:</span>
@@ -437,13 +447,24 @@ export default function DonationForm({
                   </p>
                 </div>
               )}
+
+              {paypalBelowMinimum && (
+                <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-sm text-amber-800 font-medium">
+                    PayPal is not recommended for small donations in Rand.
+                  </p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    Use Yoco for smaller South African payments, or increase this donation to at least {formatCurrency(paypalMinimumUsd, 'USD')}.
+                  </p>
+                </div>
+              )}
               
               <PayPalButtons
                 style={{ layout: 'vertical' }}
                 createOrder={createOrder}
                 onApprove={onApprove}
                 onError={onError}
-                disabled={isSubmitting}
+                disabled={isSubmitting || paypalBelowMinimum}
               />
             </div>
           ) : (
@@ -466,7 +487,7 @@ export default function DonationForm({
                       <span>+{formatCurrency(fees.mishtehFee, userCurrency)}</span>
                     </div>
                     <div className="text-xs text-green-600 italic">
-                      100% of your donation goes to the recipient
+                      Yoco is recommended for South African Rand payments because the fee structure is better for smaller local donations.
                     </div>
                     <div className="flex justify-between pt-2 border-t border-green-300">
                       <span className="font-semibold text-green-900">Total you'll pay:</span>

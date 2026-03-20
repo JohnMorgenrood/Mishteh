@@ -17,6 +17,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     }
 
+    if ((currency || 'USD') === 'USD' && amount < 5) {
+      return NextResponse.json(
+        { error: 'PayPal is only available for totals of at least $5.00. Please use Yoco for smaller donations.' },
+        { status: 400 }
+      );
+    }
+
     // Create PayPal order
     const order = await createOrder(amount, currency || 'USD');
 
