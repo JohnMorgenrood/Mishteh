@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { getYocoPaymentDetails } from '@/lib/yoco';
+import { getYocoPaymentDetails, isYocoPaymentSuccessful } from '@/lib/yoco';
 import { calculateYocoBreakdown } from '@/lib/payment-fees';
 
 function buildLegacyBackfillNote(paymentMethod?: string | null) {
@@ -120,7 +120,7 @@ async function finalizePendingYocoDonations() {
     try {
       const paymentDetails = await getYocoPaymentDetails(donation.paymentIntentId!);
 
-      if (paymentDetails.status === 'succeeded') {
+      if (isYocoPaymentSuccessful(paymentDetails.status)) {
         const alreadyTracked = await prisma.transaction.findFirst({
           where: {
             paymentId: donation.paymentIntentId,

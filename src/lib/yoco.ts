@@ -53,11 +53,15 @@ export interface YocoPaymentRequest {
 
 export interface YocoPaymentResponse {
   id: string;
-  status: 'created' | 'succeeded' | 'failed' | 'cancelled';
+  status: 'created' | 'completed' | 'succeeded' | 'failed' | 'cancelled';
   amount: number;
   currency: string;
   metadata?: any;
   createdDate: string;
+}
+
+export function isYocoPaymentSuccessful(status?: string | null) {
+  return status === 'completed' || status === 'succeeded';
 }
 
 /**

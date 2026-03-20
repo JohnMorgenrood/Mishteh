@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createYocoCheckout, getYocoPaymentDetails } from '@/lib/yoco';
+import { createYocoCheckout, getYocoPaymentDetails, isYocoPaymentSuccessful } from '@/lib/yoco';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -166,7 +166,7 @@ export async function GET(request: Request) {
     let status: 'PLEDGED' | 'COMPLETED' | 'REFUNDED' = 'PLEDGED';
     let paymentStatus = 'PENDING';
     
-    if (paymentDetails.status === 'succeeded' && donation.status !== 'COMPLETED') {
+    if (isYocoPaymentSuccessful(paymentDetails.status) && donation.status !== 'COMPLETED') {
       status = 'COMPLETED';
       paymentStatus = 'COMPLETED';
       
