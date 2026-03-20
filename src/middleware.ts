@@ -11,11 +11,14 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  const pathname = request.nextUrl.pathname;
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard');
   const isAdmin = request.nextUrl.pathname.startsWith('/admin');
-  const isAdminBlog = request.nextUrl.pathname.startsWith('/admin/blog');
-  const isAdminSecurity = request.nextUrl.pathname.startsWith('/admin/security');
+  const isActivityPage = pathname.startsWith('/activity');
+  const isRequestsPage = pathname === '/requests' || pathname.startsWith('/requests/');
+  const isProfilePage = pathname.startsWith('/profile/');
+  const isProtectedCommunityPage = isActivityPage || isRequestsPage || isProfilePage;
 
   // Redirect authenticated users away from auth pages
   if (isAuthPage && token) {
@@ -27,8 +30,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect unauthenticated users to login
-  if ((isDashboard || isAdmin) && !token) {
-    return NextResponse.redirect(new URL('/auth/login', request.url));
+  if ((isDashboard || isAdmin || isProtectedCommunityPage) && !token) {
+    const loginUrl = new URL('/auth/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   // SECURITY: Only owners can access admin pages - FULL ACCESS
@@ -44,5 +49,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/auth/:path*', '/dashboard/:path*', '/admin/:path*'],
+  matcher: ['/auth/:path*', '/dashboard/:path*', '/admin/:path*', '/activity/:path*', '/requests/:path*', '/profile/:path*'],
 };
