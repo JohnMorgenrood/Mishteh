@@ -3,6 +3,15 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+function buildLegacyBackfillNote(paymentMethod?: string | null) {
+  const gateway = paymentMethod || 'UNKNOWN';
+  return `Legacy ${gateway} donation backfill. The database only preserved the completed donation payout amount, so gross paid, gateway fees, and original display currency may require manual review.`;
+}
+
+function getBackfillCurrency(paymentMethod?: string | null) {
+  return paymentMethod === 'YOCO' ? 'ZAR' : 'USD';
+}
+
 async function backfillMissingDonationTransactions() {
   const completedDonations = await prisma.donation.findMany({
     where: {
@@ -60,7 +69,7 @@ async function backfillMissingDonationTransactions() {
         amount: donation.amount,
         feeAmount: 0,
         netAmount: donation.amount,
-        currency: donation.paymentMethod === 'PAYPAL' ? 'USD' : 'ZAR',
+        currency: getBackfillCurrency(donation.paymentMethod),
         paymentGateway: donation.paymentMethod,
         paymentId: donation.paymentIntentId,
         donorId: donation.donorId,
@@ -72,7 +81,7 @@ async function backfillMissingDonationTransactions() {
         requestId: donation.requestId,
         requestTitle: donation.request.title,
         completedAt: donation.updatedAt,
-        adminNotes: 'Backfilled from a completed donation record because no transaction ledger entry existed.',
+        adminNotes: buildLegacyBackfillNote(donation.paymentMethod),
         createdAt: donation.createdAt,
       },
     });
