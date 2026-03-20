@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -52,14 +52,16 @@ interface Transaction {
   completedAt: string | null;
 }
 
-export default function TransactionDetailPage({ params }: { params: { id: string } }) {
+export default function TransactionDetailPage() {
   const { data: session, status } = useSession();
+  const params = useParams<{ id: string }>();
   const router = useRouter();
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
   const [newStatus, setNewStatus] = useState('');
+  const transactionId = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
   const parsedGatewayResponse = (() => {
     if (!transaction?.gatewayResponse) return null;
@@ -83,22 +85,30 @@ export default function TransactionDetailPage({ params }: { params: { id: string
   }, [session, status, router]);
 
   useEffect(() => {
-    if (session?.user?.userType === 'ADMIN') {
+    if (session?.user?.userType === 'ADMIN' && transactionId) {
       fetchTransaction();
     }
-  }, [session, params.id]);
+  }, [session, transactionId]);
 
   const fetchTransaction = async () => {
     try {
-      const res = await fetch(`/api/admin/transactions/${params.id}`);
+      if (!transactionId) {
+        setTransaction(null);
+        return;
+      }
+
+      const res = await fetch(`/api/admin/transactions/${transactionId}`);
       if (res.ok) {
         const data = await res.json();
         setTransaction(data);
         setAdminNotes(data.adminNotes || '');
         setNewStatus(data.status);
+      } else {
+        setTransaction(null);
       }
     } catch (error) {
       console.error('Error fetching transaction:', error);
+      setTransaction(null);
     } finally {
       setLoading(false);
     }
@@ -107,7 +117,12 @@ export default function TransactionDetailPage({ params }: { params: { id: string
   const handleUpdate = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/transactions/${params.id}`, {
+      if (!transactionId) {
+        alert('Transaction ID is missing');
+        return;
+      }
+
+      const res = await fetch(`/api/admin/transactions/${transactionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -147,8 +162,8 @@ export default function TransactionDetailPage({ params }: { params: { id: string
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">Transaction not found</p>
-          <Link href="/admin/accounts" className="text-primary-600 hover:underline mt-4 inline-block">
-            Back to Accounts
+          <Link href="/admin/transactions" className="text-primary-600 hover:underline mt-4 inline-block">
+            Back to Transactions
           </Link>
         </div>
       </div>
@@ -160,11 +175,11 @@ export default function TransactionDetailPage({ params }: { params: { id: string
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <Link
-          href="/admin/accounts"
+          href="/admin/transactions"
           className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
-          Back to Accounts
+          Back to Transactions
         </Link>
 
         <div className="mb-8">
