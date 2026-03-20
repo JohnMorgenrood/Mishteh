@@ -188,6 +188,40 @@ export default function ActivityFeed({
     }
   };
 
+  const renderActivityAvatar = (activity: Activity) => {
+    const config = activityConfig[activity.type];
+    const Icon = config.icon;
+    const initial = (activity.user?.fullName || activity.metadata?.userName || 'S').charAt(0).toUpperCase();
+
+    if (activity.user?.image) {
+      return (
+        <div className="h-9 w-9 overflow-hidden rounded-full ring-2 ring-white shadow-sm">
+          <Image
+            src={activity.user.image}
+            alt={activity.user.fullName}
+            width={36}
+            height={36}
+            className="h-full w-full object-cover"
+          />
+        </div>
+      );
+    }
+
+    if (activity.user?.fullName || activity.metadata?.userName) {
+      return (
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 text-xs font-bold text-white shadow-sm">
+          {initial}
+        </div>
+      );
+    }
+
+    return (
+      <div className={`flex h-9 w-9 items-center justify-center rounded-full ${config.bgColor}`}>
+        <Icon className={`h-4 w-4 ${config.color}`} />
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className={`bg-white rounded-2xl shadow-soft p-6 ${className}`}>
@@ -259,18 +293,8 @@ export default function ActivityFeed({
               >
                 <div className="flex items-start gap-3">
                   {/* Activity Icon or User Avatar */}
-                  <div className={`flex-shrink-0 w-9 h-9 rounded-full ${config.bgColor} flex items-center justify-center`}>
-                    {activity.user?.image ? (
-                      <Image
-                        src={activity.user.image}
-                        alt={activity.user.fullName}
-                        width={36}
-                        height={36}
-                        className="rounded-full"
-                      />
-                    ) : (
-                      <Icon className={`w-4 h-4 ${config.color}`} />
-                    )}
+                  <div className="flex-shrink-0">
+                    {renderActivityAvatar(activity)}
                   </div>
 
                   {/* Activity Content */}

@@ -163,6 +163,40 @@ export default function ActivityPage() {
     fetchActivities();
   }, [fetchActivities]);
 
+  const renderActivityAvatar = (activity: Activity) => {
+    const config = activityConfig[activity.type];
+    const Icon = config.icon;
+    const initial = (activity.user?.fullName || activity.metadata?.userName || 'S').charAt(0).toUpperCase();
+
+    if (activity.user?.image) {
+      return (
+        <div className="h-12 w-12 overflow-hidden rounded-2xl ring-2 ring-white shadow-sm">
+          <Image
+            src={activity.user.image}
+            alt={activity.user.fullName}
+            width={48}
+            height={48}
+            className="h-full w-full object-cover"
+          />
+        </div>
+      );
+    }
+
+    if (activity.user?.fullName || activity.metadata?.userName) {
+      return (
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 text-sm font-bold text-white shadow-sm">
+          {initial}
+        </div>
+      );
+    }
+
+    return (
+      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${config.bgColor}`}>
+        <Icon className={`h-5 w-5 ${config.color}`} />
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f6faf8,white_40%,#f8fafc_100%)] py-10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -220,18 +254,8 @@ export default function ActivityPage() {
                     <article key={activity.id} className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-soft transition hover:shadow-soft-lg">
                       <div className="p-6">
                         <div className="flex items-start gap-4">
-                          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${config.bgColor}`}>
-                            {activity.user?.image ? (
-                              <Image
-                                src={activity.user.image}
-                                alt={activity.user.fullName}
-                                width={48}
-                                height={48}
-                                className="rounded-2xl object-cover"
-                              />
-                            ) : (
-                              <Icon className={`h-5 w-5 ${config.color}`} />
-                            )}
+                          <div className="flex-shrink-0">
+                            {renderActivityAvatar(activity)}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
