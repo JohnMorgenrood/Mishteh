@@ -74,7 +74,7 @@ export default function AboutPage() {
               <p>
                 Founded in 2025, MISHTEH has grown from a small community project into a nationwide platform 
                 connecting thousands of donors with individuals and families facing financial hardships. Every 
-                day, we witness the power of human kindness transforming lives.
+                day, we witness Divine Love and human kindness transforming lives.
               </p>
             </div>
           </div>
