@@ -14,7 +14,12 @@ import {
   Calendar,
   FileText,
   CreditCard,
-  Save
+  Save,
+  Receipt,
+  ShieldCheck,
+  ArrowRightLeft,
+  Mail,
+  Hash
 } from 'lucide-react';
 
 interface Transaction {
@@ -55,6 +60,19 @@ export default function TransactionDetailPage({ params }: { params: { id: string
   const [saving, setSaving] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
   const [newStatus, setNewStatus] = useState('');
+
+  const parsedGatewayResponse = (() => {
+    if (!transaction?.gatewayResponse) return null;
+    try {
+      return JSON.parse(transaction.gatewayResponse);
+    } catch {
+      return null;
+    }
+  })();
+
+  const summaryLine = transaction
+    ? `${transaction.donorName || 'Anonymous donor'} paid ${transaction.currency} ${transaction.amount.toFixed(2)} to support ${transaction.recipientName || 'the recipient'}${transaction.requestTitle ? ` for "${transaction.requestTitle}"` : ''}.`
+    : '';
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -167,6 +185,17 @@ export default function TransactionDetailPage({ params }: { params: { id: string
               {transaction.status}
             </span>
           </div>
+          <div className="mt-4 rounded-2xl border border-primary-100 bg-gradient-to-r from-primary-50 to-white p-5">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-primary-100 p-2">
+                <Receipt className="h-5 w-5 text-primary-700" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-primary-700">Audit Summary</p>
+                <p className="mt-1 text-sm text-gray-700">{summaryLine}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -205,6 +234,20 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                   </p>
                 </div>
               )}
+              <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Transaction Type</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900">{transaction.type}</p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Gateway</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900">{transaction.paymentGateway || 'Manual / Internal'}</p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Reference</p>
+                  <p className="mt-1 break-all font-mono text-xs text-gray-900">{transaction.paymentId || transaction.id}</p>
+                </div>
+              </div>
             </div>
 
             {/* Parties Involved */}
@@ -214,11 +257,14 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                 Parties Involved
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
+                <div className="rounded-2xl border border-gray-100 p-5">
                   <p className="text-sm font-semibold text-gray-700 mb-2">Donor</p>
                   <div className="space-y-1">
-                    <p className="text-gray-900">{transaction.donorName || 'N/A'}</p>
-                    <p className="text-sm text-gray-600">{transaction.donorEmail || 'N/A'}</p>
+                    <p className="text-lg font-semibold text-gray-900">{transaction.donorName || 'N/A'}</p>
+                    <p className="text-sm text-gray-600 flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      {transaction.donorEmail || 'N/A'}
+                    </p>
                     {transaction.donorId && (
                       <Link href={`/admin/users/${transaction.donorId}`} className="text-sm text-primary-600 hover:underline">
                         View Profile
@@ -226,11 +272,14 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                     )}
                   </div>
                 </div>
-                <div>
+                <div className="rounded-2xl border border-gray-100 p-5">
                   <p className="text-sm font-semibold text-gray-700 mb-2">Recipient</p>
                   <div className="space-y-1">
-                    <p className="text-gray-900">{transaction.recipientName || 'N/A'}</p>
-                    <p className="text-sm text-gray-600">{transaction.recipientEmail || 'N/A'}</p>
+                    <p className="text-lg font-semibold text-gray-900">{transaction.recipientName || 'N/A'}</p>
+                    <p className="text-sm text-gray-600 flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      {transaction.recipientEmail || 'N/A'}
+                    </p>
                     {transaction.recipientId && (
                       <Link href={`/admin/users/${transaction.recipientId}`} className="text-sm text-primary-600 hover:underline">
                         View Profile
@@ -253,23 +302,36 @@ export default function TransactionDetailPage({ params }: { params: { id: string
             </div>
 
             <div className="bg-white rounded-2xl shadow-soft p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Trail</h2>
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Payer:</span> {transaction.donorName || 'Anonymous'}
-                </p>
-                <p className="mt-2 text-sm text-gray-700">
-                  <span className="font-semibold">Recipient:</span> {transaction.recipientName || 'Platform / Unassigned'}
-                </p>
-                <p className="mt-2 text-sm text-gray-700">
-                  <span className="font-semibold">For:</span> {transaction.requestTitle || 'General platform transaction'}
-                </p>
-                <p className="mt-2 text-sm text-gray-700">
-                  <span className="font-semibold">Gateway Reference:</span> {transaction.paymentId || 'N/A'}
-                </p>
-                <p className="mt-2 text-sm text-gray-700">
-                  <span className="font-semibold">Type:</span> {transaction.type}
-                </p>
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <ArrowRightLeft className="h-6 w-6 text-primary-600" />
+                Payment Trail
+              </h2>
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex-1 rounded-xl bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Payer</p>
+                    <p className="mt-1 text-base font-semibold text-gray-900">{transaction.donorName || 'Anonymous'}</p>
+                    <p className="mt-1 text-sm text-gray-500">{transaction.donorEmail || 'No email recorded'}</p>
+                  </div>
+                  <div className="flex items-center justify-center text-primary-600">
+                    <ArrowRightLeft className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 rounded-xl bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Recipient</p>
+                    <p className="mt-1 text-base font-semibold text-gray-900">{transaction.recipientName || 'Platform / Unassigned'}</p>
+                    <p className="mt-1 text-sm text-gray-500">{transaction.recipientEmail || 'No email recorded'}</p>
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div className="rounded-xl bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Purpose</p>
+                    <p className="mt-1 text-sm text-gray-900">{transaction.requestTitle || 'General platform transaction'}</p>
+                  </div>
+                  <div className="rounded-xl bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Gateway Reference</p>
+                    <p className="mt-1 break-all font-mono text-xs text-gray-900">{transaction.paymentId || 'N/A'}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -287,7 +349,7 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                   </div>
                   {transaction.paymentId && (
                     <div>
-                      <p className="text-sm text-gray-600">Payment ID</p>
+                      <p className="text-sm text-gray-600 flex items-center gap-2"><Hash className="h-4 w-4 text-gray-400" />Payment ID</p>
                       <p className="font-mono text-sm text-gray-900">{transaction.paymentId}</p>
                     </div>
                   )}
@@ -297,13 +359,28 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                       <p className="font-mono text-sm text-gray-900">{transaction.payerId}</p>
                     </div>
                   )}
+                  {parsedGatewayResponse && (
+                    <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Gateway Snapshot</p>
+                      <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <div>
+                          <p className="text-xs text-emerald-700">Status</p>
+                          <p className="text-sm font-semibold text-emerald-900">{parsedGatewayResponse.status || transaction.status}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-emerald-700">Reference</p>
+                          <p className="break-all text-sm font-semibold text-emerald-900">{parsedGatewayResponse.id || transaction.paymentId || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {transaction.gatewayResponse && (
                     <details className="mt-4">
                       <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-900">
                         Gateway Response (JSON)
                       </summary>
                       <pre className="mt-2 p-3 bg-gray-50 rounded-xl text-xs overflow-x-auto">
-                        {JSON.stringify(JSON.parse(transaction.gatewayResponse), null, 2)}
+                        {JSON.stringify(parsedGatewayResponse || transaction.gatewayResponse, null, 2)}
                       </pre>
                     </details>
                   )}
@@ -346,6 +423,30 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                     )}
                   </div>
                 )}
+                <div>
+                  <p className="text-sm text-gray-600">Last Updated</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {new Date(transaction.updatedAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-soft p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-6 h-6 text-primary-600" />
+                Audit Markers
+              </h2>
+              <div className="space-y-3 text-sm text-gray-700">
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <p><span className="font-semibold">Ledger ID:</span> {transaction.id}</p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <p><span className="font-semibold">Recorded Status:</span> {transaction.status}</p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <p><span className="font-semibold">Gateway Used:</span> {transaction.paymentGateway || 'Manual / Internal'}</p>
+                </div>
               </div>
             </div>
 
