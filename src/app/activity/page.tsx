@@ -3,9 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  Heart, MessageCircle, HandHeart, Sparkles, 
-  TrendingUp, User, Loader2, ArrowLeft
+import {
+  Heart,
+  MessageCircle,
+  HandHeart,
+  Sparkles,
+  TrendingUp,
+  Loader2,
+  ArrowLeft,
+  ShieldCheck,
+  PlayCircle,
 } from 'lucide-react';
 import { formatShortDate } from '@/lib/utils';
 
@@ -39,38 +46,81 @@ const activityConfig = {
     icon: Heart,
     color: 'text-red-500',
     bgColor: 'bg-red-100',
-    verb: 'liked',
-    emoji: '❤️',
+    label: 'Support',
   },
   COMMENT: {
     icon: MessageCircle,
     color: 'text-blue-500',
     bgColor: 'bg-blue-100',
-    verb: 'commented on',
-    emoji: '💬',
+    label: 'Comment',
   },
   DONATION: {
     icon: HandHeart,
-    color: 'text-green-500',
+    color: 'text-green-600',
     bgColor: 'bg-green-100',
-    verb: 'donated to',
-    emoji: '🎁',
+    label: 'Donation',
   },
   NEW_REQUEST: {
     icon: Sparkles,
-    color: 'text-purple-500',
-    bgColor: 'bg-purple-100',
-    verb: 'posted a new story',
-    emoji: '✨',
+    color: 'text-primary-600',
+    bgColor: 'bg-primary-100',
+    label: 'New Story',
   },
   REQUEST_FUNDED: {
     icon: TrendingUp,
-    color: 'text-primary-500',
-    bgColor: 'bg-primary-100',
-    verb: 'reached its goal!',
-    emoji: '🎉',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-100',
+    label: 'Goal Reached',
   },
 };
+
+function formatTimeAgo(dateString: string) {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  return formatShortDate(date);
+}
+
+function renderHeadline(activity: Activity) {
+  const actor = activity.metadata?.userName || activity.user?.fullName || 'Someone';
+  const recipientName = activity.request?.user?.fullName || 'someone';
+
+  switch (activity.type) {
+    case 'LIKE':
+      return `${actor} showed support for ${recipientName}`;
+    case 'COMMENT':
+      return `${actor} commented on ${recipientName}'s story`;
+    case 'DONATION':
+      return `A donation was made to support ${recipientName}`;
+    case 'NEW_REQUEST':
+      return `${recipientName} shared a new story`;
+    case 'REQUEST_FUNDED':
+      return `${recipientName}'s request reached its goal`;
+    default:
+      return 'Community activity';
+  }
+}
+
+function renderBody(activity: Activity) {
+  if (activity.type === 'COMMENT' && activity.metadata?.commentPreview) {
+    return activity.metadata.commentPreview;
+  }
+
+  if (activity.type === 'DONATION' && activity.metadata?.amount) {
+    return `Support amount recorded: $${Number(activity.metadata.amount).toFixed(2)}`;
+  }
+
+  if (activity.request?.title) {
+    return activity.request.title;
+  }
+
+  return 'Community members are actively supporting one another.';
+}
 
 export default function ActivityPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -86,19 +136,21 @@ export default function ActivityPage() {
     }
 
     try {
-      const params = new URLSearchParams({ limit: '30' });
+      const params = new URLSearchParams({ limit: '24' });
       if (cursor) params.append('cursor', cursor);
-      
+
       const response = await fetch(`/api/activity?${params.toString()}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (cursor) {
-          setActivities(prev => [...prev, ...data.activities]);
-        } else {
-          setActivities(data.activities);
-        }
-        setNextCursor(data.nextCursor);
+      if (!response.ok) {
+        throw new Error('Failed to fetch activity');
       }
+
+      const data = await response.json();
+      if (cursor) {
+        setActivities((prev) => [...prev, ...data.activities]);
+      } else {
+        setActivities(data.activities);
+      }
+      setNextCursor(data.nextCursor);
     } catch (error) {
       console.error('Error fetching activities:', error);
     } finally {
@@ -111,181 +163,157 @@ export default function ActivityPage() {
     fetchActivities();
   }, [fetchActivities]);
 
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    return formatShortDate(date);
-  };
-
-  const renderActivityText = (activity: Activity) => {
-    const config = activityConfig[activity.type];
-    const userName = activity.metadata?.userName || activity.user?.fullName || 'Someone';
-    const recipientName = activity.request?.user?.fullName;
-
-    switch (activity.type) {
-      case 'LIKE':
-        return (
-          <>
-            <span className="font-semibold">{userName}</span> {config.emoji} {config.verb}{' '}
-            {recipientName && (
-              <>
-                <span className="font-medium">{recipientName}&apos;s</span> request
-              </>
-            )}
-          </>
-        );
-      case 'COMMENT':
-        return (
-          <>
-            <span className="font-semibold">{userName}</span> {config.emoji} {config.verb}{' '}
-            {recipientName && (
-              <>
-                <span className="font-medium">{recipientName}&apos;s</span> story
-              </>
-            )}
-          </>
-        );
-      case 'DONATION':
-        return (
-          <>
-            <span className="font-semibold">A donation</span> {config.emoji} was made to support{' '}
-            <span className="font-medium">{recipientName || 'someone in need'}</span>
-          </>
-        );
-      case 'NEW_REQUEST':
-        return (
-          <>
-            <span className="font-semibold">{recipientName || userName}</span> {config.emoji}{' '}
-            {config.verb}
-            {activity.request?.user?.location && (
-              <span className="text-gray-500"> from {activity.request.user.location}</span>
-            )}
-          </>
-        );
-      case 'REQUEST_FUNDED':
-        return (
-          <>
-            <span className="font-semibold">{recipientName}&apos;s</span> request {config.emoji}{' '}
-            {config.verb}
-          </>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f6faf8,white_40%,#f8fafc_100%)] py-10">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <Link 
+          <Link
             href="/"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-primary-600 mb-4"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-primary-600"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <span className="animate-pulse">🌟</span>
-            Community Activity
-          </h1>
-          <p className="text-gray-600 mt-2">
-            See what&apos;s happening in our community of kindness
-          </p>
         </div>
 
-        {/* Activity List */}
-        <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div>
+            <div className="mb-6 rounded-3xl bg-gradient-to-r from-primary-700 via-primary-600 to-secondary-600 p-8 text-white shadow-soft-lg">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-100">Community Feed</p>
+              <h1 className="mt-2 text-3xl font-bold md:text-4xl">Activity, support, and momentum</h1>
+              <p className="mt-3 max-w-3xl text-sm text-primary-50 md:text-base">
+                This page now acts more like a social feed. Full standalone posts, video uploads, and admin approval can build on this next without changing the rest of the app structure.
+              </p>
             </div>
-          ) : activities.length === 0 ? (
-            <div className="text-center py-16">
-              <Sparkles className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No activity yet</p>
-              <p className="text-gray-400 text-sm mt-1">Be the first to interact!</p>
+
+            <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-soft">
+              <div className="flex items-start gap-4">
+                <div className="rounded-2xl bg-primary-50 p-3">
+                  <PlayCircle className="h-6 w-6 text-primary-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Next Social Phase</h2>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Video posts, image posts, and public status updates can sit here with likes, comments, and admin approval before they go live.
+                  </p>
+                </div>
+              </div>
             </div>
-          ) : (
-            <>
-              <div className="divide-y divide-gray-50">
-                {activities.map((activity, index) => {
+
+            <div className="space-y-5">
+              {isLoading ? (
+                <div className="rounded-2xl bg-white px-6 py-16 text-center shadow-soft">
+                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-500" />
+                </div>
+              ) : activities.length === 0 ? (
+                <div className="rounded-2xl bg-white px-6 py-16 text-center shadow-soft">
+                  <Sparkles className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                  <p className="text-gray-600">No activity yet</p>
+                  <p className="mt-1 text-sm text-gray-400">Once people like, comment, donate, and share requests, activity will appear here.</p>
+                </div>
+              ) : (
+                activities.map((activity) => {
                   const config = activityConfig[activity.type];
                   const Icon = config.icon;
 
                   return (
-                    <div
-                      key={activity.id}
-                      className="px-6 py-4 hover:bg-gray-50/50 transition-colors animate-fade-in"
-                      style={{ animationDelay: `${index * 30}ms` }}
-                    >
-                      <div className="flex items-start gap-4">
-                        {/* Activity Icon or User Avatar */}
-                        <div className={`flex-shrink-0 w-12 h-12 rounded-full ${config.bgColor} flex items-center justify-center`}>
-                          {activity.user?.image ? (
-                            <Image
-                              src={activity.user.image}
-                              alt={activity.user.fullName}
-                              width={48}
-                              height={48}
-                              className="rounded-full"
-                            />
-                          ) : (
-                            <Icon className={`w-6 h-6 ${config.color}`} />
-                          )}
-                        </div>
+                    <article key={activity.id} className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-soft transition hover:shadow-soft-lg">
+                      <div className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${config.bgColor}`}>
+                            {activity.user?.image ? (
+                              <Image
+                                src={activity.user.image}
+                                alt={activity.user.fullName}
+                                width={48}
+                                height={48}
+                                className="rounded-2xl object-cover"
+                              />
+                            ) : (
+                              <Icon className={`h-5 w-5 ${config.color}`} />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                              <div>
+                                <p className="text-sm font-semibold uppercase tracking-wide text-primary-600">{config.label}</p>
+                                <h2 className="mt-1 text-lg font-bold text-gray-900">{renderHeadline(activity)}</h2>
+                              </div>
+                              <span className="text-xs text-gray-400">{formatTimeAgo(activity.createdAt)}</span>
+                            </div>
+                            <p className="mt-3 text-sm leading-7 text-gray-600">{renderBody(activity)}</p>
 
-                        {/* Activity Content */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-gray-700 leading-relaxed">
-                            {renderActivityText(activity)}
-                          </p>
-                          {activity.request && (
-                            <Link
-                              href={`/requests/${activity.request.id}`}
-                              className="text-sm text-primary-600 hover:text-primary-700 font-medium mt-1 line-clamp-1 block"
-                            >
-                              &quot;{activity.request.title}&quot;
-                            </Link>
-                          )}
-                          <span className="text-sm text-gray-400 mt-2 block">
-                            {formatTimeAgo(activity.createdAt)}
-                          </span>
+                            {activity.request && (
+                              <Link
+                                href={`/requests/${activity.request.id}`}
+                                className="mt-4 block rounded-2xl border border-gray-200 bg-gray-50 p-4 transition hover:border-primary-200 hover:bg-primary-50/40"
+                              >
+                                <p className="text-sm font-semibold text-gray-900">{activity.request.title}</p>
+                                <p className="mt-1 text-xs text-gray-500">
+                                  {activity.request.user.fullName}
+                                  {activity.request.user.location ? ` • ${activity.request.user.location}` : ''}
+                                </p>
+                              </Link>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </article>
                   );
-                })}
-              </div>
-
-              {/* Load More */}
-              {nextCursor && (
-                <div className="px-6 py-4 border-t border-gray-100">
-                  <button
-                    onClick={() => fetchActivities(nextCursor)}
-                    disabled={isLoadingMore}
-                    className="w-full py-3 text-center text-primary-600 hover:text-primary-700 font-medium hover:bg-primary-50 rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    {isLoadingMore ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Loading...
-                      </span>
-                    ) : (
-                      'Load More Activity'
-                    )}
-                  </button>
-                </div>
+                })
               )}
-            </>
-          )}
+            </div>
+
+            {nextCursor && (
+              <div className="mt-6">
+                <button
+                  onClick={() => fetchActivities(nextCursor)}
+                  disabled={isLoadingMore}
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-6 py-4 text-sm font-semibold text-primary-600 shadow-soft transition hover:border-primary-200 hover:bg-primary-50 disabled:opacity-50"
+                >
+                  {isLoadingMore ? 'Loading more activity...' : 'Load More Feed'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <aside className="space-y-6">
+            <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <h2 className="text-lg font-bold text-gray-900">How This Feed Works</h2>
+              <div className="mt-4 space-y-3 text-sm text-gray-600">
+                <div className="rounded-xl bg-gray-50 p-4">Request likes and comments already flow into this page.</div>
+                <div className="rounded-xl bg-gray-50 p-4">Donations can appear as support events without exposing private donor names publicly.</div>
+                <div className="rounded-xl bg-gray-50 p-4">This is the right place to add future post, image, and video cards.</div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-6 shadow-soft">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-700" />
+                <div>
+                  <h2 className="text-lg font-bold text-emerald-900">Admin Approval Ready</h2>
+                  <p className="mt-2 text-sm text-emerald-800">
+                    The next step is to add a post model and moderation queue so videos and community posts only go live after admin approval.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <h2 className="text-lg font-bold text-gray-900">Quick Links</h2>
+              <div className="mt-4 space-y-3">
+                <Link href="/requests" className="block rounded-xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-primary-50 hover:text-primary-700">
+                  Browse requests
+                </Link>
+                <Link href="/dashboard" className="block rounded-xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-primary-50 hover:text-primary-700">
+                  Open dashboard
+                </Link>
+                <Link href="/admin" className="block rounded-xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-primary-50 hover:text-primary-700">
+                  Admin tools
+                </Link>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
