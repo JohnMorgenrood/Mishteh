@@ -2,11 +2,19 @@ import paypal from '@paypal/checkout-server-sdk';
 
 // PayPal environment configuration
 function environment() {
-  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!;
+  const clientId = process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET!;
-  const mode = process.env.PAYPAL_MODE || 'sandbox';
+  const mode = (process.env.PAYPAL_MODE || 'sandbox').toLowerCase();
 
-  if (mode === 'production') {
+  if (!clientId) {
+    throw new Error('Missing PayPal client ID. Set PAYPAL_CLIENT_ID or NEXT_PUBLIC_PAYPAL_CLIENT_ID.');
+  }
+
+  if (!clientSecret) {
+    throw new Error('Missing PAYPAL_CLIENT_SECRET.');
+  }
+
+  if (mode === 'production' || mode === 'live') {
     return new paypal.core.LiveEnvironment(clientId, clientSecret);
   } else {
     return new paypal.core.SandboxEnvironment(clientId, clientSecret);

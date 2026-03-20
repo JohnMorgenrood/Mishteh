@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         paymentGateway: 'PAYPAL',
         paymentId: orderId,
         payerId,
-        gatewayResponse: captureResult,
+        gatewayResponse: JSON.stringify(captureResult),
         donorId: session.user.id,
         donorName: anonymous ? 'Anonymous' : session.user.name || 'Anonymous',
         donorEmail: session.user.email || null,
@@ -179,8 +179,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error capturing PayPal payment:', error);
+    const details = error?.message || error?.statusCode || error?.name || 'Unknown PayPal error';
     return NextResponse.json(
-      { error: error.message || 'Failed to capture PayPal payment' },
+      { error: details || 'Failed to capture PayPal payment' },
       { status: 500 }
     );
   }

@@ -26,8 +26,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error creating PayPal order:', error);
+    const details = error?.message || error?.statusCode || error?.name || 'Unknown PayPal error';
     return NextResponse.json(
-      { error: error.message || 'Failed to create PayPal order' },
+      { error: details || 'Failed to create PayPal order' },
       { status: 500 }
     );
   }
