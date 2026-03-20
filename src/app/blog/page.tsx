@@ -36,6 +36,9 @@ interface FeaturedStory {
   perspective: string;
   sourceUrl: string;
   sourceLabel: string;
+  mediaUrl: string;
+  mediaAlt: string;
+  mediaTag: string;
   accentClasses: string;
 }
 
@@ -55,6 +58,9 @@ const featuredStories: FeaturedStory[] = [
       'For families living through this, daily needs do not pause when headlines move on.',
     sourceUrl: 'https://www.wfp.org/stories/somalia',
     sourceLabel: 'Read WFP story',
+    mediaUrl: 'https://images.unsplash.com/photo-1593113598332-cd59a93ad1b1?auto=format&fit=crop&w=1200&q=80',
+    mediaAlt: 'Aid worker handing out food support',
+    mediaTag: 'Photo story',
     accentClasses: 'from-amber-500 via-orange-500 to-rose-500',
   },
   {
@@ -72,6 +78,9 @@ const featuredStories: FeaturedStory[] = [
       'Behind every nutrition emergency is a parent trying to keep a child safe and alive.',
     sourceUrl: 'https://www.unicef.org/stories/hope-red-sachet',
     sourceLabel: 'Read UNICEF story',
+    mediaUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=80',
+    mediaAlt: 'Mother and child together outdoors',
+    mediaTag: 'Human story',
     accentClasses: 'from-red-500 via-rose-500 to-orange-400',
   },
   {
@@ -89,6 +98,9 @@ const featuredStories: FeaturedStory[] = [
       'For donors and requesters alike, this is a reminder that support can bring real strength back into a family\'s life.',
     sourceUrl: 'https://www.unicef.org/sop/stories/oday-was-acutely-malnourished-and-weakbut-care-and-nutrition-revived-him',
     sourceLabel: 'Read UNICEF State of Palestine story',
+    mediaUrl: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1200&q=80',
+    mediaAlt: 'Child receiving comfort and care',
+    mediaTag: 'Recovery story',
     accentClasses: 'from-sky-500 via-cyan-500 to-emerald-400',
   },
   {
@@ -106,6 +118,9 @@ const featuredStories: FeaturedStory[] = [
       'When a family is under pressure, every part of daily life becomes harder to carry.',
     sourceUrl: 'https://www.unicef.org/stories/haiti-shleydine-strives-to-learn',
     sourceLabel: 'Read UNICEF story',
+    mediaUrl: 'https://images.unsplash.com/photo-1497486751825-1233686d5d80?auto=format&fit=crop&w=1200&q=80',
+    mediaAlt: 'Children walking together near a school',
+    mediaTag: 'Family pressure',
     accentClasses: 'from-indigo-500 via-blue-600 to-cyan-500',
   },
   {
@@ -123,6 +138,9 @@ const featuredStories: FeaturedStory[] = [
       'Global hunger warnings help communities understand that many families are carrying burdens far heavier than we can see at first glance.',
     sourceUrl: 'https://www.wfp.org/videos/wfp-news-video-new-report-warns-escalating-hunger-due-conflict-displacement-and-humanitarian',
     sourceLabel: 'View WFP update',
+    mediaUrl: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80',
+    mediaAlt: 'Children waiting together outdoors',
+    mediaTag: 'Global update',
     accentClasses: 'from-emerald-500 via-teal-500 to-sky-500',
   },
 ];
@@ -266,22 +284,22 @@ export default function BlogPage() {
                   }}
                   className="snap-start overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-soft"
                 >
-                  <div className="grid min-h-[78vh] grid-cols-1 lg:grid-cols-[1.15fr_0.85fr]">
-                    <div className={`relative overflow-hidden bg-gradient-to-br ${story.accentClasses} p-8 text-white md:p-12`}>
+                  <div className="grid min-h-[78vh] grid-cols-1 lg:grid-cols-[1fr_1fr]">
+                    <div className={`relative overflow-hidden bg-gradient-to-br ${story.accentClasses} p-7 text-white md:p-10`}>
                       <div className="absolute right-6 top-6 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white/90">
                         Story {index + 1} of {featuredStories.length}
                       </div>
-                      <div className="absolute -right-10 bottom-[-20px] text-[180px] font-bold leading-none text-white/10 md:text-[220px]">
+                      <div className="absolute -right-10 bottom-[-20px] text-[120px] font-bold leading-none text-white/10 md:text-[160px]">
                         {index + 1}
                       </div>
 
                       <div className="relative z-10 flex h-full flex-col justify-between">
                         <div>
-                          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">{story.eyebrow}</p>
-                          <h2 className="mt-5 max-w-3xl text-3xl font-bold leading-tight md:text-5xl">
+                          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/80 md:text-sm">{story.eyebrow}</p>
+                          <h2 className="mt-4 max-w-2xl text-2xl font-bold leading-tight md:text-[2.4rem]">
                             {story.title}
                           </h2>
-                          <div className="mt-6 flex flex-wrap gap-3 text-sm text-white/85">
+                          <div className="mt-5 flex flex-wrap gap-2 text-xs text-white/85 md:text-sm">
                             <span className="rounded-full border border-white/25 bg-white/10 px-4 py-2">
                               {story.organisation}
                             </span>
@@ -294,9 +312,28 @@ export default function BlogPage() {
                           </div>
                         </div>
 
-                        <div className="mt-10 max-w-2xl rounded-[1.5rem] border border-white/20 bg-black/15 p-6 backdrop-blur-sm">
-                          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/75">Why This Matters</p>
-                          <p className="mt-3 text-lg leading-8 text-white/95">{story.impactLine}</p>
+                        <div className="mt-8 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+                          <div className="max-w-xl rounded-[1.5rem] border border-white/20 bg-black/15 p-5 backdrop-blur-sm">
+                            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/75">Why This Matters</p>
+                            <p className="mt-3 text-base leading-7 text-white/95 md:text-lg">{story.impactLine}</p>
+                          </div>
+                          <div className="overflow-hidden rounded-[1.5rem] border border-white/20 bg-black/20 shadow-lg">
+                            <div className="relative h-48 md:h-56">
+                              <img
+                                src={story.mediaUrl}
+                                alt={story.mediaAlt}
+                                className="h-full w-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                              <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-900">
+                                {story.mediaTag}
+                              </div>
+                              <div className="absolute bottom-4 left-4 right-4">
+                                <p className="text-sm font-semibold text-white">{story.region}</p>
+                                <p className="mt-1 text-xs text-white/85">{story.mediaAlt}</p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -308,7 +345,7 @@ export default function BlogPage() {
                           Trusted source
                         </div>
 
-                        <p className="mt-6 text-base leading-8 text-gray-700">{story.summary}</p>
+                        <p className="mt-6 text-base leading-8 text-gray-700 md:text-[1.05rem]">{story.summary}</p>
 
                         <div className="mt-6 rounded-[1.5rem] bg-[#f5f8f6] p-5">
                           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-600">What This Shows</p>
