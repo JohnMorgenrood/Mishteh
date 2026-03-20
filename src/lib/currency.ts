@@ -91,26 +91,36 @@ export const EXCHANGE_RATES: Record<Currency, number> = {
  * Detect user's currency based on location/locale
  */
 export function detectUserCurrency(): Currency {
-  // Server-side: would use IP geolocation
-  // Client-side: use browser locale
   if (typeof window === 'undefined') {
-    return 'ZAR'; // Default to ZAR for South Africa
+    return 'ZAR';
   }
 
-  const locale = navigator.language || 'en-ZA';
-  
-  if (locale.includes('ZA')) return 'ZAR';
-  if (locale.includes('NG')) return 'NGN';
-  if (locale.includes('KE')) return 'KES';
-  if (locale.includes('GH')) return 'GHS';
-  if (locale.includes('UG')) return 'UGX';
-  if (locale.includes('US')) return 'USD';
-  if (locale.includes('GB')) return 'GBP';
-  if (locale.includes('AU')) return 'AUD';
-  if (locale.includes('CA')) return 'CAD';
-  if (locale.includes('EU') || locale.includes('DE') || locale.includes('FR')) return 'EUR';
-  
-  return 'ZAR'; // Default to ZAR
+  const locales = [
+    ...(navigator.languages || []),
+    navigator.language,
+  ]
+    .filter(Boolean)
+    .map(locale => locale.toUpperCase());
+
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone?.toUpperCase() || '';
+
+  if (timeZone.includes('JOHANNESBURG') || locales.some(locale => locale.includes('-ZA') || locale.endsWith('ZA'))) {
+    return 'ZAR';
+  }
+
+  if (locales.some(locale => locale.includes('-NG') || locale.endsWith('NG'))) return 'NGN';
+  if (locales.some(locale => locale.includes('-KE') || locale.endsWith('KE'))) return 'KES';
+  if (locales.some(locale => locale.includes('-GH') || locale.endsWith('GH'))) return 'GHS';
+  if (locales.some(locale => locale.includes('-UG') || locale.endsWith('UG'))) return 'UGX';
+  if (locales.some(locale => locale.includes('-US') || locale.endsWith('US'))) return 'USD';
+  if (locales.some(locale => locale.includes('-GB') || locale.endsWith('GB'))) return 'GBP';
+  if (locales.some(locale => locale.includes('-AU') || locale.endsWith('AU'))) return 'AUD';
+  if (locales.some(locale => locale.includes('-CA') || locale.endsWith('CA'))) return 'CAD';
+  if (locales.some(locale => locale.includes('-DE') || locale.endsWith('DE') || locale.includes('-FR') || locale.endsWith('FR') || locale.includes('EU'))) {
+    return 'EUR';
+  }
+
+  return 'ZAR';
 }
 
 /**
