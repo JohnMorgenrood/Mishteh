@@ -49,7 +49,7 @@ export async function PATCH(
       if (status === 'VERIFIED') {
         await prisma.user.update({
           where: { id: existingDocument.userId },
-          data: { image: existingDocument.filePath },
+          data: { image: `/api/profile-photo/${existingDocument.userId}` },
         });
       } else {
         await flagModerationIncident(

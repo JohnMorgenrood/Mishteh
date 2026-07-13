@@ -193,16 +193,12 @@ export default function ProfileSettingsPage() {
         submitData.append('selfieWithId', files.selfieWithId);
       }
 
-      console.log('Submitting profile data:', Object.fromEntries(submitData.entries()));
-      
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         body: submitData,
       });
 
       const data = await response.json();
-      console.log('Profile update response:', data);
-
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update profile');
       }
@@ -259,8 +255,8 @@ export default function ProfileSettingsPage() {
             </div>
           )}
 
-          {/* FICA Status Banner */}
-          {session?.user.userType === 'REQUESTER' && profileData && (
+          {/* Identity verification status */}
+          {session?.user.userType !== 'ADMIN' && profileData && (
             <div
               className={`mb-6 p-4 rounded-lg border ${
                 profileData.ficaVerified
@@ -551,12 +547,12 @@ export default function ProfileSettingsPage() {
               />
             </div>
 
-            {/* FICA Documents - Only for REQUESTER users */}
-            {session?.user.userType === 'REQUESTER' && (
+            {/* Every community member can request help, so all need access to identity uploads. */}
+            {session?.user.userType !== 'ADMIN' && (
               <div className="border-t border-gray-200 pt-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">Identity Documents (FICA)</h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  Update your identity verification documents. Changes will be reviewed by an admin.
+                  Upload your ID or passport here. These files stay private and must be reviewed by an administrator.
                 </p>
 
                 <div className="space-y-6">
@@ -566,6 +562,7 @@ export default function ProfileSettingsPage() {
                     icon="document"
                     value={files.idDocument}
                     onFileSelect={(file) => setFiles({ ...files, idDocument: file })}
+                    maxSize={4194304}
                   />
 
                   <FicaUpload
@@ -574,6 +571,7 @@ export default function ProfileSettingsPage() {
                     icon="document"
                     value={files.proofOfAddress}
                     onFileSelect={(file) => setFiles({ ...files, proofOfAddress: file })}
+                    maxSize={4194304}
                   />
 
                   <FicaUpload
@@ -583,6 +581,7 @@ export default function ProfileSettingsPage() {
                     value={files.selfieWithId}
                     onFileSelect={(file) => setFiles({ ...files, selfieWithId: file })}
                     acceptedTypes={['image/jpeg', 'image/png', 'image/jpg']}
+                    maxSize={4194304}
                   />
                 </div>
               </div>

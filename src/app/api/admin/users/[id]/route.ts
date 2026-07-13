@@ -37,6 +37,12 @@ export async function GET(
         sponsorType: true,
         companyName: true,
         industry: true,
+        documents: {
+          where: { documentType: 'PROFILE_PHOTO', status: 'PENDING' },
+          orderBy: { uploadedAt: 'desc' },
+          take: 1,
+          select: { id: true, fileName: true },
+        },
       },
     });
 
@@ -89,6 +95,12 @@ export async function PATCH(
           idDocumentUrl: true,
           selfieUrl: true,
           isSuspicious: true,
+          documents: {
+            where: { documentType: 'PROFILE_PHOTO', status: 'PENDING' },
+            orderBy: { uploadedAt: 'desc' },
+            take: 1,
+            select: { id: true },
+          },
         },
       });
 
@@ -97,7 +109,7 @@ export async function PATCH(
         !phone?.trim() && 'phone number',
         !location?.trim() && 'location',
         !bio?.trim() && 'bio',
-        !existingUser?.image?.trim() && 'approved profile photo',
+        !existingUser?.image?.trim() && !existingUser?.documents.length && 'profile photo',
         !existingUser?.idDocumentUrl?.trim() && 'ID document',
         !existingUser?.selfieUrl?.trim() && 'selfie with ID',
       ].filter(Boolean);
@@ -134,6 +146,25 @@ export async function PATCH(
         ficaVerifiedBy: ficaVerified ? session.user.email : null,
       },
     });
+
+    if (ficaVerified) {
+      const pendingPhoto = await prisma.document.findFirst({
+        where: { userId: id, documentType: 'PROFILE_PHOTO', status: 'PENDING' },
+        orderBy: { uploadedAt: 'desc' },
+      });
+      if (pendingPhoto) {
+        await prisma.$transaction([
+          prisma.document.update({
+            where: { id: pendingPhoto.id },
+            data: { status: 'VERIFIED', verifiedAt: new Date(), verifiedBy: session.user.id },
+          }),
+          prisma.user.update({
+            where: { id },
+            data: { image: `/api/profile-photo/${id}` },
+          }),
+        ]);
+      }
+    }
 
     return NextResponse.json({
       message: 'User updated successfully',

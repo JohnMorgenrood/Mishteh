@@ -24,6 +24,7 @@ interface UserData {
   sponsorType: string | null;
   companyName: string | null;
   industry: string | null;
+  documents: Array<{ id: string; fileName: string }>;
 }
 
 export default function AdminUserDetailPage() {
@@ -181,7 +182,7 @@ export default function AdminUserDetailPage() {
     !formData.phone.trim() && 'phone number',
     !formData.location.trim() && 'location',
     !formData.bio.trim() && 'bio',
-    !user.image?.trim() && 'approved profile photo',
+    !user.image?.trim() && !user.documents?.length && 'profile photo',
     !user.idDocumentUrl?.trim() && 'ID document',
     !user.selfieUrl?.trim() && 'selfie with ID',
   ].filter(Boolean) as string[];
@@ -260,13 +261,18 @@ export default function AdminUserDetailPage() {
             <div className="md:col-span-2"><dt className="font-medium text-gray-600">Bio</dt><dd className="mt-1 whitespace-pre-wrap text-gray-900">{user.bio || 'Not provided'}</dd></div>
           </dl>
           <div className="mt-4 flex flex-wrap gap-3">
+            {user.documents?.[0] && (
+              <a href={`/api/admin/document-file?id=${user.documents[0].id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-primary-700 shadow-sm">
+                <UserIcon className="h-4 w-4" /> Review pending profile photo
+              </a>
+            )}
             {user.idDocumentUrl ? (
-              <a href={user.idDocumentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-primary-700 shadow-sm">
+              <a href={`/api/admin/identity-file?userId=${user.id}&kind=id`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-primary-700 shadow-sm">
                 <FileText className="h-4 w-4" /> Review ID document
               </a>
             ) : <span className="text-sm text-red-700">ID document missing</span>}
             {user.selfieUrl ? (
-              <a href={user.selfieUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-primary-700 shadow-sm">
+              <a href={`/api/admin/identity-file?userId=${user.id}&kind=selfie`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-primary-700 shadow-sm">
                 <UserIcon className="h-4 w-4" /> Review selfie with ID
               </a>
             ) : <span className="text-sm text-red-700">Selfie with ID missing</span>}

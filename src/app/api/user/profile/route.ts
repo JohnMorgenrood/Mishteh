@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { put } from '@vercel/blob';
 import { moderateSupportiveContent } from '@/lib/content-moderation';
 import { flagModerationIncident } from '@/lib/moderation-incident';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
 const PROFILE_PHOTO_TYPES = ['image/jpeg', 'image/png'];
 const ID_DOCUMENT_TYPES = [...PROFILE_PHOTO_TYPES, 'application/pdf'];
 
@@ -115,7 +113,9 @@ export async function PUT(request: NextRequest) {
     const profilePhoto = formData.get('profilePhoto') as File | null;
     const idDocument = formData.get('idDocument') as File | null;
     const selfieWithId = formData.get('selfieWithId') as File | null;
+    const proofOfAddress = formData.get('proofOfAddress') as File | null;
     let pendingProfilePhotoUrl: string | null = null;
+    let proofOfAddressUrl: string | null = null;
 
     // Prepare update data - include all values (allow empty strings to clear fields)
     const updateData: any = {
@@ -138,12 +138,7 @@ export async function PUT(request: NextRequest) {
     });
 
     // Handle file uploads if provided
-    if (profilePhoto || idDocument || selfieWithId) {
-      const uploadDir = join(process.cwd(), 'public', 'uploads', 'fica');
-      if (!existsSync(uploadDir)) {
-        await mkdir(uploadDir, { recursive: true });
-      }
-
+    if (profilePhoto || idDocument || selfieWithId || proofOfAddress) {
       const saveFile = async (file: File, prefix: string, allowedTypes: string[]): Promise<string> => {
         if (file.size <= 0 || file.size > MAX_FILE_SIZE) {
           throw new Error('Each upload must be a non-empty file no larger than 5MB');
@@ -151,13 +146,15 @@ export async function PUT(request: NextRequest) {
         if (!allowedTypes.includes(file.type)) {
           throw new Error('Unsupported upload type');
         }
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const timestamp = Date.now();
-        const filename = `${prefix}_${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const filepath = join(uploadDir, filename);
-        await writeFile(filepath, buffer);
-        return `/uploads/fica/${filename}`;
+        if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
+          throw new Error('Secure file storage is not configured. Please contact the site administrator.');
+        }
+        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const blob = await put(`identity/${session.user.id}/${prefix}-${safeName}`, file, {
+          access: 'private',
+          addRandomSuffix: true,
+        });
+        return blob.url;
       };
 
       if (profilePhoto) {
@@ -176,6 +173,9 @@ export async function PUT(request: NextRequest) {
         updateData.selfieUrl = await saveFile(selfieWithId, 'selfie', PROFILE_PHOTO_TYPES);
         updateData.ficaVerified = false;
         updateData.ficaVerifiedAt = null;
+      }
+      if (proofOfAddress) {
+        proofOfAddressUrl = await saveFile(proofOfAddress, 'address', ID_DOCUMENT_TYPES);
       }
     }
 
@@ -229,6 +229,20 @@ export async function PUT(request: NextRequest) {
       ]);
     }
 
+    if (proofOfAddress && proofOfAddressUrl) {
+      await prisma.document.create({
+        data: {
+          userId: session.user.id,
+          fileName: proofOfAddress.name,
+          fileType: proofOfAddress.type,
+          fileSize: proofOfAddress.size,
+          filePath: proofOfAddressUrl,
+          documentType: 'PROOF_OF_ADDRESS',
+          status: 'PENDING',
+        },
+      });
+    }
+
     if (session.user.userType === 'DONOR' || session.user.userType === 'SPONSOR') {
       await prisma.donorPreference.upsert({
         where: { userId: session.user.id },
@@ -252,7 +266,7 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error updating user profile:', error);
     return NextResponse.json(
-      { error: 'Failed to update user profile' },
+      { error: error instanceof Error ? error.message : 'Failed to update user profile' },
       { status: 500 }
     );
   }
