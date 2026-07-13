@@ -39,7 +39,7 @@ function getProgress(currentAmount: number, targetAmount?: number | null) {
 
 async function getDashboardData(userId: string, userType: string) {
   if (userType === 'DONOR') {
-    const [donations, donationSummary] = await Promise.all([
+    const [donations, donationSummary, requests] = await Promise.all([
       prisma.donation.findMany({
         where: { donorId: userId },
         include: {
@@ -61,6 +61,11 @@ async function getDashboardData(userId: string, userType: string) {
         _sum: { amount: true },
         _count: true,
       }),
+      prisma.request.findMany({
+        where: { userId },
+        select: { id: true, title: true, status: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
 
     const completedDonations = donations.filter((donation) => donation.status === 'COMPLETED');
@@ -71,6 +76,7 @@ async function getDashboardData(userId: string, userType: string) {
 
     return {
       donations,
+      requests,
       totals: {
         totalSent: donationSummary._sum.amount || 0,
         donationCount: donationSummary._count,
@@ -175,7 +181,8 @@ export default async function DashboardPage() {
   const isDonor = session.user.userType === 'DONOR';
   const quickLinks = isDonor
     ? [
-        { href: '/requests', label: 'Support more requests', icon: Heart },
+      { href: '/requests', label: 'Support more requests', icon: Heart },
+        { href: '/dashboard/requests/new', label: 'Request help for yourself', icon: Plus },
         { href: '/activity', label: 'See community activity', icon: Sparkles },
         { href: '/dashboard/profile', label: 'Manage donor privacy', icon: Settings },
       ]
@@ -204,13 +211,21 @@ export default async function DashboardPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className={`grid grid-cols-1 gap-3 ${isDonor ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
               <Link
                 href={isDonor ? '/requests' : '/dashboard/requests/new'}
                 className="rounded-2xl bg-white px-5 py-4 text-sm font-semibold text-primary-700 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 {isDonor ? 'Browse Requests to Support' : 'Create a New Request'}
               </Link>
+              {isDonor && (
+                <Link
+                  href="/dashboard/requests/new"
+                  className="rounded-2xl border border-white/30 bg-white/10 px-5 py-4 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
+                >
+                  Request Help for Yourself
+                </Link>
+              )}
               <Link
                 href="/activity"
                 className="rounded-2xl border border-white/30 bg-white/10 px-5 py-4 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
@@ -220,6 +235,34 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {isDonor && data.requests?.length > 0 && (
+          <div className="mb-8 rounded-2xl border border-primary-100 bg-white p-6 shadow-soft">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Your Help Requests</h2>
+                <p className="mt-1 text-sm text-gray-500">Donating never prevents you from asking the community for help.</p>
+              </div>
+              <Link href="/dashboard/requests/new" className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600">
+                <Plus className="h-4 w-4" /> New Request
+              </Link>
+            </div>
+            <div className="mt-4 space-y-3">
+              {data.requests.map((request: any) => (
+                <div key={request.id} className="flex flex-col gap-2 rounded-xl bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-semibold text-gray-900">{request.title}</p>
+                    <p className="text-xs text-gray-500">Submitted {new Date(request.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-700">{formatLabel(request.status)}</span>
+                    <Link href={`/dashboard/requests/${request.id}/edit`} className="text-sm font-semibold text-primary-600">Manage</Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
           {isDonor ? (

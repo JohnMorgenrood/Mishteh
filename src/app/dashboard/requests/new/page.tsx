@@ -159,13 +159,13 @@ export default function NewRequestPage() {
     }
   };
 
-  if (!session || session.user.userType !== 'REQUESTER') {
+  if (!session || session.user.userType === 'ADMIN') {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-2xl mx-auto px-4">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-            <p className="text-gray-600">Only requesters can create help requests.</p>
+            <p className="text-gray-600">Please sign in with a community account to request help.</p>
           </div>
         </div>
       </div>
@@ -178,7 +178,7 @@ export default function NewRequestPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Create New Request</h1>
           <p className="text-gray-600 mt-2">
-            Fill out the form below to request help from our community of donors.
+            Anyone in our community can need help. Complete the form below and our team will review it before publication.
           </p>
         </div>
 

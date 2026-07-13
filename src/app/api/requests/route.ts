@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const requester = await prisma.user.findUnique({
+    const account = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
         userType: true,
@@ -150,21 +150,21 @@ export async function POST(request: NextRequest) {
     });
 
     // Check the database record, not user-controlled client state or a stale session.
-    if (!requester || requester.userType !== 'REQUESTER') {
+    if (!account || account.userType === 'ADMIN') {
       return NextResponse.json(
-        { error: 'Only requesters can create help requests' },
+        { error: 'This account cannot create help requests' },
         { status: 403 }
       );
     }
 
     const missingProfileFields = [
-      !requester.fullName?.trim() && 'full name',
-      !requester.phone?.trim() && 'phone number',
-      !requester.location?.trim() && 'location',
-      !requester.bio?.trim() && 'bio',
-      !requester.image?.trim() && 'profile photo',
-      !requester.idDocumentUrl?.trim() && 'identity document',
-      !requester.selfieUrl?.trim() && 'selfie with ID',
+      !account.fullName?.trim() && 'full name',
+      !account.phone?.trim() && 'phone number',
+      !account.location?.trim() && 'location',
+      !account.bio?.trim() && 'bio',
+      !account.image?.trim() && 'profile photo',
+      !account.idDocumentUrl?.trim() && 'identity document',
+      !account.selfieUrl?.trim() && 'selfie with ID',
     ].filter(Boolean);
 
     if (missingProfileFields.length > 0) {
@@ -177,10 +177,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!requester.ficaVerified || requester.isSuspicious) {
+    if (!account.ficaVerified || account.isSuspicious) {
       return NextResponse.json(
         {
-          error: requester.isSuspicious
+          error: account.isSuspicious
             ? 'Your account requires a security review before you can post.'
             : 'Your identity must be approved by an administrator before you can post.',
           code: 'ACCOUNT_APPROVAL_REQUIRED',

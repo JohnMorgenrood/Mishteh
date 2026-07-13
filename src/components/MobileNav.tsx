@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, PlusCircle, Bell, User, HandHeart, LucideIcon } from 'lucide-react';
+import { Home, Search, PlusCircle, Bell, User, LucideIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 interface NavItem {
@@ -49,20 +49,12 @@ export default function MobileNav() {
         label: 'Login',
         isSpecial: true,
       };
-    } else if (userType === 'REQUESTER') {
-      // Requester - show "Create Request"
+    } else if (userType !== 'ADMIN') {
+      // Every community member may request help, including people who have donated.
       actionItem = {
         href: '/dashboard/requests/new',
         icon: PlusCircle,
         label: 'Request',
-        isSpecial: true,
-      };
-    } else if (userType === 'DONOR' || userType === 'SPONSOR') {
-      // Donor/Sponsor - show "Donate" (browse requests)
-      actionItem = {
-        href: '/requests',
-        icon: HandHeart,
-        label: 'Donate',
         isSpecial: true,
       };
     } else if (userType === 'ADMIN') {
