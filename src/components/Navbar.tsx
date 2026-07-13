@@ -78,16 +78,6 @@ export default function Navbar() {
               Requests
             </Link>
             <Link
-              href="/blog"
-              className={`text-sm font-medium transition-all ${
-                isActive('/blog') 
-                  ? 'text-primary-600 font-semibold' 
-                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
-              }`}
-            >
-              Blog
-            </Link>
-            <Link
               href="/about"
               className={`text-sm font-medium transition-all ${
                 isActive('/about') 
@@ -252,15 +242,6 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Requests
-              </Link>
-              <Link
-                href="/blog"
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive('/blog') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Blog
               </Link>
               <Link
                 href="/about"
