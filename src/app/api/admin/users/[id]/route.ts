@@ -70,12 +70,49 @@ export async function PATCH(
       email,
       phone,
       location,
+      address,
+      bio,
+      dateOfBirth,
       userType,
       ficaVerified,
       sponsorType,
       companyName,
       industry,
     } = body;
+
+    if (ficaVerified) {
+      const existingUser = await prisma.user.findUnique({
+        where: { id },
+        select: {
+          bio: true,
+          image: true,
+          idDocumentUrl: true,
+          selfieUrl: true,
+          isSuspicious: true,
+        },
+      });
+
+      const missing = [
+        !fullName?.trim() && 'full name',
+        !phone?.trim() && 'phone number',
+        !location?.trim() && 'location',
+        !bio?.trim() && 'bio',
+        !existingUser?.image?.trim() && 'approved profile photo',
+        !existingUser?.idDocumentUrl?.trim() && 'ID document',
+        !existingUser?.selfieUrl?.trim() && 'selfie with ID',
+      ].filter(Boolean);
+
+      if (missing.length > 0 || existingUser?.isSuspicious) {
+        return NextResponse.json(
+          {
+            error: existingUser?.isSuspicious
+              ? 'Clear the security flag after completing your review before approving this account.'
+              : `Cannot approve yet. Missing: ${missing.join(', ')}`,
+          },
+          { status: 409 }
+        );
+      }
+    }
 
     // Update user
     const updatedUser = await prisma.user.update({
@@ -85,6 +122,9 @@ export async function PATCH(
         email,
         phone: phone || null,
         location: location || null,
+        address: address || null,
+        bio: bio || null,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
         userType,
         ficaVerified,
         sponsorType: sponsorType || null,

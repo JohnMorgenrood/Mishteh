@@ -44,6 +44,9 @@ export default function AdminUserDetailPage() {
     email: '',
     phone: '',
     location: '',
+    address: '',
+    bio: '',
+    dateOfBirth: '',
     userType: '',
     ficaVerified: false,
     sponsorType: '',
@@ -72,6 +75,9 @@ export default function AdminUserDetailPage() {
           email: data.user.email || '',
           phone: data.user.phone || '',
           location: data.user.location || '',
+          address: data.user.address || '',
+          bio: data.user.bio || '',
+          dateOfBirth: data.user.dateOfBirth ? data.user.dateOfBirth.slice(0, 10) : '',
           userType: data.user.userType || '',
           ficaVerified: data.user.ficaVerified || false,
           sponsorType: data.user.sponsorType || '',
@@ -169,6 +175,17 @@ export default function AdminUserDetailPage() {
       </div>
     );
   }
+
+  const approvalMissing = [
+    !formData.fullName.trim() && 'full name',
+    !formData.phone.trim() && 'phone number',
+    !formData.location.trim() && 'location',
+    !formData.bio.trim() && 'bio',
+    !user.image?.trim() && 'approved profile photo',
+    !user.idDocumentUrl?.trim() && 'ID document',
+    !user.selfieUrl?.trim() && 'selfie with ID',
+  ].filter(Boolean) as string[];
+  const canApprove = approvalMissing.length === 0;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -315,6 +332,22 @@ export default function AdminUserDetailPage() {
 
           {/* User Type */}
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Physical Address</label>
+            <input type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="No physical address" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+            <input type="date" value={formData.dateOfBirth} onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600" />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+            <textarea value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })} rows={4} placeholder="No bio" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600" />
+          </div>
+
+          {/* User Type */}
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               User Type
             </label>
@@ -323,11 +356,12 @@ export default function AdminUserDetailPage() {
               onChange={(e) => setFormData({ ...formData, userType: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
             >
-              <option value="DONOR">Donor</option>
-              <option value="REQUESTER">Requester</option>
-              <option value="SPONSOR">Sponsor</option>
+              <option value="DONOR">Donor &amp; Requester (Both)</option>
+              <option value="REQUESTER">Requester (can also donate)</option>
+              <option value="SPONSOR">Sponsor (can donate and request)</option>
               <option value="ADMIN">Admin</option>
             </select>
+            <p className="mt-2 text-xs text-gray-500">All community account types can both donate and request help. This selection controls the dashboard emphasis.</p>
           </div>
 
           {/* FICA Verified */}
@@ -337,11 +371,15 @@ export default function AdminUserDetailPage() {
               id="ficaVerified"
               checked={formData.ficaVerified}
               onChange={(e) => setFormData({ ...formData, ficaVerified: e.target.checked })}
+              disabled={!canApprove && !formData.ficaVerified}
               className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-600"
             />
             <label htmlFor="ficaVerified" className="ml-2 text-sm font-medium text-gray-700">
               FICA Verified
             </label>
+            {!canApprove && !formData.ficaVerified && (
+              <p className="ml-3 text-xs text-amber-700">Cannot approve yet: {approvalMissing.join(', ')}</p>
+            )}
           </div>
         </div>
 

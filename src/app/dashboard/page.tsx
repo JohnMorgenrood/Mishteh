@@ -197,16 +197,16 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 rounded-3xl bg-gradient-to-r from-primary-700 via-primary-600 to-secondary-600 p-8 text-white shadow-soft-lg">
+        <div className="mb-8 rounded-3xl bg-gray-800 p-8 text-white shadow-soft-lg">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-100">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-300">
                 {isDonor ? 'Donor Dashboard' : isAdmin ? 'Admin Community Dashboard' : 'Requester Dashboard'}
               </p>
               <h1 className="mt-2 text-3xl font-bold md:text-4xl">
                 Welcome back, {session.user.name}
               </h1>
-              <p className="mt-3 max-w-2xl text-sm text-primary-50 md:text-base">
+              <p className="mt-3 max-w-2xl text-sm text-gray-200 md:text-base">
                 {isDonor
                   ? 'Track every gift you have sent, monitor completed support, and see the difference your giving is making.'
                   : isAdmin
