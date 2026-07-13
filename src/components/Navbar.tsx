@@ -140,13 +140,6 @@ export default function Navbar() {
                           🎛️ Control Center
                         </Link>
                         <Link
-                          href="/admin/blog"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                          onClick={() => setAdminDropdownOpen(false)}
-                        >
-                          ✍️ Blog Management
-                        </Link>
-                        <Link
                           href="/admin/requests"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
                           onClick={() => setAdminDropdownOpen(false)}
@@ -250,20 +243,11 @@ export default function Navbar() {
                       <Link
                         href="/admin"
                         className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                          isActive('/admin') && !isActive('/admin/blog') && !isActive('/admin/security') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
+                          isActive('/admin') && !isActive('/admin/security') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
                         }`}
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         🎛️ Control Center
-                      </Link>
-                      <Link
-                        href="/admin/blog"
-                        className={`block px-4 py-2 text-sm rounded-md transition-colors ${
-                          isActive('/admin/blog') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        ✍️ Blog Management
                       </Link>
                       <Link
                         href="/admin/requests"

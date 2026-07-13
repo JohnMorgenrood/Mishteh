@@ -646,10 +646,6 @@ export default function AdminDashboard() {
 
         {/* Quick Links */}
         <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link href="/admin/blog" className="flex items-center gap-3 p-4 bg-gray-800 rounded-xl border border-gray-700 hover:bg-gray-700 transition">
-            <FileText className="w-6 h-6 text-blue-400" />
-            <span>Blog Management</span>
-          </Link>
           <Link href="/admin/requests" className="flex items-center gap-3 p-4 bg-gray-800 rounded-xl border border-gray-700 hover:bg-gray-700 transition">
             <Database className="w-6 h-6 text-green-400" />
             <span>Manage Requests</span>

@@ -10,7 +10,6 @@ import {
   FileText, 
   AlertCircle, 
   DollarSign, 
-  PenSquare,
   Eye,
   UserCog,
   Settings,
@@ -65,14 +64,6 @@ export default function AdminDashboardPage() {
       href: '/admin/users',
       color: 'bg-purple-500',
       stats: 'User Control'
-    },
-    {
-      title: 'Blog Management',
-      description: 'Create, edit, and manage blog posts',
-      icon: PenSquare,
-      href: '/admin/blog',
-      color: 'bg-pink-500',
-      stats: 'Content'
     },
     {
       title: 'View User Dashboards',
@@ -140,15 +131,6 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Blog Posts</p>
-                <p className="text-2xl font-bold text-gray-900">-</p>
-              </div>
-              <PenSquare className="w-8 h-8 text-orange-500" />
-            </div>
-          </div>
         </div>
 
         {/* Admin Tools Grid */}
@@ -187,12 +169,6 @@ export default function AdminDashboardPage() {
               className="px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-center font-semibold"
             >
               Review Pending Requests
-            </Link>
-            <Link
-              href="/admin/blog"
-              className="px-4 py-3 bg-pink-50 text-pink-700 rounded-lg hover:bg-pink-100 transition-colors text-center font-semibold"
-            >
-              Create New Blog Post
             </Link>
             <Link
               href="/admin/users"
