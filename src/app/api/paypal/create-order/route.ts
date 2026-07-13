@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createOrder } from '@/lib/paypal';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,11 +12,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { amount, currency } = await request.json();
+    const { amount, currency, requestId } = await request.json();
 
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     }
+
+    if (!requestId) return NextResponse.json({ error: 'Request ID is required' }, { status: 400 });
+    const helpRequest = await prisma.request.findFirst({
+      where: {
+        id: requestId,
+        status: { in: ['ACTIVE', 'PARTIALLY_FUNDED'] },
+        verified: true,
+        user: { ficaVerified: true, isSuspicious: false },
+      },
+      select: { id: true },
+    });
+    if (!helpRequest) return NextResponse.json({ error: 'This request is not currently approved to receive donations.' }, { status: 409 });
 
     if ((currency || 'USD') === 'USD' && amount < 5) {
       return NextResponse.json(

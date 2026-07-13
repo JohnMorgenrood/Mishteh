@@ -367,7 +367,7 @@ model VideoComment {
   videoId   String
   userId    String
   content   String
-  approved  Boolean        @default(true)
+  approved  Boolean        @default(false)
   createdAt DateTime       @default(now())
   video     CommunityVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)

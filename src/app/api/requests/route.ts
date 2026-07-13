@@ -176,32 +176,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const missingProfileFields = [
-      !account.fullName?.trim() && 'full name',
-      !account.phone?.trim() && 'phone number',
-      !account.location?.trim() && 'location',
-      !account.bio?.trim() && 'bio',
-      !account.image?.trim() && 'profile photo',
-      !account.idDocumentUrl?.trim() && 'identity document',
-      !account.selfieUrl?.trim() && 'selfie with ID',
-    ].filter(Boolean);
-
-    if (missingProfileFields.length > 0) {
+    // Let people ask for help without uploading sensitive documents up front.
+    // The request stays private/PENDING; admin publication still requires a
+    // complete, verified identity and the payment routes only accept ACTIVE requests.
+    if (account.isSuspicious) {
       return NextResponse.json(
         {
-          error: `Complete your profile before posting. Missing: ${missingProfileFields.join(', ')}`,
-          code: 'PROFILE_INCOMPLETE',
-        },
-        { status: 403 }
-      );
-    }
-
-    if (!account.ficaVerified || account.isSuspicious) {
-      return NextResponse.json(
-        {
-          error: account.isSuspicious
-            ? 'Your account requires a security review before you can post.'
-            : 'Your identity must be approved by an administrator before you can post.',
+          error: 'Your account requires a security review before you can submit a request.',
           code: 'ACCOUNT_APPROVAL_REQUIRED',
         },
         { status: 403 }
@@ -232,7 +213,7 @@ export async function POST(request: NextRequest) {
         targetAmount: data.targetAmount,
         isAnonymous: data.isAnonymous || false,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
-        status: 'PENDING', // Starts as pending until verified
+        status: 'PENDING', // Never public until an admin verifies the recipient and approves it.
       },
       include: {
         user: {

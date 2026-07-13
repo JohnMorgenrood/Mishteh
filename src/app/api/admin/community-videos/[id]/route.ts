@@ -11,6 +11,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const suggestion = await prisma.videoSuggestion.update({ where: { id }, data: { status: body.status, adminNotes: body.adminNotes || null } });
     return NextResponse.json({ suggestion });
   }
+  if (body.kind === 'comment') {
+    if (body.action === 'approve') {
+      const comment = await prisma.videoComment.update({ where: { id }, data: { approved: true } });
+      return NextResponse.json({ comment });
+    }
+    await prisma.videoComment.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  }
   const video = await prisma.communityVideo.update({ where: { id }, data: { published: body.published, featured: body.featured } });
   return NextResponse.json({ video });
 }

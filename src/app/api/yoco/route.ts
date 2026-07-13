@@ -51,6 +51,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!['ACTIVE', 'PARTIALLY_FUNDED'].includes(helpRequest.status) || !helpRequest.verified || !helpRequest.user.ficaVerified || helpRequest.user.isSuspicious) {
+      return NextResponse.json(
+        { error: 'This request is not currently approved to receive donations.' },
+        { status: 409 }
+      );
+    }
+
     const feeBreakdown = calculateYocoBreakdown(amount);
     const calculatedTotal = totalAmount || feeBreakdown.grossAmount;
 
@@ -147,6 +154,13 @@ export async function GET(request: Request) {
       return NextResponse.json(
         { error: 'Donation not found' },
         { status: 404 }
+      );
+    }
+
+    if (!donation.request || !['ACTIVE', 'PARTIALLY_FUNDED'].includes(donation.request.status) || !donation.request.verified || !donation.request.user.ficaVerified || donation.request.user.isSuspicious) {
+      return NextResponse.json(
+        { error: 'This request is not currently approved to receive donations.' },
+        { status: 409 }
       );
     }
 

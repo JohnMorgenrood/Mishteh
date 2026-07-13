@@ -7,11 +7,16 @@ import { extractYouTubeId } from '@/lib/youtube';
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.userType !== 'ADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const [videos, suggestions] = await Promise.all([
+  const [videos, suggestions, comments] = await Promise.all([
     prisma.communityVideo.findMany({ orderBy: { createdAt: 'desc' } }),
     prisma.videoSuggestion.findMany({ include: { user: { select: { fullName: true, email: true } } }, orderBy: { createdAt: 'desc' } }),
+    prisma.videoComment.findMany({
+      where: { approved: false },
+      include: { user: { select: { fullName: true, email: true } }, video: { select: { title: true } } },
+      orderBy: { createdAt: 'desc' },
+    }),
   ]);
-  return NextResponse.json({ videos, suggestions });
+  return NextResponse.json({ videos, suggestions, comments });
 }
 
 export async function POST(request: NextRequest) {

@@ -20,6 +20,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   const video = await prisma.communityVideo.findFirst({ where: { id, published: true }, select: { id: true } });
   if (!video) return NextResponse.json({ error: 'Video not found' }, { status: 404 });
-  await prisma.videoComment.create({ data: { videoId: id, userId: session.user.id, content } });
-  return NextResponse.json({ message: 'Comment posted.' }, { status: 201 });
+  await prisma.videoComment.create({ data: { videoId: id, userId: session.user.id, content, approved: false } });
+  return NextResponse.json({ message: 'Comment sent for admin approval.' }, { status: 201 });
 }

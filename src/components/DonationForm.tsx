@@ -128,6 +128,7 @@ export default function DonationForm({
         body: JSON.stringify({
           amount: usdAmount,
           currency: 'USD',
+          requestId,
         }),
       });
 

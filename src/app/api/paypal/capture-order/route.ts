@@ -20,6 +20,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
+    if (!requestId) return NextResponse.json({ error: 'Request ID is required' }, { status: 400 });
+    // Check again immediately before capture so a request that was suspended
+    // after checkout creation cannot receive money.
+    const approvedRequest = await prisma.request.findFirst({
+      where: {
+        id: requestId,
+        status: { in: ['ACTIVE', 'PARTIALLY_FUNDED'] },
+        verified: true,
+        user: { ficaVerified: true, isSuspicious: false },
+      },
+      select: { id: true },
+    });
+    if (!approvedRequest) return NextResponse.json({ error: 'This request is no longer approved to receive donations.' }, { status: 409 });
+
     // Capture the PayPal payment
     const captureResult = await captureOrder(orderId);
 

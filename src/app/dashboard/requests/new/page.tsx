@@ -218,14 +218,14 @@ export default function NewRequestPage() {
                     onChange={(event) => setBeneficiaryUserId(event.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-white px-4 py-2"
                   >
-                    <option value="">Select a verified community member</option>
+                    <option value="">Select a community member</option>
                     {beneficiaries.map((user) => (
-                      <option key={user.id} value={user.id} disabled={!user.ficaVerified}>
-                        {user.fullName} ({user.email}){user.ficaVerified ? '' : ' — not verified'}
+                      <option key={user.id} value={user.id}>
+                        {user.fullName} ({user.email}){user.ficaVerified ? ' — verified' : ' — verification needed before publishing'}
                       </option>
                     ))}
                   </select>
-                  <p className="mt-2 text-xs text-gray-600">The request belongs to this person and remains pending until reviewed.</p>
+                  <p className="mt-2 text-xs text-gray-600">The request stays private until the person completes identity verification and an admin approves it.</p>
                 </div>
               )}
               {/* Title */}
@@ -379,7 +379,7 @@ export default function NewRequestPage() {
               Supporting Documents
             </h2>
             <p className="text-sm text-gray-600 mb-4">
-              Upload documents to verify your identity and need. This helps build trust with donors.
+              You can submit now without identity documents. Before the request can be published or receive money, you must upload your ID and selfie and pass an admin review.
             </p>
             <FileUpload
               documentType="proof_of_need"
