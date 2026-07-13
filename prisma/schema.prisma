@@ -112,6 +112,9 @@ model Request {
   currentAmount     Float           @default(0)
   status            RequestStatus   @default(PENDING)
   verified          Boolean         @default(false)
+  contentApproved   Boolean         @default(false)
+  contentApprovedAt DateTime?
+  contentApprovedBy String?
   views             Int             @default(0)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt

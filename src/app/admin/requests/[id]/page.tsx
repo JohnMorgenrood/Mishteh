@@ -17,15 +17,22 @@ interface Request {
   targetAmount: number;
   currentAmount: number;
   status: string;
+  contentApproved: boolean;
   featured: boolean;
   isAnonymous: boolean;
   createdAt: string;
   user: {
+    id: string;
     fullName: string;
     email: string;
     phone?: string;
     location?: string;
     image?: string;
+    bio?: string;
+    idDocumentUrl?: string;
+    selfieUrl?: string;
+    ficaVerified: boolean;
+    isSuspicious: boolean;
   };
 }
 
@@ -38,6 +45,7 @@ export default function AdminRequestReview() {
   const [processing, setProcessing] = useState(false);
   const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     if (session?.user?.userType !== 'ADMIN') {
@@ -50,11 +58,11 @@ export default function AdminRequestReview() {
 
   const fetchRequest = async () => {
     try {
-      const response = await fetch(`/api/requests/${params.id}`);
+      const response = await fetch(`/api/admin/requests/${params.id}`);
       if (response.ok) {
         const data = await response.json();
-        setRequest(data);
-        setNewCategory(data.category);
+        setRequest(data.request);
+        setNewCategory(data.request.category);
       }
     } catch (error) {
       console.error('Error fetching request:', error);
@@ -109,11 +117,12 @@ export default function AdminRequestReview() {
         body: JSON.stringify({ status: action }),
       });
 
+      const data = await response.json();
       if (response.ok) {
         alert(`Request ${action.toLowerCase()} successfully!`);
         router.push('/admin');
       } else {
-        alert('Failed to update request');
+        setMessage(data.error || 'Failed to update request');
       }
     } catch (error) {
       console.error('Error updating request:', error);
@@ -121,6 +130,20 @@ export default function AdminRequestReview() {
     } finally {
       setProcessing(false);
     }
+  };
+
+  const approvePost = async () => {
+    setProcessing(true);
+    setMessage('');
+    const response = await fetch(`/api/admin/requests/${params.id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contentApproved: true }),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      setRequest(data.request);
+      setMessage('Post approved. It is still private until recipient verification is complete and you publish it.');
+    } else setMessage(data.error || 'Unable to approve post.');
+    setProcessing(false);
   };
 
   const handleToggleFeatured = async () => {
@@ -192,6 +215,7 @@ export default function AdminRequestReview() {
           </div>
 
           <div className="p-6 space-y-6">
+            {message && <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">{message}</div>}
             {/* Request Details */}
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">{request.title}</h2>
@@ -336,14 +360,32 @@ export default function AdminRequestReview() {
 
             {/* Action Buttons */}
             {request.status === 'PENDING' && (
-              <div className="border-t pt-6 flex gap-4">
+              <div className="border-t pt-6 space-y-5">
+                <div className="rounded-xl bg-gray-50 p-5">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Step 1 — Moderate the post</p>
+                  <p className="mt-2 font-semibold text-gray-900">{request.contentApproved ? 'Post content approved' : 'Review the story, images, category, and amount.'}</p>
+                  {!request.contentApproved && <button onClick={approvePost} disabled={processing} className="mt-4 rounded-lg bg-primary-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50">Approve Post</button>}
+                </div>
+                <div className="rounded-xl bg-gray-50 p-5">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Step 2 — Publish fundraising</p>
+                  <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                    <p>{request.contentApproved ? '✓' : '○'} Post approved</p>
+                    <p>{request.user.ficaVerified ? '✓' : '○'} Identity approved</p>
+                    <p>{request.user.idDocumentUrl ? '✓' : '○'} ID document uploaded</p>
+                    <p>{request.user.selfieUrl ? '✓' : '○'} Selfie with ID uploaded</p>
+                    <p>{request.user.image ? '✓' : '○'} Profile photo uploaded</p>
+                    <p>{request.user.isSuspicious ? '✕ Security flag must be cleared' : '✓ No security flag'}</p>
+                  </div>
+                  {!request.user.ficaVerified && <Link href={`/admin/users/${request.user.id}`} className="mt-4 inline-flex font-semibold text-primary-600">Open recipient verification →</Link>}
+                </div>
+                <div className="flex gap-4">
                 <button
                   onClick={() => handleAction('ACTIVE')}
-                  disabled={processing}
+                  disabled={processing || !request.contentApproved || !request.user.ficaVerified || request.user.isSuspicious}
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CheckCircle className="w-5 h-5" />
-                  Approve Request
+                  Publish &amp; Enable Donations
                 </button>
                 <button
                   onClick={() => handleAction('REJECTED')}
@@ -353,6 +395,7 @@ export default function AdminRequestReview() {
                   <XCircle className="w-5 h-5" />
                   Reject Request
                 </button>
+                </div>
               </div>
             )}
           </div>

@@ -3,16 +3,13 @@ import { getServerSession } from 'next-auth';
 import Link from 'next/link';
 import {
   ArrowRight,
-  CheckCircle2,
   CircleDollarSign,
   Clock3,
   FileText,
   HandCoins,
   Heart,
   Plus,
-  Settings,
   ShieldCheck,
-  Sparkles,
   TrendingUp,
   Wallet,
 } from 'lucide-react';
@@ -180,20 +177,6 @@ export default async function DashboardPage() {
   const data: any = await getDashboardData(session.user.id, session.user.userType);
   const isDonor = session.user.userType === 'DONOR';
   const isAdmin = session.user.userType === 'ADMIN';
-  const quickLinks = isDonor
-    ? [
-      { href: '/requests', label: 'Support more requests', icon: Heart },
-        { href: '/dashboard/requests/new', label: 'Request help for yourself', icon: Plus },
-        { href: '/activity', label: 'See community activity', icon: Sparkles },
-        { href: '/dashboard/profile', label: 'Manage donor privacy', icon: Settings },
-      ]
-    : [
-        { href: '/requests', label: 'Browse requests to support', icon: Heart },
-        { href: '/dashboard/requests/new', label: isAdmin ? 'Create request on behalf' : 'Create a new request', icon: Plus },
-        { href: '/activity', label: 'Follow community activity', icon: Sparkles },
-        { href: '/dashboard/profile', label: 'Update your profile', icon: Settings },
-      ];
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -401,27 +384,6 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          <div className="rounded-2xl bg-white p-6 shadow-soft">
-            <h2 className="text-lg font-bold text-gray-900">Quick Actions</h2>
-            <div className="mt-4 space-y-3">
-              {quickLinks.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center justify-between rounded-2xl border border-gray-200 px-4 py-4 text-sm font-semibold text-gray-700 transition hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
-                  >
-                    <span className="flex items-center gap-3">
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-3">
@@ -605,61 +567,6 @@ export default async function DashboardPage() {
           </div>
 
           <div className="space-y-8">
-            <div className="rounded-2xl bg-white p-6 shadow-soft">
-              <h2 className="text-lg font-bold text-gray-900">Dashboard Focus</h2>
-              <p className="mt-2 text-sm text-gray-600">
-                {isDonor
-                  ? 'Your donor dashboard now emphasizes money sent, completed support, and the people you have helped.'
-                  : 'Your requester dashboard now emphasizes money received, active requests, and incoming community support.'}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white shadow-soft">
-              <div className="border-b border-gray-100 px-6 py-5">
-                <h2 className="text-lg font-bold text-gray-900">
-                  {isDonor ? 'Account Confidence' : 'Requester Checklist'}
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  {isDonor
-                    ? 'Quick reminders that help your giving stay clear and private.'
-                    : 'Helpful next steps to make your requests easier to trust and support.'}
-                </p>
-              </div>
-              <div className="space-y-3 p-6 text-sm text-gray-600">
-                {isDonor ? (
-                  <>
-                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-600" />
-                      <p>Donor names stay private by default unless you turn visibility on in profile settings.</p>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-600" />
-                      <p>Yoco is still the better option for smaller South African donations.</p>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-600" />
-                      <p>Completed donations flow into the admin ledger for easier support tracking and auditing.</p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-600" />
-                      <p>Keep your request title, story, and target amount clear so donors understand the need quickly.</p>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-600" />
-                      <p>Respond to support with updates in the activity feed so donors can see momentum building.</p>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-600" />
-                      <p>Use request management to keep funded or changed requests accurate and up to date.</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
             {!isDonor && (
               <>
                 <RequesterGratitudePrompt requests={data.gratitudeRequests || []} />

@@ -175,6 +175,9 @@ export async function PATCH(
         targetAmount: body.targetAmount,
         status: isAdmin ? body.status : 'PENDING',
         verified: isAdmin ? body.status === 'ACTIVE' : false,
+        contentApproved: isAdmin ? existingRequest.contentApproved : false,
+        contentApprovedAt: isAdmin ? existingRequest.contentApprovedAt : null,
+        contentApprovedBy: isAdmin ? existingRequest.contentApprovedBy : null,
       },
     });
 

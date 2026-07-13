@@ -3,6 +3,18 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || session.user.userType !== 'ADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { id } = await params;
+  const helpRequest = await prisma.request.findUnique({
+    where: { id },
+    include: { user: { select: { id: true, fullName: true, email: true, phone: true, location: true, bio: true, image: true, idDocumentUrl: true, selfieUrl: true, ficaVerified: true, isSuspicious: true } } },
+  });
+  if (!helpRequest) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
+  return NextResponse.json({ request: helpRequest });
+}
+
 // PATCH - Approve or reject a request
 export async function PATCH(
   request: NextRequest,
@@ -20,10 +32,16 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status, featured, category } = body;
+    const { status, featured, category, contentApproved } = body;
 
     // Prepare update data
     const updateData: any = {};
+
+    if (contentApproved !== undefined) {
+      updateData.contentApproved = Boolean(contentApproved);
+      updateData.contentApprovedAt = contentApproved ? new Date() : null;
+      updateData.contentApprovedBy = contentApproved ? session.user.email : null;
+    }
 
     if (status !== undefined) {
       if (!['ACTIVE', 'REJECTED'].includes(status)) {
@@ -37,6 +55,7 @@ export async function PATCH(
         const requestOwner = await prisma.request.findUnique({
           where: { id },
           select: {
+            contentApproved: true,
             user: {
               select: {
                 fullName: true,
@@ -57,6 +76,9 @@ export async function PATCH(
           return NextResponse.json({ error: 'Request not found' }, { status: 404 });
         }
 
+        if (!requestOwner.contentApproved) {
+          return NextResponse.json({ error: 'Approve the post content before publishing it.' }, { status: 409 });
+        }
         const owner = requestOwner.user;
         const profileComplete = Boolean(
           owner.fullName?.trim() &&
@@ -70,7 +92,7 @@ export async function PATCH(
 
         if (!profileComplete || !owner.ficaVerified || owner.isSuspicious) {
           return NextResponse.json(
-            { error: 'Approve the requester identity and complete their profile before publishing this request.' },
+            { error: 'The post is approved, but the recipient must complete identity verification before it can be published and receive donations.' },
             { status: 409 }
           );
         }
@@ -98,6 +120,12 @@ export async function PATCH(
             email: true,
             phone: true,
             location: true,
+            bio: true,
+            image: true,
+            idDocumentUrl: true,
+            selfieUrl: true,
+            ficaVerified: true,
+            isSuspicious: true,
           },
         },
       },
