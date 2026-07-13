@@ -31,6 +31,49 @@ export async function PATCH(
           { status: 400 }
         );
       }
+
+      if (status === 'ACTIVE') {
+        const requestOwner = await prisma.request.findUnique({
+          where: { id: params.id },
+          select: {
+            user: {
+              select: {
+                fullName: true,
+                phone: true,
+                location: true,
+                bio: true,
+                image: true,
+                idDocumentUrl: true,
+                selfieUrl: true,
+                ficaVerified: true,
+                isSuspicious: true,
+              },
+            },
+          },
+        });
+
+        if (!requestOwner) {
+          return NextResponse.json({ error: 'Request not found' }, { status: 404 });
+        }
+
+        const owner = requestOwner.user;
+        const profileComplete = Boolean(
+          owner.fullName?.trim() &&
+          owner.phone?.trim() &&
+          owner.location?.trim() &&
+          owner.bio?.trim() &&
+          owner.image?.trim() &&
+          owner.idDocumentUrl?.trim() &&
+          owner.selfieUrl?.trim()
+        );
+
+        if (!profileComplete || !owner.ficaVerified || owner.isSuspicious) {
+          return NextResponse.json(
+            { error: 'Approve the requester identity and complete their profile before publishing this request.' },
+            { status: 409 }
+          );
+        }
+      }
       updateData.status = status;
       updateData.verified = status === 'ACTIVE';
     }

@@ -9,6 +9,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
     const requestData: any = await prisma.request.findUnique({
       where: { id: params.id },
       include: {
@@ -67,6 +68,14 @@ export async function GET(
         { error: 'Request not found' },
         { status: 404 }
       );
+    }
+
+    const isPublic = ['ACTIVE', 'PARTIALLY_FUNDED'].includes(requestData.status);
+    const canReview = session?.user?.userType === 'ADMIN';
+    const isOwner = session?.user?.id === requestData.userId;
+
+    if (!isPublic && !canReview && !isOwner) {
+      return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
 
     // Increment view count
@@ -135,7 +144,9 @@ export async function PATCH(
       );
     }
 
-    // Update the request
+    const isAdmin = session.user.userType === 'ADMIN';
+
+    // Requesters may edit content, but only the admin review endpoint may publish it.
     const updatedRequest = await prisma.request.update({
       where: { id: params.id },
       data: {
@@ -145,7 +156,8 @@ export async function PATCH(
         urgency: body.urgency,
         location: body.location,
         targetAmount: body.targetAmount,
-        status: body.status,
+        status: isAdmin ? body.status : 'PENDING',
+        verified: isAdmin ? body.status === 'ACTIVE' : false,
       },
     });
 

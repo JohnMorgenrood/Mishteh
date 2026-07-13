@@ -6,6 +6,10 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const PROFILE_PHOTO_TYPES = ['image/jpeg', 'image/png'];
+const ID_DOCUMENT_TYPES = [...PROFILE_PHOTO_TYPES, 'application/pdf'];
+
 // GET - Fetch user profile
 export async function GET(request: NextRequest) {
   try {
@@ -81,9 +85,6 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData();
     
-    // Log incoming data for debugging
-    console.log('Profile update request from user:', session.user.id);
-    
     // Extract form fields
     const fullName = formData.get('fullName') as string;
     const phone = formData.get('phone') as string | null;
@@ -98,8 +99,6 @@ export async function PUT(request: NextRequest) {
     const websiteUrl = formData.get('websiteUrl') as string | null;
     const showDonorNamePublicValue = formData.get('showDonorNamePublic');
     const showDonorNamePublic = showDonorNamePublicValue === 'true';
-
-    console.log('Form data received:', { fullName, phone, location, bio, paypalEmail, facebookUrl, twitterUrl, instagramUrl, tiktokUrl, websiteUrl, showDonorNamePublic });
 
     // Extract files
     const profilePhoto = formData.get('profilePhoto') as File | null;
@@ -133,7 +132,13 @@ export async function PUT(request: NextRequest) {
         await mkdir(uploadDir, { recursive: true });
       }
 
-      const saveFile = async (file: File, prefix: string): Promise<string> => {
+      const saveFile = async (file: File, prefix: string, allowedTypes: string[]): Promise<string> => {
+        if (file.size <= 0 || file.size > MAX_FILE_SIZE) {
+          throw new Error('Each upload must be a non-empty file no larger than 5MB');
+        }
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error('Unsupported upload type');
+        }
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
         const timestamp = Date.now();
@@ -144,16 +149,16 @@ export async function PUT(request: NextRequest) {
       };
 
       if (profilePhoto) {
-        updateData.image = await saveFile(profilePhoto, 'profile');
+        updateData.image = await saveFile(profilePhoto, 'profile', PROFILE_PHOTO_TYPES);
       }
       if (idDocument) {
-        updateData.idDocumentUrl = await saveFile(idDocument, 'id');
+        updateData.idDocumentUrl = await saveFile(idDocument, 'id', ID_DOCUMENT_TYPES);
         // If FICA documents are updated, reset verification status
         updateData.ficaVerified = false;
         updateData.ficaVerifiedAt = null;
       }
       if (selfieWithId) {
-        updateData.selfieUrl = await saveFile(selfieWithId, 'selfie');
+        updateData.selfieUrl = await saveFile(selfieWithId, 'selfie', PROFILE_PHOTO_TYPES);
         updateData.ficaVerified = false;
         updateData.ficaVerifiedAt = null;
       }
@@ -218,7 +223,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { fullName, phone, location, bio, image } = body;
+    const { fullName, phone, location, bio } = body;
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -227,7 +232,6 @@ export async function PATCH(request: NextRequest) {
         phone,
         location,
         bio,
-        image,
       },
       select: {
         id: true,

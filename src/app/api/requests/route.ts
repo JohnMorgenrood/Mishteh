@@ -57,11 +57,12 @@ export async function GET(request: NextRequest) {
     if (category) where.category = category;
     if (urgency) where.urgency = urgency;
     if (location) where.location = { contains: location, mode: 'insensitive' };
-    if (status) where.status = status;
+    const publicStatuses = ['ACTIVE', 'PARTIALLY_FUNDED'];
+    if (status && publicStatuses.includes(status)) where.status = status;
     
-    // Default to showing active requests for public view (include PENDING for testing)
-    if (!status) {
-      where.status = { in: ['PENDING', 'ACTIVE', 'PARTIALLY_FUNDED'] };
+    // Pending, rejected, and withdrawn requests are never returned publicly.
+    if (!where.status) {
+      where.status = { in: publicStatuses };
     }
 
     const [requests, total] = await Promise.all([
@@ -132,10 +133,58 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Only requesters can create requests
-    if (session.user.userType !== 'REQUESTER') {
+    const requester = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        userType: true,
+        fullName: true,
+        phone: true,
+        location: true,
+        bio: true,
+        image: true,
+        idDocumentUrl: true,
+        selfieUrl: true,
+        ficaVerified: true,
+        isSuspicious: true,
+      },
+    });
+
+    // Check the database record, not user-controlled client state or a stale session.
+    if (!requester || requester.userType !== 'REQUESTER') {
       return NextResponse.json(
         { error: 'Only requesters can create help requests' },
+        { status: 403 }
+      );
+    }
+
+    const missingProfileFields = [
+      !requester.fullName?.trim() && 'full name',
+      !requester.phone?.trim() && 'phone number',
+      !requester.location?.trim() && 'location',
+      !requester.bio?.trim() && 'bio',
+      !requester.image?.trim() && 'profile photo',
+      !requester.idDocumentUrl?.trim() && 'identity document',
+      !requester.selfieUrl?.trim() && 'selfie with ID',
+    ].filter(Boolean);
+
+    if (missingProfileFields.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Complete your profile before posting. Missing: ${missingProfileFields.join(', ')}`,
+          code: 'PROFILE_INCOMPLETE',
+        },
+        { status: 403 }
+      );
+    }
+
+    if (!requester.ficaVerified || requester.isSuspicious) {
+      return NextResponse.json(
+        {
+          error: requester.isSuspicious
+            ? 'Your account requires a security review before you can post.'
+            : 'Your identity must be approved by an administrator before you can post.',
+          code: 'ACCOUNT_APPROVAL_REQUIRED',
+        },
         { status: 403 }
       );
     }

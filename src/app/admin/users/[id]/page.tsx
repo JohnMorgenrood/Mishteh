@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Trash2, Shield, Mail, Phone, MapPin, Calendar, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Shield, FileText, User as UserIcon } from 'lucide-react';
 
 interface UserData {
   id: string;
@@ -12,6 +12,12 @@ interface UserData {
   userType: string;
   phone: string | null;
   location: string | null;
+  address: string | null;
+  bio: string | null;
+  dateOfBirth: string | null;
+  idDocumentType: string | null;
+  idDocumentUrl: string | null;
+  selfieUrl: string | null;
   createdAt: string;
   ficaVerified: boolean;
   image: string | null;
@@ -223,6 +229,32 @@ export default function AdminUserDetailPage() {
               Joined {new Date(user.createdAt).toLocaleDateString()}
             </p>
           </div>
+        </div>
+
+        {/* Private verification information - visible to administrators only */}
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Shield className="h-5 w-5 text-amber-700" />
+            <h3 className="font-semibold text-amber-900">Private identity review</h3>
+          </div>
+          <dl className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
+            <div><dt className="font-medium text-gray-600">Physical address</dt><dd className="mt-1 text-gray-900">{user.address || 'Not provided'}</dd></div>
+            <div><dt className="font-medium text-gray-600">Date of birth</dt><dd className="mt-1 text-gray-900">{user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : 'Not provided'}</dd></div>
+            <div className="md:col-span-2"><dt className="font-medium text-gray-600">Bio</dt><dd className="mt-1 whitespace-pre-wrap text-gray-900">{user.bio || 'Not provided'}</dd></div>
+          </dl>
+          <div className="mt-4 flex flex-wrap gap-3">
+            {user.idDocumentUrl ? (
+              <a href={user.idDocumentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-primary-700 shadow-sm">
+                <FileText className="h-4 w-4" /> Review ID document
+              </a>
+            ) : <span className="text-sm text-red-700">ID document missing</span>}
+            {user.selfieUrl ? (
+              <a href={user.selfieUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-primary-700 shadow-sm">
+                <UserIcon className="h-4 w-4" /> Review selfie with ID
+              </a>
+            ) : <span className="text-sm text-red-700">Selfie with ID missing</span>}
+          </div>
+          <p className="mt-4 text-xs text-amber-800">Do not share phone numbers, addresses, dates of birth, or identity files publicly.</p>
         </div>
 
         {/* Edit Form */}

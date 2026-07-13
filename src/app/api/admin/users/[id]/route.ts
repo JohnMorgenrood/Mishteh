@@ -24,6 +24,12 @@ export async function GET(
         userType: true,
         phone: true,
         location: true,
+        address: true,
+        bio: true,
+        dateOfBirth: true,
+        idDocumentType: true,
+        idDocumentUrl: true,
+        selfieUrl: true,
         createdAt: true,
         ficaVerified: true,
         image: true,
@@ -82,6 +88,8 @@ export async function PATCH(
         sponsorType: sponsorType || null,
         companyName: companyName || null,
         industry: industry || null,
+        ficaVerifiedAt: ficaVerified ? new Date() : null,
+        ficaVerifiedBy: ficaVerified ? session.user.email : null,
       },
     });
 
