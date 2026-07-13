@@ -12,12 +12,16 @@ declare global {
 
 export default function LanguageSelector() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     // Define the callback function
     window.googleTranslateElementInit = () => {
       if (window.google && window.google.translate) {
+        const container = document.getElementById('google_translate_element');
+        if (!container || container.childElementCount > 0) return;
+
         new window.google.translate.TranslateElement(
           {
             pageLanguage: 'en',
@@ -28,6 +32,7 @@ export default function LanguageSelector() {
           'google_translate_element'
         );
         setIsLoaded(true);
+        setLoadError(false);
       }
     };
 
@@ -35,8 +40,9 @@ export default function LanguageSelector() {
     if (!document.getElementById('google-translate-script')) {
       const script = document.createElement('script');
       script.id = 'google-translate-script';
-      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       script.async = true;
+      script.onerror = () => setLoadError(true);
       document.body.appendChild(script);
     } else if (window.google && window.google.translate) {
       window.googleTranslateElementInit();
@@ -46,6 +52,12 @@ export default function LanguageSelector() {
       // Cleanup
     };
   }, []);
+
+  useEffect(() => {
+    if (showDropdown && window.google?.translate) {
+      window.googleTranslateElementInit();
+    }
+  }, [showDropdown]);
 
   return (
     <div className="relative">
@@ -66,8 +78,13 @@ export default function LanguageSelector() {
           />
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 p-2">
             <div id="google_translate_element" className="translate-dropdown" />
-            {!isLoaded && (
+            {!isLoaded && !loadError && (
               <p className="text-xs text-gray-500 text-center py-2">Loading translator...</p>
+            )}
+            {loadError && (
+              <p className="text-xs text-red-600 text-center py-2">
+                Translator unavailable. Please check your connection and try again.
+              </p>
             )}
           </div>
         </>
@@ -101,7 +118,7 @@ export default function LanguageSelector() {
         body {
           top: 0 !important;
         }
-        .skiptranslate {
+        body > .skiptranslate {
           display: none !important;
         }
         .translate-dropdown .goog-te-gadget-simple {
