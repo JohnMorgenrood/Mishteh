@@ -566,8 +566,8 @@ export default function ProfileSettingsPage() {
                   />
 
                   <FicaUpload
-                    label="Proof of Address"
-                    description="Utility bill, bank statement, or lease agreement (not older than 3 months)"
+                    label="Proof of Address (Optional)"
+                    description="You may upload a recent utility bill, bank statement, or lease agreement, but this is not required for verification."
                     icon="document"
                     value={files.proofOfAddress}
                     onFileSelect={(file) => setFiles({ ...files, proofOfAddress: file })}
