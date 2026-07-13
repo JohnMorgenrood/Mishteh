@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, PlusCircle, Bell, User, LucideIcon } from 'lucide-react';
+import { Home, Search, PlusCircle, Bell, User, PlaySquare, LucideIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 interface NavItem {
@@ -34,7 +34,12 @@ export default function MobileNav() {
       {
         href: '/requests',
         icon: Search,
-        label: 'Browse',
+        label: 'Requests',
+      },
+      {
+        href: '/community-videos',
+        icon: PlaySquare,
+        label: 'Videos',
       },
     ];
 
@@ -95,7 +100,7 @@ export default function MobileNav() {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
-      <div className="flex items-center justify-around px-2 py-2">
+      <div className="flex items-center justify-around px-1 py-2">
         {navItems.map((item, index) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -121,7 +126,7 @@ export default function MobileNav() {
             <Link
               key={`${item.href}-${index}`}
               href={item.href}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors ${
+              className={`relative flex flex-col items-center justify-center py-2 px-2 rounded-lg transition-colors ${
                 active
                   ? 'text-primary-600'
                   : 'text-gray-500 hover:text-primary-600'

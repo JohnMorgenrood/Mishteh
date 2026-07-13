@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, LogOut, LogIn, UserPlus } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut, LogIn, UserPlus, Home, HeartHandshake, PlaySquare, Bell, LayoutDashboard, UserCircle } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import LanguageSelector from './LanguageSelector';
@@ -56,73 +56,62 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-2">
             <Link
               href="/"
-              className={`text-sm font-medium transition-all ${
+              title="Home"
+              aria-label="Home"
+              className={`flex h-12 w-16 items-center justify-center rounded-xl transition-all ${
                 isActive('/') 
-                  ? 'text-primary-600 font-semibold' 
-                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
+                  ? 'bg-primary-50 text-primary-600' 
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-primary-600'
               }`}
             >
-              Home
+              <Home className="h-6 w-6" /><span className="sr-only">Home</span>
             </Link>
             <Link
               href="/requests"
-              className={`text-sm font-medium transition-all ${
-                isActive('/requests') 
-                  ? 'text-primary-600 font-semibold' 
-                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
+              title="Requests"
+              aria-label="Requests"
+              className={`flex h-12 w-16 items-center justify-center rounded-xl transition-all ${
+                pathname?.startsWith('/requests') 
+                  ? 'bg-primary-50 text-primary-600' 
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-primary-600'
               }`}
             >
-              Requests
+              <HeartHandshake className="h-6 w-6" /><span className="sr-only">Requests</span>
             </Link>
-            <Link
-              href="/about"
-              className={`text-sm font-medium transition-all ${
-                isActive('/about') 
-                  ? 'text-primary-600 font-semibold' 
-                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
-              }`}
-            >
-              About
+            <Link href="/community-videos" title="Community Videos" aria-label="Community Videos" className={`flex h-12 w-16 items-center justify-center rounded-xl transition-all ${isActive('/community-videos') ? 'bg-primary-50 text-primary-600' : 'text-gray-500 hover:bg-gray-100 hover:text-primary-600'}`}>
+              <PlaySquare className="h-6 w-6" /><span className="sr-only">Community Videos</span>
             </Link>
-            <Link href="/community-videos" className={`text-sm font-medium transition-all ${isActive('/community-videos') ? 'text-primary-600 font-semibold' : 'text-gray-700 hover:text-primary-600'}`}>
-              Videos
-            </Link>
-            <Link
-              href="/contact"
-              className={`text-sm font-medium transition-all ${
-                isActive('/contact') 
-                  ? 'text-primary-600 font-semibold' 
-                  : 'text-gray-700 hover:text-primary-600 hover:scale-105'
-              }`}
-            >
-              Contact
-            </Link>
+            {status === 'authenticated' && <Link href="/activity" title="Activity" aria-label="Activity" className={`flex h-12 w-16 items-center justify-center rounded-xl transition-all ${isActive('/activity') ? 'bg-primary-50 text-primary-600' : 'text-gray-500 hover:bg-gray-100 hover:text-primary-600'}`}><Bell className="h-6 w-6" /><span className="sr-only">Activity</span></Link>}
 
             {status === 'authenticated' ? (
               <>
                 <Link
                   href="/dashboard"
-                  className={`text-sm font-medium transition-all ${
+                  title="Dashboard"
+                  aria-label="Dashboard"
+                  className={`flex h-12 w-16 items-center justify-center rounded-xl transition-all ${
                     isActive('/dashboard') 
-                      ? 'text-primary-600 font-semibold' 
-                      : 'text-gray-700 hover:text-primary-600 hover:scale-105'
+                      ? 'bg-primary-50 text-primary-600' 
+                      : 'text-gray-500 hover:bg-gray-100 hover:text-primary-600'
                   }`}
                 >
-                  Dashboard
+                  <LayoutDashboard className="h-6 w-6" /><span className="sr-only">Dashboard</span>
                 </Link>
                 
                 <Link
                   href="/dashboard/profile"
-                  className={`text-sm font-medium transition-all ${
+                  title="Profile and settings"
+                  aria-label="Profile and settings"
+                  className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
                     isActive('/dashboard/profile') 
-                      ? 'text-primary-600 font-semibold' 
-                      : 'text-gray-700 hover:text-primary-600 hover:scale-105'
+                      ? 'bg-primary-100 text-primary-700' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  Profile
+                  <UserCircle className="h-6 w-6" /><span className="sr-only">Profile and settings</span>
                 </Link>
                 
                 {/* Admin Dropdown Menu */}
@@ -218,6 +207,7 @@ export default function Navbar() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 text-gray-700"
+            aria-label={mobileMenuOpen ? 'Close account menu' : 'Open account menu'}
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -231,48 +221,9 @@ export default function Navbar() {
         >
           <div className="py-4 border-t border-gray-200 max-h-[calc(100vh-5rem)] overflow-y-auto">
             <div className="flex flex-col gap-3">
-              <Link
-                href="/"
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive('/') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
-                href="/requests"
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive('/requests') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Requests
-              </Link>
-              <Link
-                href="/about"
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive('/about') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link href="/community-videos" className={`px-4 py-2 text-sm font-medium rounded-md ${isActive('/community-videos') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'}`} onClick={() => setMobileMenuOpen(false)}>
-                Videos
-              </Link>
-              <Link
-                href="/contact"
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive('/contact') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Contact
-              </Link>
-
               {status === 'authenticated' ? (
                 <>
+                  <p className="px-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Your account</p>
                   <Link
                     href="/dashboard"
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
