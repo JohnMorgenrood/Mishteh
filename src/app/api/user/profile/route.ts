@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { moderateSupportiveContent } from '@/lib/content-moderation';
+import { flagModerationIncident } from '@/lib/moderation-incident';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const PROFILE_PHOTO_TYPES = ['image/jpeg', 'image/png'];
@@ -100,10 +102,20 @@ export async function PUT(request: NextRequest) {
     const showDonorNamePublicValue = formData.get('showDonorNamePublic');
     const showDonorNamePublic = showDonorNamePublicValue === 'true';
 
+    const profileModeration = moderateSupportiveContent([fullName || '', bio || ''].join(' '));
+    if (!profileModeration.allowed) {
+      await flagModerationIncident(session.user.id, profileModeration.reason);
+      return NextResponse.json(
+        { error: 'This profile content was blocked and your account was sent for administrator review.' },
+        { status: 422 }
+      );
+    }
+
     // Extract files
     const profilePhoto = formData.get('profilePhoto') as File | null;
     const idDocument = formData.get('idDocument') as File | null;
     const selfieWithId = formData.get('selfieWithId') as File | null;
+    let pendingProfilePhotoUrl: string | null = null;
 
     // Prepare update data - include all values (allow empty strings to clear fields)
     const updateData: any = {
@@ -149,7 +161,10 @@ export async function PUT(request: NextRequest) {
       };
 
       if (profilePhoto) {
-        updateData.image = await saveFile(profilePhoto, 'profile', PROFILE_PHOTO_TYPES);
+        pendingProfilePhotoUrl = await saveFile(profilePhoto, 'profile', PROFILE_PHOTO_TYPES);
+        // A changed public image must be reviewed before the account can post again.
+        updateData.ficaVerified = false;
+        updateData.ficaVerifiedAt = null;
       }
       if (idDocument) {
         updateData.idDocumentUrl = await saveFile(idDocument, 'id', ID_DOCUMENT_TYPES);
@@ -180,6 +195,39 @@ export async function PUT(request: NextRequest) {
         ficaVerified: true,
       },
     });
+
+    if (profilePhoto) {
+      const admins = await prisma.user.findMany({
+        where: { userType: 'ADMIN' },
+        select: { id: true },
+      });
+      await prisma.$transaction([
+        prisma.document.create({
+          data: {
+            userId: session.user.id,
+            fileName: profilePhoto.name,
+            fileType: profilePhoto.type,
+            fileSize: profilePhoto.size,
+            filePath: pendingProfilePhotoUrl!,
+            documentType: 'PROFILE_PHOTO',
+            status: 'PENDING',
+          },
+        }),
+        prisma.request.updateMany({
+          where: { userId: session.user.id, status: { in: ['ACTIVE', 'PARTIALLY_FUNDED'] } },
+          data: { status: 'PENDING', verified: false },
+        }),
+        ...admins.map((admin) => prisma.notification.create({
+          data: {
+            userId: admin.id,
+            title: 'Profile photo review required',
+            message: `${updatedUser.fullName} uploaded a new public profile photo. Review it before restoring verification.`,
+            type: 'PROFILE_REVIEW',
+            link: `/admin/users/${session.user.id}`,
+          },
+        })),
+      ]);
+    }
 
     if (session.user.userType === 'DONOR' || session.user.userType === 'SPONSOR') {
       await prisma.donorPreference.upsert({

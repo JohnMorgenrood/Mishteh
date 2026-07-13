@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { flagModerationIncident } from '@/lib/moderation-incident';
 
 // PATCH - Verify or reject a document
 export async function PATCH(
@@ -29,6 +30,11 @@ export async function PATCH(
       );
     }
 
+    const existingDocument = await prisma.document.findUnique({ where: { id } });
+    if (!existingDocument) {
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+    }
+
     const document = await prisma.document.update({
       where: { id },
       data: {
@@ -38,6 +44,20 @@ export async function PATCH(
         verifiedBy: session.user.id,
       },
     });
+
+    if (existingDocument.documentType === 'PROFILE_PHOTO') {
+      if (status === 'VERIFIED') {
+        await prisma.user.update({
+          where: { id: existingDocument.userId },
+          data: { image: existingDocument.filePath },
+        });
+      } else {
+        await flagModerationIncident(
+          existingDocument.userId,
+          `Profile photo rejected: ${rejectionReason || 'unsafe or unsuitable image'}`
+        );
+      }
+    }
 
     return NextResponse.json({
       message: `Document ${status.toLowerCase()} successfully`,

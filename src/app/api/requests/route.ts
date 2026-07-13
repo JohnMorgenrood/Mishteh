@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { moderateSupportiveContent } from '@/lib/content-moderation';
+import { flagModerationIncident } from '@/lib/moderation-incident';
 
 // All valid categories (legacy + new)
 const ALL_CATEGORIES = [
@@ -202,6 +204,17 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validationResult.data;
+
+    const moderation = moderateSupportiveContent(
+      [data.title, data.description, data.customCategory || ''].join(' ')
+    );
+    if (!moderation.allowed) {
+      await flagModerationIncident(session.user.id, moderation.reason);
+      return NextResponse.json(
+        { error: 'This content was blocked and your account was sent for administrator review.' },
+        { status: 422 }
+      );
+    }
 
     // Create the request
     const newRequest = await prisma.request.create({

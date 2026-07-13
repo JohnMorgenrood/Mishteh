@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { moderateSupportiveContent } from '@/lib/content-moderation';
+import { flagModerationIncident } from '@/lib/moderation-incident';
 
 // GET - Fetch a single request by ID
 export async function GET(
@@ -147,6 +149,19 @@ export async function PATCH(
     }
 
     const isAdmin = session.user.userType === 'ADMIN';
+
+    if (!isAdmin) {
+      const moderation = moderateSupportiveContent(
+        [body.title || '', body.description || ''].join(' ')
+      );
+      if (!moderation.allowed) {
+        await flagModerationIncident(session.user.id, moderation.reason);
+        return NextResponse.json(
+          { error: 'This content was blocked and your account was sent for administrator review.' },
+          { status: 422 }
+        );
+      }
+    }
 
     // Requesters may edit content, but only the admin review endpoint may publish it.
     const updatedRequest = await prisma.request.update({

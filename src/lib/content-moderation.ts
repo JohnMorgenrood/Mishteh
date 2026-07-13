@@ -4,6 +4,12 @@ const DISALLOWED_PATTERNS = [
   /\b(scammer|fraud|fake story|liar)\b/i,
   /\b(kill yourself|go die|drop dead)\b/i,
   /\b(fuck|shit|bitch|asshole|bastard)\b/i,
+  /\b(porn|pornography|xxx|nudes?|naked pics?|onlyfans|sexual services?)\b/i,
+  /\b(child porn|child sexual|underage sex|minor nudes?)\b/i,
+  /\b(rape|sexual assault|bestiality|incest)\b/i,
+  /\b(buy drugs?|sell drugs?|cocaine|heroin|methamphetamine)\b/i,
+  /\b(send (me )?(money|cash).*(whatsapp|telegram)|crypto investment|guaranteed returns?)\b/i,
+  /https?:\/\/\S+/i,
 ];
 
 const SUPPORTIVE_PATTERNS = [

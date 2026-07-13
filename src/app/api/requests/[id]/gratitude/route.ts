@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { moderateSupportiveContent } from '@/lib/content-moderation';
+import { flagModerationIncident } from '@/lib/moderation-incident';
 
 export async function POST(
   request: NextRequest,
@@ -13,6 +14,17 @@ export async function POST(
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: 'You must be logged in.' }, { status: 401 });
+    }
+
+    const postingAccount = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { isSuspicious: true },
+    });
+    if (postingAccount?.isSuspicious) {
+      return NextResponse.json(
+        { message: 'Your account is blocked from posting pending administrator review.' },
+        { status: 403 }
+      );
     }
 
     const { id: requestId } = await params;
@@ -35,9 +47,10 @@ export async function POST(
 
     const moderation = moderateSupportiveContent(message);
     if (!moderation.allowed) {
+      await flagModerationIncident(session.user.id, moderation.reason);
       return NextResponse.json(
-        { message: moderation.reason || 'Please keep the message positive and respectful.' },
-        { status: 400 }
+        { message: 'This content was blocked and your account was sent for administrator review.' },
+        { status: 422 }
       );
     }
 
