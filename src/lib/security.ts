@@ -1,7 +1,6 @@
 // Security tracking utilities
 // Captures IP addresses, geolocation, and security events
 
-import { headers } from 'next/headers';
 import { prisma } from './prisma';
 
 // Security event types
@@ -52,18 +51,6 @@ export function getClientIP(request?: Request): string {
       if (cfIp) {
         return cfIp;
       }
-    }
-    
-    // Fallback - try to get from headers() in server components
-    const headersList = headers();
-    const forwarded = headersList.get('x-forwarded-for');
-    if (forwarded) {
-      return forwarded.split(',')[0].trim();
-    }
-    
-    const realIp = headersList.get('x-real-ip');
-    if (realIp) {
-      return realIp;
     }
     
     return 'unknown';
@@ -211,8 +198,7 @@ export function getUserAgent(request?: Request): string {
     if (request) {
       return request.headers.get('user-agent') || 'unknown';
     }
-    const headersList = headers();
-    return headersList.get('user-agent') || 'unknown';
+    return 'unknown';
   } catch {
     return 'unknown';
   }

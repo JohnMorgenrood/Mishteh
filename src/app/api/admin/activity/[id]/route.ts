@@ -8,9 +8,10 @@ const OWNER_EMAILS = ['mishteh144@gmail.com', 'golearnx@gmail.com'];
 // DELETE /api/admin/activity/[id] - Delete a single activity
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user || !OWNER_EMAILS.includes(session.user.email || '')) {
@@ -18,7 +19,7 @@ export async function DELETE(
     }
 
     await prisma.activity.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });

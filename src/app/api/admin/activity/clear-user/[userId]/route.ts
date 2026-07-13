@@ -8,9 +8,10 @@ const OWNER_EMAILS = ['mishteh144@gmail.com', 'golearnx@gmail.com'];
 // DELETE /api/admin/activity/clear-user/[userId] - Clear all activity for a user
 export async function DELETE(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user || !OWNER_EMAILS.includes(session.user.email || '')) {
@@ -19,16 +20,16 @@ export async function DELETE(
 
     // Delete all activities for this user
     await prisma.activity.deleteMany({
-      where: { userId: params.userId },
+      where: { userId },
     });
 
     // Also delete their likes and comments if desired
     await prisma.like.deleteMany({
-      where: { userId: params.userId },
+      where: { userId },
     });
 
     await prisma.comment.deleteMany({
-      where: { userId: params.userId },
+      where: { userId },
     });
 
     return NextResponse.json({ success: true, message: 'User activity cleared' });

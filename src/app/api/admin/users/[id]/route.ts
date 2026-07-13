@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // GET - Fetch a specific user
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.userType !== 'ADMIN') {
@@ -16,7 +17,7 @@ export async function GET(
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         fullName: true,
@@ -53,9 +54,10 @@ export async function GET(
 // PATCH - Update a specific user
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.userType !== 'ADMIN') {
@@ -77,7 +79,7 @@ export async function PATCH(
 
     // Update user
     const updatedUser = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         fullName,
         email,
@@ -106,9 +108,10 @@ export async function PATCH(
 // DELETE - Delete a specific user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.userType !== 'ADMIN') {
@@ -117,7 +120,7 @@ export async function DELETE(
 
     // Check if user exists
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!user) {
@@ -127,27 +130,27 @@ export async function DELETE(
     // Delete related records first (cascade delete)
     // Delete user's requests
     await prisma.request.deleteMany({
-      where: { userId: params.id },
+      where: { userId: id },
     });
 
     // Delete user's transactions (donations made by this user or to this user)
     await prisma.transaction.deleteMany({
       where: {
         OR: [
-          { donorId: params.id },
-          { recipientId: params.id },
+          { donorId: id },
+          { recipientId: id },
         ],
       },
     });
 
     // Delete user's documents
     await prisma.document.deleteMany({
-      where: { userId: params.id },
+      where: { userId: id },
     });
 
     // Finally, delete the user
     await prisma.user.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({

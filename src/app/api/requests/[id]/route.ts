@@ -6,12 +6,13 @@ import { prisma } from '@/lib/prisma';
 // GET - Fetch a single request by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     const requestData: any = await prisma.request.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -80,7 +81,7 @@ export async function GET(
 
     // Increment view count
     await prisma.request.update({
-      where: { id: params.id },
+      where: { id },
       data: { views: { increment: 1 } },
     });
 
@@ -111,9 +112,10 @@ export async function GET(
 // PATCH - Update a request
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -127,7 +129,7 @@ export async function PATCH(
 
     // Check if user owns this request
     const existingRequest = await prisma.request.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingRequest) {
@@ -148,7 +150,7 @@ export async function PATCH(
 
     // Requesters may edit content, but only the admin review endpoint may publish it.
     const updatedRequest = await prisma.request.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         title: body.title,
         description: body.description,
@@ -177,9 +179,10 @@ export async function PATCH(
 // DELETE - Withdraw/delete a request
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -191,7 +194,7 @@ export async function DELETE(
 
     // Check if user owns this request
     const existingRequest = await prisma.request.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingRequest) {
@@ -210,7 +213,7 @@ export async function DELETE(
 
     // Mark as withdrawn instead of deleting
     await prisma.request.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: 'WITHDRAWN' },
     });
 

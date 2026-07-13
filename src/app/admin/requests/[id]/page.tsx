@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, XCircle, User, Edit2, Save } from 'lucide-react';
@@ -29,7 +29,8 @@ interface Request {
   };
 }
 
-export default function AdminRequestReview({ params }: { params: { id: string } }) {
+export default function AdminRequestReview() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data: session } = useSession();
   const [request, setRequest] = useState<Request | null>(null);

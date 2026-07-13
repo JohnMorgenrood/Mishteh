@@ -1,5 +1,5 @@
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -14,11 +14,21 @@ export const metadata: Metadata = {
   title: 'MISHTEH - Connect Donors with People in Need',
   description: 'A platform connecting generous donors with people who need help with food, rent, bills, and more.',
   keywords: ['donation', 'charity', 'help', 'community', 'support', 'fundraising'],
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [{ url: '/assets/logo.png', type: 'image/png' }],
+    shortcut: '/assets/logo.png',
+    apple: '/assets/logo.png',
+  },
   openGraph: {
     title: 'MISHTEH - Connecting People Through Kindness',
     description: 'Join our community of donors and help people in need.',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#15803d',
 };
 
 export default function RootLayout({

@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // PATCH - Verify or reject a document
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user || session.user.userType !== 'ADMIN') {
@@ -29,7 +30,7 @@ export async function PATCH(
     }
 
     const document = await prisma.document.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status,
         rejectionReason: status === 'REJECTED' ? rejectionReason : null,

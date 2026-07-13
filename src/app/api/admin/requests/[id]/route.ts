@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // PATCH - Approve or reject a request
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user || session.user.userType !== 'ADMIN') {
@@ -34,7 +35,7 @@ export async function PATCH(
 
       if (status === 'ACTIVE') {
         const requestOwner = await prisma.request.findUnique({
-          where: { id: params.id },
+          where: { id },
           select: {
             user: {
               select: {
@@ -87,7 +88,7 @@ export async function PATCH(
     }
 
     const helpRequest = await prisma.request.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         user: {
