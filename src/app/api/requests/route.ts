@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { moderateSupportiveContent } from '@/lib/content-moderation';
 import { flagModerationIncident } from '@/lib/moderation-incident';
+import { randomUUID } from 'crypto';
 
 // All valid categories (legacy + new)
 const ALL_CATEGORIES = [
@@ -39,6 +40,9 @@ const createRequestSchema = z.object({
   isAnonymous: z.boolean().optional(),
   expiresAt: z.string().optional(),
   beneficiaryUserId: z.string().min(1).optional(),
+  beneficiaryName: z.string().min(2).max(120).optional(),
+  beneficiaryPhone: z.string().max(40).optional(),
+  beneficiaryLocation: z.string().max(250).optional(),
 });
 
 // GET - Fetch all requests with filtering
@@ -146,10 +150,38 @@ export async function POST(request: NextRequest) {
     }
     const data = validationResult.data;
     const isAdmin = session.user.userType === 'ADMIN';
-    const beneficiaryUserId = isAdmin ? data.beneficiaryUserId : session.user.id;
+    let beneficiaryUserId = isAdmin ? data.beneficiaryUserId : session.user.id;
 
+    if (isAdmin && !beneficiaryUserId && !data.beneficiaryName?.trim()) {
+      return NextResponse.json({ error: 'Select an account or enter the unregistered person’s name.' }, { status: 400 });
+    }
+
+    const moderation = moderateSupportiveContent(
+      [data.title, data.description, data.customCategory || '', data.beneficiaryName || ''].join(' ')
+    );
+    if (!moderation.allowed) {
+      await flagModerationIncident(session.user.id, moderation.reason);
+      return NextResponse.json(
+        { error: 'This content was blocked and your account was sent for administrator review.' },
+        { status: 422 }
+      );
+    }
+
+    // Admins may create a private, non-login recipient record for someone met
+    // offline who cannot register. It can later be completed and verified by staff.
     if (isAdmin && !beneficiaryUserId) {
-      return NextResponse.json({ error: 'Select the person this request is for.' }, { status: 400 });
+      const managedUser = await prisma.user.create({
+        data: {
+          email: `managed-${randomUUID()}@internal.mishteh.org`,
+          fullName: data.beneficiaryName!.trim(),
+          phone: data.beneficiaryPhone?.trim() || null,
+          location: data.beneficiaryLocation?.trim() || data.location,
+          userType: 'REQUESTER',
+          managedByAdmin: true,
+        },
+        select: { id: true },
+      });
+      beneficiaryUserId = managedUser.id;
     }
 
     const account = await prisma.user.findUnique({
@@ -186,17 +218,6 @@ export async function POST(request: NextRequest) {
           code: 'ACCOUNT_APPROVAL_REQUIRED',
         },
         { status: 403 }
-      );
-    }
-
-    const moderation = moderateSupportiveContent(
-      [data.title, data.description, data.customCategory || ''].join(' ')
-    );
-    if (!moderation.allowed) {
-      await flagModerationIncident(session.user.id, moderation.reason);
-      return NextResponse.json(
-        { error: 'This content was blocked and your account was sent for administrator review.' },
-        { status: 422 }
       );
     }
 

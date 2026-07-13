@@ -34,6 +34,8 @@ export default function NewRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [beneficiaries, setBeneficiaries] = useState<Array<{ id: string; fullName: string; email: string; ficaVerified: boolean }>>([]);
   const [beneficiaryUserId, setBeneficiaryUserId] = useState('');
+  const [beneficiaryMode, setBeneficiaryMode] = useState<'existing' | 'unregistered'>('existing');
+  const [managedBeneficiary, setManagedBeneficiary] = useState({ name: '', phone: '', location: '' });
 
   useEffect(() => {
     if (session?.user?.userType === 'ADMIN') {
@@ -121,9 +123,15 @@ export default function NewRequestPage() {
       return;
     }
 
-    if (session?.user?.userType === 'ADMIN' && !beneficiaryUserId) {
-      setError('Select the person this request is for.');
-      return;
+    if (session?.user?.userType === 'ADMIN') {
+      if (beneficiaryMode === 'existing' && !beneficiaryUserId) {
+        setError('Select an account or choose “Person is not registered”.');
+        return;
+      }
+      if (beneficiaryMode === 'unregistered' && managedBeneficiary.name.trim().length < 2) {
+        setError('Enter the person’s name. They do not need an email or an account.');
+        return;
+      }
     }
 
     // Validate custom category if OTHER is selected
@@ -156,7 +164,10 @@ export default function NewRequestPage() {
           location: formData.location,
           targetAmount: formData.targetAmount ? parseFloat(formData.targetAmount) : undefined,
           isAnonymous: formData.isAnonymous,
-          beneficiaryUserId: session.user.userType === 'ADMIN' ? beneficiaryUserId : undefined,
+          beneficiaryUserId: session.user.userType === 'ADMIN' && beneficiaryMode === 'existing' ? beneficiaryUserId : undefined,
+          beneficiaryName: session.user.userType === 'ADMIN' && beneficiaryMode === 'unregistered' ? managedBeneficiary.name : undefined,
+          beneficiaryPhone: session.user.userType === 'ADMIN' && beneficiaryMode === 'unregistered' ? managedBeneficiary.phone : undefined,
+          beneficiaryLocation: session.user.userType === 'ADMIN' && beneficiaryMode === 'unregistered' ? managedBeneficiary.location : undefined,
         }),
       });
 
@@ -211,7 +222,11 @@ export default function NewRequestPage() {
               {session.user.userType === 'ADMIN' && (
                 <div className="rounded-lg border border-primary-200 bg-primary-50 p-4">
                   <label htmlFor="beneficiary" className="mb-2 block text-sm font-semibold text-gray-800">Person this request is for *</label>
-                  <select
+                  <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg bg-white p-1">
+                    <button type="button" onClick={() => setBeneficiaryMode('existing')} className={`rounded-md px-3 py-2 text-sm font-semibold ${beneficiaryMode === 'existing' ? 'bg-primary-600 text-white' : 'text-gray-600'}`}>Existing account</button>
+                    <button type="button" onClick={() => setBeneficiaryMode('unregistered')} className={`rounded-md px-3 py-2 text-sm font-semibold ${beneficiaryMode === 'unregistered' ? 'bg-primary-600 text-white' : 'text-gray-600'}`}>Person is not registered</button>
+                  </div>
+                  {beneficiaryMode === 'existing' ? <select
                     id="beneficiary"
                     required
                     value={beneficiaryUserId}
@@ -224,8 +239,13 @@ export default function NewRequestPage() {
                         {user.fullName} ({user.email}){user.ficaVerified ? ' — verified' : ' — verification needed before publishing'}
                       </option>
                     ))}
-                  </select>
-                  <p className="mt-2 text-xs text-gray-600">The request stays private until the person completes identity verification and an admin approves it.</p>
+                  </select> : <div className="space-y-3">
+                    <input value={managedBeneficiary.name} onChange={(e) => setManagedBeneficiary({ ...managedBeneficiary, name: e.target.value })} className="w-full rounded-md border border-gray-300 bg-white px-4 py-2" placeholder="Person’s name *" required />
+                    <input value={managedBeneficiary.phone} onChange={(e) => setManagedBeneficiary({ ...managedBeneficiary, phone: e.target.value })} className="w-full rounded-md border border-gray-300 bg-white px-4 py-2" placeholder="Phone number (optional)" />
+                    <input value={managedBeneficiary.location} onChange={(e) => setManagedBeneficiary({ ...managedBeneficiary, location: e.target.value })} className="w-full rounded-md border border-gray-300 bg-white px-4 py-2" placeholder="Current area or location (optional)" />
+                    <p className="text-xs text-gray-600">No email or login is needed. MISHTEH will manage this recipient record privately.</p>
+                  </div>}
+                  <p className="mt-2 text-xs text-gray-600">The request stays private until an admin approves the post and completes the recipient checks.</p>
                 </div>
               )}
               {/* Title */}

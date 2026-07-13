@@ -57,6 +57,7 @@ model User {
   securityQuestion String?
   securityAnswer   String?
   isSuspicious     Boolean           @default(false)
+  managedByAdmin   Boolean           @default(false)
   suspiciousReason String?
   securityLogs     SecurityLog[]
   videoReactions   VideoReaction[]
