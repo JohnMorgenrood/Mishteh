@@ -87,6 +87,9 @@ export default function Navbar() {
             >
               About
             </Link>
+            <Link href="/community-videos" className={`text-sm font-medium transition-all ${isActive('/community-videos') ? 'text-primary-600 font-semibold' : 'text-gray-700 hover:text-primary-600'}`}>
+              Videos
+            </Link>
             <Link
               href="/contact"
               className={`text-sm font-medium transition-all ${
@@ -160,6 +163,9 @@ export default function Navbar() {
                           onClick={() => setAdminDropdownOpen(false)}
                         >
                           📋 Manage Requests
+                        </Link>
+                        <Link href="/admin/videos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors" onClick={() => setAdminDropdownOpen(false)}>
+                          📺 Community Videos
                         </Link>
                         <Link
                           href="/admin/security"
@@ -252,6 +258,9 @@ export default function Navbar() {
               >
                 About
               </Link>
+              <Link href="/community-videos" className={`px-4 py-2 text-sm font-medium rounded-md ${isActive('/community-videos') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'}`} onClick={() => setMobileMenuOpen(false)}>
+                Videos
+              </Link>
               <Link
                 href="/contact"
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -313,6 +322,9 @@ export default function Navbar() {
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         📋 Manage Requests
+                      </Link>
+                      <Link href="/admin/videos" className={`block px-4 py-2 text-sm rounded-md transition-colors ${isActive('/admin/videos') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'}`} onClick={() => setMobileMenuOpen(false)}>
+                        📺 Community Videos
                       </Link>
                       <Link
                         href="/admin/security"

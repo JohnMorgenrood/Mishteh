@@ -47,7 +47,7 @@ model User {
   comments         Comment[]
   tiktokUrl        String?
   websiteUrl       String?
-  
+
   // Security tracking fields
   signupIp         String?
   signupCountry    String?
@@ -56,9 +56,12 @@ model User {
   lastLoginAt      DateTime?
   securityQuestion String?
   securityAnswer   String?
-  isSuspicious     Boolean          @default(false)
+  isSuspicious     Boolean           @default(false)
   suspiciousReason String?
   securityLogs     SecurityLog[]
+  videoReactions   VideoReaction[]
+  videoComments    VideoComment[]
+  videoSuggestions VideoSuggestion[]
 
   @@index([email])
   @@index([userType])
@@ -70,7 +73,7 @@ model User {
 // Security Log - tracks all security events
 model SecurityLog {
   id          String   @id @default(cuid())
-  eventType   String   // SIGNUP_CREDENTIALS, SIGNUP_GOOGLE, LOGIN_SUCCESS, LOGIN_FAILED, etc.
+  eventType   String // SIGNUP_CREDENTIALS, SIGNUP_GOOGLE, LOGIN_SUCCESS, LOGIN_FAILED, etc.
   userId      String?
   email       String
   ipAddress   String?
@@ -87,8 +90,8 @@ model SecurityLog {
   userAgent   String?
   details     String?
   createdAt   DateTime @default(now())
-  
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([ipAddress])
@@ -98,31 +101,31 @@ model SecurityLog {
 }
 
 model Request {
-  id             String          @id @default(cuid())
-  userId         String
-  title          String
-  description    String
-  category       RequestCategory
-  urgency        UrgencyLevel
-  location       String
-  targetAmount   Float?
-  currentAmount  Float           @default(0)
-  status         RequestStatus   @default(PENDING)
-  verified       Boolean         @default(false)
-  views          Int             @default(0)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  gratitudeMessage String?
+  id                String          @id @default(cuid())
+  userId            String
+  title             String
+  description       String
+  category          RequestCategory
+  urgency           UrgencyLevel
+  location          String
+  targetAmount      Float?
+  currentAmount     Float           @default(0)
+  status            RequestStatus   @default(PENDING)
+  verified          Boolean         @default(false)
+  views             Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  gratitudeMessage  String?
   gratitudePostedAt DateTime?
-  expiresAt      DateTime?
-  featured       Boolean         @default(false)
-  isAnonymous    Boolean         @default(false)
-  customCategory String?
-  documents      Document[]
-  donations      Donation[]
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  likes          Like[]
-  comments       Comment[]
+  expiresAt         DateTime?
+  featured          Boolean         @default(false)
+  isAnonymous       Boolean         @default(false)
+  customCategory    String?
+  documents         Document[]
+  donations         Donation[]
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes             Like[]
+  comments          Comment[]
 
   @@index([userId])
   @@index([category])
@@ -132,10 +135,10 @@ model Request {
   @@index([createdAt])
   @@index([featured])
   // Compound indexes for common queries
-  @@index([status, featured])           // Home page featured requests
-  @@index([status, createdAt])          // Recent active requests
-  @@index([status, category])           // Filtered requests by category
-  @@index([status, urgency])            // Filtered requests by urgency
+  @@index([status, featured]) // Home page featured requests
+  @@index([status, createdAt]) // Recent active requests
+  @@index([status, category]) // Filtered requests by category
+  @@index([status, urgency]) // Filtered requests by urgency
 }
 
 // Social Features - Likes
@@ -174,7 +177,7 @@ model Activity {
   type      ActivityType
   userId    String?
   requestId String?
-  metadata  String?      // JSON string for additional data
+  metadata  String? // JSON string for additional data
   createdAt DateTime     @default(now())
 
   @@index([type])
@@ -329,6 +332,64 @@ model ContactMessage {
   @@index([createdAt(sort: Desc)])
 }
 
+model CommunityVideo {
+  id          String          @id @default(cuid())
+  youtubeId   String          @unique
+  title       String
+  description String
+  channelName String
+  published   Boolean         @default(false)
+  featured    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  reactions   VideoReaction[]
+  comments    VideoComment[]
+
+  @@index([published, createdAt(sort: Desc)])
+  @@index([featured])
+}
+
+model VideoReaction {
+  id        String         @id @default(cuid())
+  videoId   String
+  userId    String
+  type      String         @default("LIKE")
+  createdAt DateTime       @default(now())
+  video     CommunityVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, userId])
+  @@index([videoId])
+}
+
+model VideoComment {
+  id        String         @id @default(cuid())
+  videoId   String
+  userId    String
+  content   String
+  approved  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  video     CommunityVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([videoId, createdAt(sort: Desc)])
+  @@index([approved])
+}
+
+model VideoSuggestion {
+  id         String   @id @default(cuid())
+  userId     String
+  youtubeUrl String
+  message    String
+  status     String   @default("PENDING")
+  adminNotes String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt(sort: Desc)])
+}
+
 enum UserType {
   DONOR
   REQUESTER
@@ -349,7 +410,7 @@ enum RequestCategory {
   JOB_ASSISTANCE
   MEDICAL
   EDUCATION
-  OTHER              // Keep for backward compatibility (hidden in UI)
+  OTHER // Keep for backward compatibility (hidden in UI)
   FOOD_GROCERIES
   RENT_HOUSING
   UTILITIES

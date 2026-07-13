@@ -48,6 +48,7 @@ export default function Footer() {
                   Register
                 </Link>
               </li>
+              <li><Link href="/community-videos" className="text-gray-400 hover:text-white transition-colors">Community Videos</Link></li>
             </ul>
           </div>
 
