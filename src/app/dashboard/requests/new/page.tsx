@@ -32,6 +32,17 @@ export default function NewRequestPage() {
   const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [beneficiaries, setBeneficiaries] = useState<Array<{ id: string; fullName: string; email: string; ficaVerified: boolean }>>([]);
+  const [beneficiaryUserId, setBeneficiaryUserId] = useState('');
+
+  useEffect(() => {
+    if (session?.user?.userType === 'ADMIN') {
+      fetch('/api/admin/users?limit=250')
+        .then((response) => response.ok ? response.json() : Promise.reject())
+        .then((data) => setBeneficiaries((data.users || []).filter((user: any) => user.userType !== 'ADMIN')))
+        .catch(() => setError('Unable to load beneficiary accounts.'));
+    }
+  }, [session]);
 
   // Load Google Maps API
   useEffect(() => {
@@ -110,6 +121,11 @@ export default function NewRequestPage() {
       return;
     }
 
+    if (session?.user?.userType === 'ADMIN' && !beneficiaryUserId) {
+      setError('Select the person this request is for.');
+      return;
+    }
+
     // Validate custom category if OTHER is selected
     if (formData.category === 'OTHER' && !formData.customCategory.trim()) {
       setError('Please enter a custom category description');
@@ -140,6 +156,7 @@ export default function NewRequestPage() {
           location: formData.location,
           targetAmount: formData.targetAmount ? parseFloat(formData.targetAmount) : undefined,
           isAnonymous: formData.isAnonymous,
+          beneficiaryUserId: session.user.userType === 'ADMIN' ? beneficiaryUserId : undefined,
         }),
       });
 
@@ -159,13 +176,13 @@ export default function NewRequestPage() {
     }
   };
 
-  if (!session || session.user.userType === 'ADMIN') {
+  if (!session) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-2xl mx-auto px-4">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-            <p className="text-gray-600">Please sign in with a community account to request help.</p>
+            <p className="text-gray-600">Please sign in to request help.</p>
           </div>
         </div>
       </div>
@@ -176,7 +193,7 @@ export default function NewRequestPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create New Request</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{session.user.userType === 'ADMIN' ? 'Create Request on Behalf' : 'Create New Request'}</h1>
           <p className="text-gray-600 mt-2">
             Anyone in our community can need help. Complete the form below and our team will review it before publication.
           </p>
@@ -191,6 +208,26 @@ export default function NewRequestPage() {
             )}
 
             <div className="space-y-6">
+              {session.user.userType === 'ADMIN' && (
+                <div className="rounded-lg border border-primary-200 bg-primary-50 p-4">
+                  <label htmlFor="beneficiary" className="mb-2 block text-sm font-semibold text-gray-800">Person this request is for *</label>
+                  <select
+                    id="beneficiary"
+                    required
+                    value={beneficiaryUserId}
+                    onChange={(event) => setBeneficiaryUserId(event.target.value)}
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-2"
+                  >
+                    <option value="">Select a verified community member</option>
+                    {beneficiaries.map((user) => (
+                      <option key={user.id} value={user.id} disabled={!user.ficaVerified}>
+                        {user.fullName} ({user.email}){user.ficaVerified ? '' : ' — not verified'}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs text-gray-600">The request belongs to this person and remains pending until reviewed.</p>
+                </div>
+              )}
               {/* Title */}
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">

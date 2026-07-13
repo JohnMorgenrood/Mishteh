@@ -179,6 +179,7 @@ export default async function DashboardPage() {
 
   const data: any = await getDashboardData(session.user.id, session.user.userType);
   const isDonor = session.user.userType === 'DONOR';
+  const isAdmin = session.user.userType === 'ADMIN';
   const quickLinks = isDonor
     ? [
       { href: '/requests', label: 'Support more requests', icon: Heart },
@@ -187,7 +188,8 @@ export default async function DashboardPage() {
         { href: '/dashboard/profile', label: 'Manage donor privacy', icon: Settings },
       ]
     : [
-        { href: '/dashboard/requests/new', label: 'Create a new request', icon: Plus },
+        { href: '/requests', label: 'Browse requests to support', icon: Heart },
+        { href: '/dashboard/requests/new', label: isAdmin ? 'Create request on behalf' : 'Create a new request', icon: Plus },
         { href: '/activity', label: 'Follow community activity', icon: Sparkles },
         { href: '/dashboard/profile', label: 'Update your profile', icon: Settings },
       ];
@@ -199,7 +201,7 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-100">
-                {isDonor ? 'Donor Dashboard' : 'Requester Dashboard'}
+                {isDonor ? 'Donor Dashboard' : isAdmin ? 'Admin Community Dashboard' : 'Requester Dashboard'}
               </p>
               <h1 className="mt-2 text-3xl font-bold md:text-4xl">
                 Welcome back, {session.user.name}
@@ -207,25 +209,25 @@ export default async function DashboardPage() {
               <p className="mt-3 max-w-2xl text-sm text-primary-50 md:text-base">
                 {isDonor
                   ? 'Track every gift you have sent, monitor completed support, and see the difference your giving is making.'
-                  : 'Monitor money received, track request progress, and stay on top of incoming support from the community.'}
+                  : isAdmin
+                    ? 'Support community requests or create a reviewed request on behalf of a verified person.'
+                    : 'Monitor money received, track request progress, and stay on top of incoming support from the community.'}
               </p>
             </div>
 
-            <div className={`grid grid-cols-1 gap-3 ${isDonor ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Link
-                href={isDonor ? '/requests' : '/dashboard/requests/new'}
+                href="/requests"
                 className="rounded-2xl bg-white px-5 py-4 text-sm font-semibold text-primary-700 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
               >
-                {isDonor ? 'Browse Requests to Support' : 'Create a New Request'}
+                Browse Requests to Support
               </Link>
-              {isDonor && (
-                <Link
-                  href="/dashboard/requests/new"
-                  className="rounded-2xl border border-white/30 bg-white/10 px-5 py-4 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
-                >
-                  Request Help for Yourself
-                </Link>
-              )}
+              <Link
+                href="/dashboard/requests/new"
+                className="rounded-2xl border border-white/30 bg-white/10 px-5 py-4 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
+              >
+                {isAdmin ? 'Create Request on Behalf' : 'Request Help for Yourself'}
+              </Link>
               <Link
                 href="/activity"
                 className="rounded-2xl border border-white/30 bg-white/10 px-5 py-4 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"

@@ -38,6 +38,7 @@ const createRequestSchema = z.object({
   targetAmount: z.number().positive().optional(),
   isAnonymous: z.boolean().optional(),
   expiresAt: z.string().optional(),
+  beneficiaryUserId: z.string().min(1).optional(),
 });
 
 // GET - Fetch all requests with filtering
@@ -135,8 +136,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const body = await request.json();
+    const validationResult = createRequestSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const data = validationResult.data;
+    const isAdmin = session.user.userType === 'ADMIN';
+    const beneficiaryUserId = isAdmin ? data.beneficiaryUserId : session.user.id;
+
+    if (isAdmin && !beneficiaryUserId) {
+      return NextResponse.json({ error: 'Select the person this request is for.' }, { status: 400 });
+    }
+
     const account = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: beneficiaryUserId! },
       select: {
         userType: true,
         fullName: true,
@@ -191,20 +208,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    
-    // Validate request body
-    const validationResult = createRequestSchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    const data = validationResult.data;
-
     const moderation = moderateSupportiveContent(
       [data.title, data.description, data.customCategory || ''].join(' ')
     );
@@ -219,7 +222,7 @@ export async function POST(request: NextRequest) {
     // Create the request
     const newRequest = await prisma.request.create({
       data: {
-        userId: session.user.id,
+        userId: beneficiaryUserId!,
         title: data.title,
         description: data.description,
         category: data.category,
