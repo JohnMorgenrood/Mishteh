@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Heart, Shield, Users, Sparkles } from 'lucide-react';
+import { ArrowRight, Heart, Shield, Users, Sparkles, PlayCircle } from 'lucide-react';
 import SocialCard from '@/components/SocialCard';
 import HeroSlider from '@/components/HeroSlider';
 import ActivityFeed from '@/components/ActivityFeed';
@@ -47,15 +47,33 @@ async function getFeaturedRequests() {
       take: 6,
     });
 
-    return requests;
+    if (requests.length > 0) return requests;
+    return prisma.request.findMany({
+      where: { status: { in: ['ACTIVE', 'PARTIALLY_FUNDED'] } },
+      include: {
+        user: { select: { id: true, fullName: true, location: true, image: true, instagramUrl: true, facebookUrl: true, twitterUrl: true } },
+        _count: { select: { donations: true, likes: true, comments: true } },
+        likes: { select: { userId: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    });
   } catch (error) {
     console.error('Error fetching requests:', error);
     return [];
   }
 }
 
+async function getLatestVideos() {
+  try {
+    return await prisma.communityVideo.findMany({ where: { published: true }, orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }], take: 3 });
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const featuredRequests = await getFeaturedRequests();
+  const [featuredRequests, latestVideos] = await Promise.all([getFeaturedRequests(), getLatestVideos()]);
 
   return (
     <div className="min-h-screen">
@@ -120,7 +138,7 @@ export default async function HomePage() {
           <div className="flex justify-between items-center mb-12">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Featured Requests
+                {featuredRequests.some((request) => request.featured) ? 'Featured Requests' : 'Latest Requests'}
               </h2>
               <p className="text-lg text-gray-600">
                 People in need who could use your support right now
@@ -158,7 +176,7 @@ export default async function HomePage() {
                 No active requests at the moment.
               </p>
               <p className="text-gray-500">
-                Check back soon or be the first to share your story!
+                New stories are being reviewed. Watch the latest community videos below while you wait.
               </p>
               <Link
                 href="/dashboard/requests/new"
@@ -169,6 +187,43 @@ export default async function HomePage() {
               </Link>
             </div>
           )}
+        </div>
+      </section>
+
+      {latestVideos.length > 0 && (
+        <section className="bg-gray-950 py-20 text-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-10 flex items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-400">Watch good happen</p>
+                <h2 className="mt-2 text-3xl font-bold">Latest Community Videos</h2>
+                <p className="mt-2 text-gray-400">Inspiring videos selected and approved by MISHTEH.</p>
+              </div>
+              <Link href="/community-videos" className="flex items-center gap-2 font-semibold text-red-400">See all <ArrowRight className="h-5 w-5" /></Link>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {latestVideos.map((video) => (
+                <article key={video.id} className="overflow-hidden rounded-2xl bg-gray-900 shadow-xl">
+                  <iframe className="aspect-video w-full bg-black" src={`https://www.youtube-nocookie.com/embed/${video.youtubeId}`} title={video.title} loading="lazy" allowFullScreen />
+                  <div className="p-5">
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400"><PlayCircle className="h-4 w-4" />{video.channelName}</p>
+                    <h3 className="mt-2 text-lg font-bold">{video.title}</h3>
+                    <p className="mt-2 line-clamp-2 text-sm text-gray-400">{video.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="bg-gray-50 py-16">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 flex items-center justify-between">
+            <div><p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-600">Community now</p><h2 className="mt-2 text-3xl font-bold text-gray-900">Latest Posts &amp; Activity</h2></div>
+            <Link href="/activity" className="flex items-center gap-2 font-semibold text-primary-600">Open feed <ArrowRight className="h-5 w-5" /></Link>
+          </div>
+          <ActivityFeed limit={6} showTitle={false} />
         </div>
       </section>
 
