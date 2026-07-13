@@ -68,6 +68,7 @@ async function getRequest(id: string) {
             location: true,
             bio: true,
             image: true,
+            ficaVerified: true,
             instagramUrl: true,
             facebookUrl: true,
             twitterUrl: true,
@@ -391,7 +392,12 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
-              {session?.user ? (
+              {!request.user.ficaVerified ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-soft">
+                  <h2 className="text-lg font-bold text-amber-950">Story published — support coming soon</h2>
+                  <p className="mt-2 text-sm text-amber-800">MISHTEH approved this post. Donations will open after the recipient identity review is complete.</p>
+                </div>
+              ) : session?.user ? (
                 // Show donation form if logged in
                 <DonationForm
                   requestId={request.id}

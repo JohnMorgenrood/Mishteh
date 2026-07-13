@@ -80,25 +80,16 @@ export async function PATCH(
           return NextResponse.json({ error: 'Approve the post content before publishing it.' }, { status: 409 });
         }
         const owner = requestOwner.user;
-        const profileComplete = Boolean(
-          owner.fullName?.trim() &&
-          owner.phone?.trim() &&
-          owner.location?.trim() &&
-          owner.bio?.trim() &&
-          owner.image?.trim() &&
-          owner.idDocumentUrl?.trim() &&
-          owner.selfieUrl?.trim()
-        );
-
-        if (!profileComplete || !owner.ficaVerified || owner.isSuspicious) {
+        if (owner.isSuspicious) {
           return NextResponse.json(
-            { error: 'The post is approved, but the recipient must complete identity verification before it can be published and receive donations.' },
+            { error: 'Clear the recipient security flag before publishing this post.' },
             { status: 409 }
           );
         }
+        updateData.verified = owner.ficaVerified;
       }
       updateData.status = status;
-      updateData.verified = status === 'ACTIVE';
+      if (status === 'REJECTED') updateData.verified = false;
     }
 
     if (featured !== undefined) {

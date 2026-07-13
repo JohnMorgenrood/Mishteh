@@ -24,6 +24,7 @@ interface UserData {
   sponsorType: string | null;
   companyName: string | null;
   industry: string | null;
+  managedByAdmin: boolean;
   documents: Array<{ id: string; fileName: string }>;
 }
 
@@ -179,10 +180,10 @@ export default function AdminUserDetailPage() {
 
   const approvalMissing = [
     !formData.fullName.trim() && 'full name',
-    !formData.phone.trim() && 'phone number',
+    !user.managedByAdmin && !formData.phone.trim() && 'phone number',
     !formData.location.trim() && 'location',
-    !formData.bio.trim() && 'bio',
-    !user.image?.trim() && !user.documents?.length && 'profile photo',
+    !user.managedByAdmin && !formData.bio.trim() && 'bio',
+    !user.managedByAdmin && !user.image?.trim() && !user.documents?.length && 'profile photo',
     !user.idDocumentUrl?.trim() && 'ID document',
     !user.selfieUrl?.trim() && 'selfie with ID',
   ].filter(Boolean) as string[];
@@ -242,7 +243,7 @@ export default function AdminUserDetailPage() {
           )}
           <div>
             <h2 className="text-2xl font-bold text-gray-900">{user.fullName}</h2>
-            <p className="text-gray-600">{user.email}</p>
+            <p className="text-gray-600">{user.managedByAdmin ? 'No login account — managed by MISHTEH' : user.email}</p>
             <p className="text-sm text-gray-500">
               Joined {new Date(user.createdAt).toLocaleDateString()}
             </p>
@@ -296,7 +297,7 @@ export default function AdminUserDetailPage() {
           </div>
 
           {/* Email */}
-          <div>
+          {!user.managedByAdmin && <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email
             </label>
@@ -306,7 +307,7 @@ export default function AdminUserDetailPage() {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
             />
-          </div>
+          </div>}
 
           {/* Phone */}
           <div>

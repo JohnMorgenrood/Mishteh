@@ -22,6 +22,7 @@ export async function GET(
             fullName: true,
             location: true,
             bio: true,
+            ficaVerified: true,
           },
         },
         donations: {

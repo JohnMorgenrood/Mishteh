@@ -367,7 +367,7 @@ export default function AdminRequestReview() {
                   {!request.contentApproved && <button onClick={approvePost} disabled={processing} className="mt-4 rounded-lg bg-primary-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50">Approve Post</button>}
                 </div>
                 <div className="rounded-xl bg-gray-50 p-5">
-                  <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Step 2 — Publish fundraising</p>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Step 2 — Publish the post</p>
                   <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
                     <p>{request.contentApproved ? '✓' : '○'} Post approved</p>
                     <p>{request.user.ficaVerified ? '✓' : '○'} Identity approved</p>
@@ -376,16 +376,16 @@ export default function AdminRequestReview() {
                     <p>{request.user.image ? '✓' : '○'} Profile photo uploaded</p>
                     <p>{request.user.isSuspicious ? '✕ Security flag must be cleared' : '✓ No security flag'}</p>
                   </div>
-                  {!request.user.ficaVerified && <Link href={`/admin/users/${request.user.id}`} className="mt-4 inline-flex font-semibold text-primary-600">Open recipient verification →</Link>}
+                  {!request.user.ficaVerified && <><p className="mt-4 text-sm text-amber-700">You can publish the story now. Donations remain locked until identity approval is complete.</p><Link href={`/admin/users/${request.user.id}`} className="mt-2 inline-flex font-semibold text-primary-600">Open recipient verification →</Link></>}
                 </div>
                 <div className="flex gap-4">
                 <button
                   onClick={() => handleAction('ACTIVE')}
-                  disabled={processing || !request.contentApproved || !request.user.ficaVerified || request.user.isSuspicious}
+                  disabled={processing || !request.contentApproved || request.user.isSuspicious}
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CheckCircle className="w-5 h-5" />
-                  Publish &amp; Enable Donations
+                  Publish Post
                 </button>
                 <button
                   onClick={() => handleAction('REJECTED')}

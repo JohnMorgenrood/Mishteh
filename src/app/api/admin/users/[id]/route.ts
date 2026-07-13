@@ -37,6 +37,7 @@ export async function GET(
         sponsorType: true,
         companyName: true,
         industry: true,
+        managedByAdmin: true,
         documents: {
           where: { documentType: 'PROFILE_PHOTO', status: 'PENDING' },
           orderBy: { uploadedAt: 'desc' },
@@ -95,6 +96,7 @@ export async function PATCH(
           idDocumentUrl: true,
           selfieUrl: true,
           isSuspicious: true,
+          managedByAdmin: true,
           documents: {
             where: { documentType: 'PROFILE_PHOTO', status: 'PENDING' },
             orderBy: { uploadedAt: 'desc' },
@@ -106,10 +108,10 @@ export async function PATCH(
 
       const missing = [
         !fullName?.trim() && 'full name',
-        !phone?.trim() && 'phone number',
+        !existingUser?.managedByAdmin && !phone?.trim() && 'phone number',
         !location?.trim() && 'location',
-        !bio?.trim() && 'bio',
-        !existingUser?.image?.trim() && !existingUser?.documents.length && 'profile photo',
+        !existingUser?.managedByAdmin && !bio?.trim() && 'bio',
+        !existingUser?.managedByAdmin && !existingUser?.image?.trim() && !existingUser?.documents.length && 'profile photo',
         !existingUser?.idDocumentUrl?.trim() && 'ID document',
         !existingUser?.selfieUrl?.trim() && 'selfie with ID',
       ].filter(Boolean);
