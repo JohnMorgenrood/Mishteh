@@ -151,6 +151,10 @@ export async function PATCH(
 
     const isAdmin = session.user.userType === 'ADMIN';
 
+    if (body.targetAmount !== null && body.targetAmount !== undefined && Number(body.targetAmount) < 50) {
+      return NextResponse.json({ error: 'The minimum request target is R50.' }, { status: 400 });
+    }
+
     if (!isAdmin) {
       const moderation = moderateSupportiveContent(
         [body.title || '', body.description || ''].join(' ')

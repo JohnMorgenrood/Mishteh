@@ -36,7 +36,7 @@ const createRequestSchema = z.object({
   customCategory: z.string().optional(),
   urgency: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
   location: z.string().min(2, 'Location is required'),
-  targetAmount: z.number().positive().optional(),
+  targetAmount: z.number().min(50, 'The minimum request target is R50').optional(),
   isAnonymous: z.boolean().optional(),
   expiresAt: z.string().optional(),
   beneficiaryUserId: z.string().min(1).optional(),

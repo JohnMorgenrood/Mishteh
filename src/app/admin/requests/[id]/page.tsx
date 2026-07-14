@@ -46,6 +46,8 @@ export default function AdminRequestReview() {
   const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [message, setMessage] = useState('');
+  const [isEditingRequest, setIsEditingRequest] = useState(false);
+  const [editForm, setEditForm] = useState({ title: '', description: '', category: '', urgency: 'MEDIUM', location: '', targetAmount: '' });
 
   useEffect(() => {
     if (session?.user?.userType !== 'ADMIN') {
@@ -63,6 +65,14 @@ export default function AdminRequestReview() {
         const data = await response.json();
         setRequest(data.request);
         setNewCategory(data.request.category);
+        setEditForm({
+          title: data.request.title,
+          description: data.request.description,
+          category: data.request.category,
+          urgency: data.request.urgency,
+          location: data.request.location,
+          targetAmount: data.request.targetAmount?.toString() || '',
+        });
       }
     } catch (error) {
       console.error('Error fetching request:', error);
@@ -127,6 +137,33 @@ export default function AdminRequestReview() {
     } catch (error) {
       console.error('Error updating request:', error);
       alert('An error occurred');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleSaveRequest = async () => {
+    const amount = editForm.targetAmount === '' ? null : Number(editForm.targetAmount);
+    if (amount !== null && amount < 50) {
+      setMessage('The minimum request target is R50.');
+      return;
+    }
+    setProcessing(true);
+    setMessage('');
+    try {
+      const response = await fetch(`/api/admin/requests/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...editForm, targetAmount: amount }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to save request');
+      setRequest(data.request);
+      setNewCategory(data.request.category);
+      setIsEditingRequest(false);
+      setMessage('Request details saved successfully.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to save request');
     } finally {
       setProcessing(false);
     }
@@ -216,6 +253,27 @@ export default function AdminRequestReview() {
 
           <div className="p-6 space-y-6">
             {message && <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">{message}</div>}
+            {request.targetAmount !== null && request.targetAmount < 50 && <div className="rounded-lg border-l-4 border-red-500 bg-red-50 p-4 text-sm font-semibold text-red-800">Target amount is below the R50 minimum. Select Edit Request and correct it immediately.</div>}
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div><p className="font-semibold text-gray-900">Request controls</p><p className="text-sm text-gray-600">Correct details at any time, including after publication.</p></div>
+              <button onClick={() => setIsEditingRequest((value) => !value)} className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800">
+                <Edit2 className="h-4 w-4" /> {isEditingRequest ? 'Cancel Editing' : 'Edit Request'}
+              </button>
+            </div>
+            {isEditingRequest && (
+              <div className="space-y-4 rounded-xl border-2 border-primary-200 bg-white p-5 shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900">Edit request details</h2>
+                <div><label className="mb-1 block text-sm font-medium text-gray-700">Title</label><input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-2.5" /></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><label className="mb-1 block text-sm font-medium text-gray-700">Category</label><select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-2.5">{REQUEST_CATEGORIES.map((cat) => <option key={cat.value} value={cat.value}>{cat.label}</option>)}</select></div>
+                  <div><label className="mb-1 block text-sm font-medium text-gray-700">Urgency</label><select value={editForm.urgency} onChange={(e) => setEditForm({ ...editForm, urgency: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-2.5"><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
+                  <div><label className="mb-1 block text-sm font-medium text-gray-700">Location</label><input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-2.5" /></div>
+                  <div><label className="mb-1 block text-sm font-medium text-gray-700">Target amount (minimum R50)</label><div className="flex rounded-lg border border-gray-300 bg-white focus-within:ring-2 focus-within:ring-primary-200"><span className="px-3 py-2.5 text-gray-500">R</span><input type="number" min="50" step="0.01" value={editForm.targetAmount} onChange={(e) => setEditForm({ ...editForm, targetAmount: e.target.value })} className="min-w-0 flex-1 rounded-r-lg px-2 py-2.5 outline-none" /></div></div>
+                </div>
+                <div><label className="mb-1 block text-sm font-medium text-gray-700">Story</label><textarea rows={12} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3" /></div>
+                <button onClick={handleSaveRequest} disabled={processing} className="inline-flex items-center gap-2 rounded-lg bg-[#d6652f] px-5 py-3 font-semibold text-white hover:bg-[#b34e27] disabled:opacity-50"><Save className="h-4 w-4" /> {processing ? 'Saving...' : 'Save Request Changes'}</button>
+              </div>
+            )}
             {/* Request Details */}
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">{request.title}</h2>

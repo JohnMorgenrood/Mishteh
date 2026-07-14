@@ -363,7 +363,7 @@ export default function NewRequestPage() {
                     id="targetAmount"
                     type="number"
                     step="0.01"
-                    min="0"
+                    min="50"
                     value={formData.targetAmount}
                     onChange={(e) => setFormData({ ...formData, targetAmount: e.target.value })}
                     className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"

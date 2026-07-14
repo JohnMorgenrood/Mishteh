@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { RequestCategory, UrgencyLevel } from '@prisma/client';
+import { moderateSupportiveContent } from '@/lib/content-moderation';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
@@ -32,10 +34,32 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status, featured, category, contentApproved } = body;
+    const { status, featured, category, contentApproved, title, description, urgency, location, targetAmount } = body;
 
     // Prepare update data
     const updateData: any = {};
+
+    if (title !== undefined || description !== undefined || location !== undefined || targetAmount !== undefined || urgency !== undefined) {
+      const existing = await prisma.request.findUnique({ where: { id } });
+      if (!existing) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
+      const nextTitle = title?.trim() ?? existing.title;
+      const nextDescription = description?.trim() ?? existing.description;
+      const nextLocation = location?.trim() ?? existing.location;
+      const nextTarget = targetAmount === null || targetAmount === '' ? null : Number(targetAmount ?? existing.targetAmount);
+      if (nextTitle.length < 5) return NextResponse.json({ error: 'Title must be at least 5 characters.' }, { status: 400 });
+      if (nextDescription.length < 20) return NextResponse.json({ error: 'Story must be at least 20 characters.' }, { status: 400 });
+      if (nextLocation.length < 2) return NextResponse.json({ error: 'Location is required.' }, { status: 400 });
+      if (nextTarget !== null && (!Number.isFinite(nextTarget) || nextTarget < 50)) {
+        return NextResponse.json({ error: 'The minimum request target is R50.' }, { status: 400 });
+      }
+      if (urgency !== undefined && !Object.values(UrgencyLevel).includes(urgency)) {
+        return NextResponse.json({ error: 'Invalid urgency.' }, { status: 400 });
+      }
+      const moderation = moderateSupportiveContent(`${nextTitle} ${nextDescription}`);
+      if (!moderation.allowed) return NextResponse.json({ error: moderation.reason }, { status: 422 });
+      Object.assign(updateData, { title: nextTitle, description: nextDescription, location: nextLocation, targetAmount: nextTarget });
+      if (urgency !== undefined) updateData.urgency = urgency;
+    }
 
     if (contentApproved !== undefined) {
       updateData.contentApproved = Boolean(contentApproved);
@@ -56,6 +80,7 @@ export async function PATCH(
           where: { id },
           select: {
             contentApproved: true,
+            targetAmount: true,
             user: {
               select: {
                 fullName: true,
@@ -80,6 +105,9 @@ export async function PATCH(
         if (!requestOwner.contentApproved) {
           return NextResponse.json({ error: 'Approve the post content before publishing it.' }, { status: 409 });
         }
+        if (requestOwner.targetAmount !== null && requestOwner.targetAmount < 50) {
+          return NextResponse.json({ error: 'Correct the target amount to at least R50 before publishing.' }, { status: 409 });
+        }
         const owner = requestOwner.user;
         if (owner.isSuspicious) {
           return NextResponse.json(
@@ -102,6 +130,9 @@ export async function PATCH(
     }
 
     if (category !== undefined) {
+      if (!Object.values(RequestCategory).includes(category)) {
+        return NextResponse.json({ error: 'Invalid category.' }, { status: 400 });
+      }
       updateData.category = category;
     }
 
