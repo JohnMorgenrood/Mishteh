@@ -399,13 +399,24 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                   <p className="mt-2 text-sm text-amber-800">MISHTEH approved this post. Donations will open after the recipient identity review is complete.</p>
                 </div>
               ) : session?.user ? (
-                // Show donation form if logged in
-                <DonationForm
-                  requestId={request.id}
-                  requestTitle={request.title}
-                  targetAmount={request.targetAmount}
-                  currentAmount={request.currentAmount}
-                />
+                // Keep payment choices out of view until the donor chooses to continue.
+                <details id="request-donation-panel" className="group overflow-hidden rounded-2xl bg-white shadow-soft">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 bg-gray-900 px-6 py-5 text-white transition hover:bg-gray-800 [&::-webkit-details-marker]:hidden">
+                    <span>
+                      <span className="block text-lg font-bold">Make a Donation</span>
+                      <span className="mt-1 block text-xs font-medium text-gray-300">Open secure Yoco or PayPal payment</span>
+                    </span>
+                    <span className="rounded-full bg-red-500 px-4 py-2 text-sm font-bold shadow-sm">Donate</span>
+                  </summary>
+                  <div className="border-t border-gray-200">
+                    <DonationForm
+                      requestId={request.id}
+                      requestTitle={request.title}
+                      targetAmount={request.targetAmount}
+                      currentAmount={request.currentAmount}
+                    />
+                  </div>
+                </details>
               ) : (
                 // Show login prompt if not logged in
                 <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
@@ -443,7 +454,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                     <div className="space-y-3">
                       <Link
                         href={`/auth/login?callbackUrl=/requests/${request.id}`}
-                        className="block w-full px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white text-center font-semibold rounded-xl hover:from-primary-700 hover:to-primary-600 transition-all shadow-md hover:shadow-lg"
+                        className="block w-full rounded-xl bg-gray-900 px-6 py-3 text-center font-semibold text-white shadow-md transition hover:bg-gray-800 hover:shadow-lg"
                       >
                         Login to Donate
                       </Link>
