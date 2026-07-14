@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowRight,
   Clock3,
@@ -170,7 +171,7 @@ async function getDashboardData(userId: string, userType: string) {
 }
 
 async function getRecommendedFeed(userId: string) {
-  const [preferences, interactions, requests, videos, comments] = await Promise.all([
+  const [preferences, interactions, requests, videos, posts] = await Promise.all([
     prisma.donorPreference.findUnique({ where: { userId } }),
     prisma.request.findMany({
       where: { OR: [{ likes: { some: { userId } } }, { comments: { some: { userId } } }, { donations: { some: { donorId: userId } } }] },
@@ -178,26 +179,23 @@ async function getRecommendedFeed(userId: string) {
     }),
     prisma.request.findMany({
       where: { status: { in: ['ACTIVE', 'PARTIALLY_FUNDED'] } },
-      include: { user: { select: { fullName: true, location: true } }, _count: { select: { donations: true, likes: true, comments: true } } },
+      include: { user: { select: { id: true, fullName: true, location: true, image: true, managedByAdmin: true, createdAt: true } }, _count: { select: { donations: true, likes: true } } },
       orderBy: { createdAt: 'desc' }, take: 30,
     }),
     prisma.communityVideo.findMany({ where: { published: true }, orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }], take: 6 }),
-    prisma.comment.findMany({
-      where: { request: { status: { in: ['ACTIVE', 'PARTIALLY_FUNDED'] } }, userId: { not: userId } },
-      include: { user: { select: { fullName: true } }, request: { select: { id: true, title: true, category: true } } },
-      orderBy: { createdAt: 'desc' }, take: 8,
-    }),
+    prisma.communityPost.findMany({ where: { published: true }, orderBy: { createdAt: 'desc' }, take: 4 }),
   ]);
 
   const categoryInterests = new Set([...(preferences?.preferredCategories || []), ...interactions.map((item) => item.category)]);
   const locationInterests = [...(preferences?.preferredLocations || []), ...interactions.map((item) => item.location)].filter(Boolean).map((item) => item.toLowerCase());
-  const scoreRequest = (request: any) => (categoryInterests.has(request.category) ? 5 : 0) + (locationInterests.some((location) => request.location.toLowerCase().includes(location) || location.includes(request.location.toLowerCase())) ? 3 : 0);
+  const urgencyScore: Record<string, number> = { CRITICAL: 8, HIGH: 5, MEDIUM: 2, LOW: 0 };
+  const scoreRequest = (request: any) => (categoryInterests.has(request.category) ? 5 : 0) + (locationInterests.some((location) => request.location.toLowerCase().includes(location) || location.includes(request.location.toLowerCase())) ? 3 : 0) + (urgencyScore[request.urgency] || 0) + (request.featured ? 6 : 0);
   const day = 24 * 60 * 60 * 1000;
 
   return [
     ...requests.slice().sort((a, b) => scoreRequest(b) - scoreRequest(a)).slice(0, 7).map((request) => ({ kind: 'request', id: request.id, date: request.createdAt, rank: request.createdAt.getTime() + scoreRequest(request) * 7 * day, data: request })),
     ...videos.slice(0, 3).map((video) => ({ kind: 'video', id: video.id, date: video.createdAt, rank: video.createdAt.getTime() + (video.featured ? 3 * day : 0), data: video })),
-    ...comments.slice(0, 4).map((comment) => ({ kind: 'comment', id: comment.id, date: comment.createdAt, rank: comment.createdAt.getTime() + (categoryInterests.has(comment.request.category) ? 4 * day : 0), data: comment })),
+    ...posts.map((post) => ({ kind: 'post', id: post.id, date: post.createdAt, rank: post.createdAt.getTime() + 2 * day, data: post })),
   ].sort((a, b) => b.rank - a.rank).slice(0, 12);
 }
 
@@ -290,22 +288,35 @@ export default async function DashboardPage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {recommendedFeed.map((item) => item.kind === 'request' ? (
-              <Link key={`request-${item.id}`} href={`/requests/${item.id}`} className="rounded-xl border border-gray-200 p-4 transition hover:border-primary-300 hover:bg-primary-50/40">
+              <article key={`request-${item.id}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md">
+                <div className="h-1.5 bg-gradient-to-r from-gray-900 via-gray-800 to-red-500" />
+                <div className="p-4">
                 <div className="flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-wide text-primary-600">Request</span><span className="text-xs text-gray-400">{new Date(item.date).toLocaleDateString()}</span></div>
-                <h3 className="mt-2 line-clamp-2 font-bold text-gray-900">{item.data.title}</h3>
+                {item.data.user.managedByAdmin || item.data.isAnonymous ? (
+                  <div className="mt-3 flex items-center gap-2"><Image src="/assets/logo.png" alt="MISHTEH" width={36} height={36} className="h-9 w-9 rounded-full object-contain ring-2 ring-red-100" /><div><p className="text-xs font-bold text-gray-900">Posted by MISHTEH</p><p className="text-[11px] text-gray-500">Community verified and managed</p></div></div>
+                ) : (
+                  <Link href={`/profile/${item.data.user.id}`} className="mt-3 flex items-center gap-2.5 rounded-xl hover:bg-gray-50"><div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-gray-900 text-xs font-bold text-white">{item.data.user.image ? <Image src={item.data.user.image} alt={item.data.user.fullName} width={36} height={36} className="h-full w-full object-cover" /> : item.data.user.fullName.charAt(0)}</div><div><p className="text-xs font-bold text-gray-900">{item.data.user.fullName}</p><p className="text-[11px] text-gray-500">View public profile</p></div></Link>
+                )}
+                <Link href={`/requests/${item.id}`} className="mt-3 block">
+                <h3 className="line-clamp-2 font-bold text-gray-900">{item.data.title}</h3>
                 <p className="mt-2 flex items-center gap-1 text-xs text-gray-500"><MapPin className="h-3.5 w-3.5" />{item.data.location}</p>
-                <p className="mt-3 text-xs text-gray-500">{item.data._count.likes} likes · {item.data._count.comments} comments · {item.data._count.donations} gifts</p>
-              </Link>
+                {item.data.targetAmount && <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-[#d6652f]" style={{ width: `${Math.min(100, (item.data.currentAmount / item.data.targetAmount) * 100)}%` }} /></div>}
+                <p className="mt-3 text-xs text-gray-500"><span className="font-bold text-gray-800">{item.data._count.likes}</span> likes · <span className="font-bold text-gray-800">{item.data._count.donations}</span> gifts</p>
+                </Link>
+                </div>
+                {(item.data.user.managedByAdmin || item.data.isAnonymous) && <div className="flex items-center justify-center gap-1.5 border-t border-gray-100 bg-gray-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-600"><Image src="/assets/logo.png" alt="" width={16} height={16} className="h-4 w-4 object-contain" /> MISHTEH managed</div>}
+              </article>
             ) : item.kind === 'video' ? (
               <Link key={`video-${item.id}`} href="/community-videos" className="overflow-hidden rounded-xl border border-gray-200 transition hover:border-red-300">
                 <img src={`https://i.ytimg.com/vi/${item.data.youtubeId}/hqdefault.jpg`} alt="" className="aspect-video w-full object-cover" />
                 <div className="p-4"><p className="flex items-center gap-1 text-xs font-bold uppercase text-red-600"><PlayCircle className="h-4 w-4" /> Video</p><h3 className="mt-2 line-clamp-2 font-bold text-gray-900">{item.data.title}</h3></div>
               </Link>
             ) : (
-              <Link key={`comment-${item.id}`} href={`/requests/${item.data.request.id}`} className="rounded-xl border border-gray-200 p-4 transition hover:border-blue-300 hover:bg-blue-50/30">
-                <p className="flex items-center gap-1 text-xs font-bold uppercase text-blue-600"><MessageCircle className="h-4 w-4" /> Community comment</p>
-                <p className="mt-3 line-clamp-3 text-sm text-gray-700">“{item.data.content}”</p>
-                <p className="mt-3 text-xs text-gray-500">{item.data.user.fullName} on <span className="font-semibold">{item.data.request.title}</span></p>
+              <Link key={`post-${item.id}`} href={`/activity#post-${item.id}`} className="rounded-xl border border-gray-200 bg-white p-4 transition hover:border-red-200 hover:bg-red-50/20">
+                <p className="flex items-center gap-1 text-xs font-bold uppercase text-red-600"><MessageCircle className="h-4 w-4" /> Community conversation</p>
+                <h3 className="mt-3 line-clamp-2 font-bold text-gray-900">{item.data.title}</h3>
+                <p className="mt-2 line-clamp-3 text-sm text-gray-600">{item.data.question}</p>
+                <p className="mt-3 text-xs text-gray-500">Join the discussion on the Posts page.</p>
               </Link>
             ))}
           </div>
