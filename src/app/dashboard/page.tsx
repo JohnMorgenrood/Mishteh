@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import Link from 'next/link';
 import {
   ArrowRight,
-  CircleDollarSign,
   Clock3,
   FileText,
   HandCoins,
@@ -12,6 +11,9 @@ import {
   ShieldCheck,
   TrendingUp,
   Wallet,
+  PlayCircle,
+  MessageCircle,
+  MapPin,
 } from 'lucide-react';
 import { authOptions } from '@/lib/auth';
 import { formatCurrency } from '@/lib/currency';
@@ -167,6 +169,38 @@ async function getDashboardData(userId: string, userType: string) {
   };
 }
 
+async function getRecommendedFeed(userId: string) {
+  const [preferences, interactions, requests, videos, comments] = await Promise.all([
+    prisma.donorPreference.findUnique({ where: { userId } }),
+    prisma.request.findMany({
+      where: { OR: [{ likes: { some: { userId } } }, { comments: { some: { userId } } }, { donations: { some: { donorId: userId } } }] },
+      select: { category: true, location: true }, take: 30,
+    }),
+    prisma.request.findMany({
+      where: { status: { in: ['ACTIVE', 'PARTIALLY_FUNDED'] } },
+      include: { user: { select: { fullName: true, location: true } }, _count: { select: { donations: true, likes: true, comments: true } } },
+      orderBy: { createdAt: 'desc' }, take: 30,
+    }),
+    prisma.communityVideo.findMany({ where: { published: true }, orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }], take: 6 }),
+    prisma.comment.findMany({
+      where: { request: { status: { in: ['ACTIVE', 'PARTIALLY_FUNDED'] } }, userId: { not: userId } },
+      include: { user: { select: { fullName: true } }, request: { select: { id: true, title: true, category: true } } },
+      orderBy: { createdAt: 'desc' }, take: 8,
+    }),
+  ]);
+
+  const categoryInterests = new Set([...(preferences?.preferredCategories || []), ...interactions.map((item) => item.category)]);
+  const locationInterests = [...(preferences?.preferredLocations || []), ...interactions.map((item) => item.location)].filter(Boolean).map((item) => item.toLowerCase());
+  const scoreRequest = (request: any) => (categoryInterests.has(request.category) ? 5 : 0) + (locationInterests.some((location) => request.location.toLowerCase().includes(location) || location.includes(request.location.toLowerCase())) ? 3 : 0);
+  const day = 24 * 60 * 60 * 1000;
+
+  return [
+    ...requests.slice().sort((a, b) => scoreRequest(b) - scoreRequest(a)).slice(0, 7).map((request) => ({ kind: 'request', id: request.id, date: request.createdAt, rank: request.createdAt.getTime() + scoreRequest(request) * 7 * day, data: request })),
+    ...videos.slice(0, 3).map((video) => ({ kind: 'video', id: video.id, date: video.createdAt, rank: video.createdAt.getTime() + (video.featured ? 3 * day : 0), data: video })),
+    ...comments.slice(0, 4).map((comment) => ({ kind: 'comment', id: comment.id, date: comment.createdAt, rank: comment.createdAt.getTime() + (categoryInterests.has(comment.request.category) ? 4 * day : 0), data: comment })),
+  ].sort((a, b) => b.rank - a.rank).slice(0, 12);
+}
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
@@ -174,7 +208,7 @@ export default async function DashboardPage() {
     redirect('/auth/login');
   }
 
-  const data: any = await getDashboardData(session.user.id, session.user.userType);
+  const [data, recommendedFeed]: [any, any[]] = await Promise.all([getDashboardData(session.user.id, session.user.userType), getRecommendedFeed(session.user.id)]);
   const isDonor = session.user.userType === 'DONOR';
   const isAdmin = session.user.userType === 'ADMIN';
   return (
@@ -249,10 +283,38 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <section className="mb-6 rounded-2xl bg-white p-5 shadow-soft">
+          <div className="mb-4 flex items-center justify-between">
+            <div><h2 className="text-xl font-bold text-gray-900">For You Today</h2><p className="text-sm text-gray-500">Up to 12 approved stories, videos, and conversations based on what you follow and support.</p></div>
+            <Link href="/activity" className="text-sm font-semibold text-primary-600">See all</Link>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {recommendedFeed.map((item) => item.kind === 'request' ? (
+              <Link key={`request-${item.id}`} href={`/requests/${item.id}`} className="rounded-xl border border-gray-200 p-4 transition hover:border-primary-300 hover:bg-primary-50/40">
+                <div className="flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-wide text-primary-600">Request</span><span className="text-xs text-gray-400">{new Date(item.date).toLocaleDateString()}</span></div>
+                <h3 className="mt-2 line-clamp-2 font-bold text-gray-900">{item.data.title}</h3>
+                <p className="mt-2 flex items-center gap-1 text-xs text-gray-500"><MapPin className="h-3.5 w-3.5" />{item.data.location}</p>
+                <p className="mt-3 text-xs text-gray-500">{item.data._count.likes} likes · {item.data._count.comments} comments · {item.data._count.donations} gifts</p>
+              </Link>
+            ) : item.kind === 'video' ? (
+              <Link key={`video-${item.id}`} href="/community-videos" className="overflow-hidden rounded-xl border border-gray-200 transition hover:border-red-300">
+                <img src={`https://i.ytimg.com/vi/${item.data.youtubeId}/hqdefault.jpg`} alt="" className="aspect-video w-full object-cover" />
+                <div className="p-4"><p className="flex items-center gap-1 text-xs font-bold uppercase text-red-600"><PlayCircle className="h-4 w-4" /> Video</p><h3 className="mt-2 line-clamp-2 font-bold text-gray-900">{item.data.title}</h3></div>
+              </Link>
+            ) : (
+              <Link key={`comment-${item.id}`} href={`/requests/${item.data.request.id}`} className="rounded-xl border border-gray-200 p-4 transition hover:border-blue-300 hover:bg-blue-50/30">
+                <p className="flex items-center gap-1 text-xs font-bold uppercase text-blue-600"><MessageCircle className="h-4 w-4" /> Community comment</p>
+                <p className="mt-3 line-clamp-3 text-sm text-gray-700">“{item.data.content}”</p>
+                <p className="mt-3 text-xs text-gray-500">{item.data.user.fullName} on <span className="font-semibold">{item.data.request.title}</span></p>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {isDonor ? (
             <>
-              <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <div className="rounded-xl bg-white p-4 shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">Total Sent</span>
                   <Wallet className="h-5 w-5 text-primary-600" />
@@ -260,7 +322,7 @@ export default async function DashboardPage() {
                 <p className="text-3xl font-bold text-gray-900">{formatMoney(data.totals.totalSent)}</p>
                 <p className="mt-2 text-sm text-gray-500">Across all donations you have made</p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <div className="rounded-xl bg-white p-4 shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">Completed Gifts</span>
                   <ShieldCheck className="h-5 w-5 text-green-600" />
@@ -268,7 +330,7 @@ export default async function DashboardPage() {
                 <p className="text-3xl font-bold text-gray-900">{data.totals.completedCount}</p>
                 <p className="mt-2 text-sm text-gray-500">Successful donations already processed</p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <div className="rounded-xl bg-white p-4 shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">People Helped</span>
                   <Heart className="h-5 w-5 text-red-500" />
@@ -276,7 +338,7 @@ export default async function DashboardPage() {
                 <p className="text-3xl font-bold text-gray-900">{data.totals.uniqueRecipients}</p>
                 <p className="mt-2 text-sm text-gray-500">Unique recipients you have supported</p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <div className="rounded-xl bg-white p-4 shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">Donations Made</span>
                   <TrendingUp className="h-5 w-5 text-primary-600" />
@@ -287,7 +349,7 @@ export default async function DashboardPage() {
             </>
           ) : (
             <>
-              <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <div className="rounded-xl bg-white p-4 shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">Total Received</span>
                   <HandCoins className="h-5 w-5 text-green-600" />
@@ -295,7 +357,7 @@ export default async function DashboardPage() {
                 <p className="text-3xl font-bold text-gray-900">{formatMoney(data.totals.totalReceived)}</p>
                 <p className="mt-2 text-sm text-gray-500">Completed donations received from supporters</p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <div className="rounded-xl bg-white p-4 shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">Incoming Support</span>
                   <Heart className="h-5 w-5 text-red-500" />
@@ -303,7 +365,7 @@ export default async function DashboardPage() {
                 <p className="text-3xl font-bold text-gray-900">{data.totals.receivedDonationCount}</p>
                 <p className="mt-2 text-sm text-gray-500">Completed donations across your requests</p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <div className="rounded-xl bg-white p-4 shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">Active Requests</span>
                   <Clock3 className="h-5 w-5 text-amber-500" />
@@ -311,7 +373,7 @@ export default async function DashboardPage() {
                 <p className="text-3xl font-bold text-gray-900">{data.totals.activeRequests}</p>
                 <p className="mt-2 text-sm text-gray-500">Requests currently open or under review</p>
               </div>
-              <div className="rounded-2xl bg-white p-6 shadow-soft">
+              <div className="rounded-xl bg-white p-4 shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">Funded Requests</span>
                   <TrendingUp className="h-5 w-5 text-primary-600" />
@@ -321,69 +383,6 @@ export default async function DashboardPage() {
               </div>
             </>
           )}
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl bg-white p-6 shadow-soft lg:col-span-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">At a Glance</h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  {isDonor
-                    ? 'A simpler summary of your giving activity and what still needs attention.'
-                    : 'A quick finance snapshot of your requests and the support still needed.'}
-                </p>
-              </div>
-              <CircleDollarSign className="h-5 w-5 text-primary-600" />
-            </div>
-
-            {isDonor ? (
-              <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
-                  <p className="text-sm font-medium text-green-700">Completed Value</p>
-                  <p className="mt-2 text-2xl font-bold text-green-900">
-                    {formatMoney(data.totals.completedValue)}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                  <p className="text-sm font-medium text-amber-700">Pending Gifts</p>
-                  <p className="mt-2 text-2xl font-bold text-amber-900">{data.totals.pendingCount}</p>
-                </div>
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-                  <p className="text-sm font-medium text-blue-700">Average Gift</p>
-                  <p className="mt-2 text-2xl font-bold text-blue-900">
-                    {formatMoney(
-                      data.totals.donationCount > 0
-                        ? data.totals.totalSent / data.totals.donationCount
-                        : 0
-                    )}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
-                  <p className="text-sm font-medium text-green-700">Received So Far</p>
-                  <p className="mt-2 text-2xl font-bold text-green-900">{formatMoney(data.totals.totalReceived)}</p>
-                </div>
-                <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                  <p className="text-sm font-medium text-amber-700">Still Needed</p>
-                  <p className="mt-2 text-2xl font-bold text-amber-900">{formatMoney(data.totals.openGoalAmount)}</p>
-                </div>
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-                  <p className="text-sm font-medium text-blue-700">Average Support</p>
-                  <p className="mt-2 text-2xl font-bold text-blue-900">
-                    {formatMoney(
-                      data.totals.receivedDonationCount > 0
-                        ? data.totals.totalReceived / data.totals.receivedDonationCount
-                        : 0
-                    )}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-3">
