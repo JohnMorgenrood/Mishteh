@@ -11,6 +11,7 @@ import { ToastProvider } from '@/components/Toast';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://mishteh.org'),
   title: 'MISHTEH - Connect Donors with People in Need',
   description: 'A platform connecting generous donors with people who need help with food, rent, bills, and more.',
   keywords: ['donation', 'charity', 'help', 'community', 'support', 'fundraising'],

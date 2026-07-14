@@ -41,11 +41,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         title: request.title,
         description: request.description.slice(0, 160),
         type: 'article',
+        url: `/requests/${id}`,
+        images: [{ url: `/requests/${id}/opengraph-image`, width: 1200, height: 630, alt: request.title }],
       },
       twitter: {
         card: 'summary_large_image',
         title: request.title,
         description: request.description.slice(0, 160),
+        images: [`/requests/${id}/opengraph-image`],
       },
     };
   } catch {
