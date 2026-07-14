@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 
 // Maximum file size (5MB)
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '5242880');
@@ -49,18 +48,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create unique filename
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const timestamp = Date.now();
-    const filename = `${session.user.id}_${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    
-    // Ensure upload directory exists
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'documents');
-    const filePath = path.join(uploadDir, filename);
-
-    // Save file
-    await writeFile(filePath, buffer);
+    if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
+      return NextResponse.json({ error: 'Secure private storage is not configured.' }, { status: 503 });
+    }
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const blob = await put(`identity/${session.user.id}/document-${safeName}`, file, {
+      access: 'private',
+      addRandomSuffix: true,
+    });
 
     // Create document record in database
     const document = await prisma.document.create({
@@ -70,7 +65,7 @@ export async function POST(request: NextRequest) {
         fileName: file.name,
         fileType: file.type,
         fileSize: file.size,
-        filePath: `/uploads/documents/${filename}`,
+        filePath: blob.url,
         documentType: documentType || 'general',
         status: 'PENDING',
       },
@@ -79,7 +74,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         message: 'Document uploaded successfully',
-        document,
+        document: { id: document.id, fileName: document.fileName, fileType: document.fileType, fileSize: document.fileSize, documentType: document.documentType, status: document.status, uploadedAt: document.uploadedAt },
       },
       { status: 201 }
     );
@@ -114,12 +109,13 @@ export async function GET(request: NextRequest) {
 
     const documents = await prisma.document.findMany({
       where,
+      select: { id: true, fileName: true, fileType: true, fileSize: true, documentType: true, status: true, uploadedAt: true, verifiedAt: true },
       orderBy: {
         uploadedAt: 'desc',
       },
     });
 
-    return NextResponse.json({ documents });
+    return NextResponse.json({ documents }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error) {
     console.error('Error fetching documents:', error);
     return NextResponse.json(
