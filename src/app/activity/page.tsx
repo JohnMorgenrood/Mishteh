@@ -11,7 +11,7 @@ import { getAvatarInitial, isUploadedProfileImage } from '@/lib/avatar';
 type Comment = { id: string; content: string; createdAt: string; user: { id: string; fullName: string; image?: string | null } };
 type Post = { id: string; title: string; body: string; question: string; category: string; createdAt: string; reactionCount: number; viewerReaction: string | null; comments: Comment[] };
 
-const accents = ['from-blue-700 to-indigo-600', 'from-orange-500 to-rose-500', 'from-emerald-600 to-teal-500', 'from-violet-700 to-fuchsia-600'];
+const accents = ['from-red-500 to-orange-500', 'from-gray-900 to-red-500', 'from-red-600 to-primary-500', 'from-gray-700 to-gray-900'];
 
 export default function PostsPage() {
   const { data: session } = useSession();
@@ -66,27 +66,27 @@ export default function PostsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f8fb] py-6 md:py-10">
+    <main className="min-h-screen bg-gray-100 py-6 md:py-10">
       <div className="mx-auto max-w-3xl px-3 sm:px-6">
-        <header className="mb-6 overflow-hidden rounded-[2rem] bg-gradient-to-br from-blue-800 via-indigo-700 to-violet-700 p-6 text-white shadow-xl md:p-9">
-          <span className="inline-flex items-center gap-2 rounded-full bg-amber-300 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-900"><Sparkles className="h-3.5 w-3.5" /> Community conversations</span>
+        <header className="mb-6 overflow-hidden rounded-[2rem] bg-gray-900 p-6 text-white shadow-xl md:p-9">
+          <span className="inline-flex items-center gap-2 rounded-full bg-red-500/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-400"><Sparkles className="h-3.5 w-3.5" /> Community conversations</span>
           <h1 className="mt-4 text-3xl font-extrabold tracking-tight md:text-4xl">Stories and ideas worth sharing</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100 md:text-base">Join positive conversations, celebrate kindness, and share ideas that can strengthen our community.</p>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-300 md:text-base">Join positive conversations, celebrate kindness, and share ideas that can strengthen our community.</p>
         </header>
 
-        {loading ? <div className="py-24 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" /></div> : (
+        {loading ? <div className="py-24 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-red-500" /></div> : (
           <div className="space-y-6">
             {posts.map((post, index) => (
               <article id={`post-${post.id}`} key={post.id} className="scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                 <div className={`h-2 bg-gradient-to-r ${accents[index % accents.length]}`} />
                 <div className="p-5 md:p-7">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{post.category}</span>
+                    <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-600">{post.category}</span>
                     <time className="text-xs text-slate-400">{formatShortDate(post.createdAt)}</time>
                   </div>
                   <h2 className="mt-4 text-xl font-extrabold leading-tight text-slate-900 md:text-2xl">{post.title}</h2>
                   <p className="mt-3 text-sm leading-7 text-slate-600 md:text-base">{post.body}</p>
-                  <div className="mt-5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 p-4 text-sm font-semibold leading-6 text-slate-800">{post.question}</div>
+                  <div className="mt-5 rounded-2xl border-l-4 border-red-500 bg-gray-50 p-4 text-sm font-semibold leading-6 text-slate-800">{post.question}</div>
 
                   <div className="mt-5 flex items-center border-y border-slate-100 py-2">
                     <button onClick={() => react(post.id)} disabled={busy === `reaction-${post.id}`} className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition ${post.viewerReaction ? 'bg-rose-50 text-rose-600' : 'text-slate-600 hover:bg-slate-50'}`}>
@@ -97,15 +97,15 @@ export default function PostsPage() {
                   </div>
 
                   <form onSubmit={(event) => comment(event, post.id)} className="mt-4 flex items-start gap-2">
-                    <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-bold text-white">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-gray-900 to-red-600 text-xs font-bold text-white">
                       {isUploadedProfileImage(session?.user?.image) ? <Image src={session?.user?.image || ''} alt="Your profile" width={36} height={36} className="h-full w-full object-cover" /> : getAvatarInitial(session?.user?.name || 'Guest')}
                     </div>
-                    <div className="flex min-w-0 flex-1 rounded-2xl bg-slate-100 p-1.5 pl-4 focus-within:ring-2 focus-within:ring-blue-200">
+                    <div className="flex min-w-0 flex-1 rounded-2xl bg-slate-100 p-1.5 pl-4 focus-within:ring-2 focus-within:ring-red-200">
                       <input id={`comment-${post.id}`} value={drafts[post.id] || ''} onChange={(event) => setDrafts((current) => ({ ...current, [post.id]: event.target.value }))} maxLength={800} placeholder={session ? 'Write a kind comment...' : 'Sign in to join the conversation'} className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none" />
-                      <button type="submit" disabled={busy === `comment-${post.id}` || !drafts[post.id]?.trim()} aria-label="Post comment" className="grid h-9 w-9 place-items-center rounded-full bg-blue-600 text-white disabled:opacity-40"><Send className="h-4 w-4" /></button>
+                      <button type="submit" disabled={busy === `comment-${post.id}` || !drafts[post.id]?.trim()} aria-label="Post comment" className="grid h-9 w-9 place-items-center rounded-full bg-gray-900 text-white transition hover:bg-red-600 disabled:opacity-40"><Send className="h-4 w-4" /></button>
                     </div>
                   </form>
-                  {errors[post.id] && <p className="ml-11 mt-2 text-xs font-medium text-blue-700">{errors[post.id]}</p>}
+                  {errors[post.id] && <p className="ml-11 mt-2 text-xs font-medium text-red-600">{errors[post.id]}</p>}
 
                   {post.comments.length > 0 && <div className="ml-11 mt-4 space-y-3">
                     {post.comments.slice(0, 8).map((item) => <div key={item.id} className="rounded-2xl bg-slate-50 px-4 py-3">
@@ -119,7 +119,7 @@ export default function PostsPage() {
           </div>
         )}
 
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-sm text-emerald-900"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" /><p><strong>A safer community.</strong> Posts are published by MISHTEH and comments are checked automatically. Community post submissions will require admin approval before appearing.</p></div>
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-700"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-red-500" /><p><strong className="text-gray-900">A safer community.</strong> Posts are published by MISHTEH and comments are checked automatically. Community post submissions will require admin approval before appearing.</p></div>
         {!session && <Link href="/auth/login?callbackUrl=/activity" className="mt-4 block rounded-2xl bg-slate-900 px-5 py-4 text-center text-sm font-bold text-white">Sign in to join the conversation</Link>}
       </div>
     </main>
