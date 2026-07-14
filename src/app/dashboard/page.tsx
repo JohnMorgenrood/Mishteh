@@ -199,6 +199,39 @@ async function getRecommendedFeed(userId: string) {
   ].sort((a, b) => b.rank - a.rank).slice(0, 12);
 }
 
+async function getCommunityOverview(userId: string) {
+  const [sent, received, ownRequests, sentSummary, receivedSummary] = await Promise.all([
+    prisma.donation.findMany({
+      where: { donorId: userId },
+      include: { request: { select: { id: true, title: true, userId: true } } },
+      orderBy: { createdAt: 'desc' }, take: 5,
+    }),
+    prisma.donation.findMany({
+      where: { request: { userId }, status: 'COMPLETED' },
+      include: { request: { select: { id: true, title: true } }, donor: { select: { fullName: true } } },
+      orderBy: { createdAt: 'desc' }, take: 5,
+    }),
+    prisma.request.findMany({
+      where: { userId },
+      select: { id: true, title: true, status: true, currentAmount: true, targetAmount: true, createdAt: true },
+      orderBy: { createdAt: 'desc' }, take: 6,
+    }),
+    prisma.donation.aggregate({ where: { donorId: userId, status: 'COMPLETED' }, _sum: { amount: true }, _count: true }),
+    prisma.donation.aggregate({ where: { request: { userId }, status: 'COMPLETED' }, _sum: { amount: true }, _count: true }),
+  ]);
+  return {
+    sent,
+    received,
+    ownRequests,
+    totalSent: sentSummary._sum.amount || 0,
+    totalReceived: receivedSummary._sum.amount || 0,
+    completedGifts: sentSummary._count,
+    incomingGifts: receivedSummary._count,
+    peopleHelped: new Set(sent.filter((gift) => gift.status === 'COMPLETED').map((gift) => gift.request.userId)).size,
+    activeRequests: ownRequests.filter((item) => ['ACTIVE', 'PARTIALLY_FUNDED', 'PENDING'].includes(item.status)).length,
+  };
+}
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
@@ -206,7 +239,7 @@ export default async function DashboardPage() {
     redirect('/auth/login');
   }
 
-  const [data, recommendedFeed]: [any, any[]] = await Promise.all([getDashboardData(session.user.id, session.user.userType), getRecommendedFeed(session.user.id)]);
+  const [data, recommendedFeed, overview]: [any, any[], any] = await Promise.all([getDashboardData(session.user.id, session.user.userType), getRecommendedFeed(session.user.id), getCommunityOverview(session.user.id)]);
   const isDonor = session.user.userType === 'DONOR';
   const isAdmin = session.user.userType === 'ADMIN';
   return (
@@ -216,17 +249,15 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-300">
-                {isDonor ? 'Donor Dashboard' : isAdmin ? 'Admin Community Dashboard' : 'Requester Dashboard'}
+                {isAdmin ? 'Admin Community Dashboard' : 'Community Dashboard'}
               </p>
               <h1 className="mt-2 text-3xl font-bold md:text-4xl">
                 Welcome back, {session.user.name}
               </h1>
               <p className="mt-3 max-w-2xl text-sm text-gray-200 md:text-base">
-                {isDonor
-                  ? 'Track every gift you have sent, monitor completed support, and see the difference your giving is making.'
-                  : isAdmin
+                {isAdmin
                     ? 'Support community requests or create a reviewed request on behalf of a verified person.'
-                    : 'Monitor money received, track request progress, and stay on top of incoming support from the community.'}
+                    : 'Give support, request help when you need it, and follow every contribution from one place.'}
               </p>
             </div>
 
@@ -322,7 +353,23 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <section className="mb-8">
+          <div className="mb-4"><h2 className="text-xl font-bold text-gray-900">Your Community Overview</h2><p className="text-sm text-gray-500">Giving and receiving belong together. Every account can do both.</p></div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="rounded-xl bg-white p-4 shadow-soft"><div className="flex items-center justify-between text-sm text-gray-500"><span>Total Sent</span><Wallet className="h-5 w-5 text-[#d6652f]" /></div><p className="mt-3 text-2xl font-bold text-gray-900">{formatMoney(overview.totalSent)}</p><p className="mt-1 text-xs text-gray-500">{overview.completedGifts} completed gift{overview.completedGifts === 1 ? '' : 's'}</p></div>
+            <div className="rounded-xl bg-white p-4 shadow-soft"><div className="flex items-center justify-between text-sm text-gray-500"><span>Total Received</span><HandCoins className="h-5 w-5 text-green-600" /></div><p className="mt-3 text-2xl font-bold text-gray-900">{formatMoney(overview.totalReceived)}</p><p className="mt-1 text-xs text-gray-500">{overview.incomingGifts} completed contribution{overview.incomingGifts === 1 ? '' : 's'}</p></div>
+            <div className="rounded-xl bg-white p-4 shadow-soft"><div className="flex items-center justify-between text-sm text-gray-500"><span>People Helped</span><Heart className="h-5 w-5 text-red-500" /></div><p className="mt-3 text-2xl font-bold text-gray-900">{overview.peopleHelped}</p><p className="mt-1 text-xs text-gray-500">Unique recipients supported</p></div>
+            <div className="rounded-xl bg-white p-4 shadow-soft"><div className="flex items-center justify-between text-sm text-gray-500"><span>Your Active Requests</span><FileText className="h-5 w-5 text-gray-800" /></div><p className="mt-3 text-2xl font-bold text-gray-900">{overview.activeRequests}</p><p className="mt-1 text-xs text-gray-500">Open or under review</p></div>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <div className="rounded-2xl bg-white p-5 shadow-soft"><h3 className="font-bold text-gray-900">Recent Giving</h3><div className="mt-4 space-y-3">{overview.sent.length ? overview.sent.map((gift: any) => <Link key={gift.id} href={`/requests/${gift.request.id}`} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 px-3 py-3 text-sm"><span className="line-clamp-1 font-medium text-gray-800">{gift.request.title}</span><span className="shrink-0 font-bold text-[#d6652f]">{formatMoney(gift.amount)}</span></Link>) : <p className="text-sm text-gray-500">No donations made yet.</p>}</div></div>
+            <div className="rounded-2xl bg-white p-5 shadow-soft"><h3 className="font-bold text-gray-900">Recent Support Received</h3><div className="mt-4 space-y-3">{overview.received.length ? overview.received.map((gift: any) => <Link key={gift.id} href={`/requests/${gift.request.id}`} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 px-3 py-3 text-sm"><span className="line-clamp-1 font-medium text-gray-800">{gift.request.title}</span><span className="shrink-0 font-bold text-green-600">{formatMoney(gift.amount)}</span></Link>) : <p className="text-sm text-gray-500">No support received yet.</p>}</div></div>
+            <div className="rounded-2xl bg-white p-5 shadow-soft"><div className="flex items-center justify-between"><h3 className="font-bold text-gray-900">Your Requests</h3><Link href="/dashboard/requests/new" className="text-xs font-bold text-[#d6652f]">New request</Link></div><div className="mt-4 space-y-3">{overview.ownRequests.length ? overview.ownRequests.map((item: any) => <Link key={item.id} href={`/requests/${item.id}`} className="block rounded-xl bg-gray-50 px-3 py-3"><p className="line-clamp-1 text-sm font-medium text-gray-800">{item.title}</p><p className="mt-1 text-[11px] font-semibold uppercase text-gray-500">{formatLabel(item.status)}</p></Link>) : <p className="text-sm text-gray-500">You have not requested help yet.</p>}</div></div>
+          </div>
+        </section>
+
+        <div className="hidden grid-cols-2 gap-3 lg:grid-cols-4">
           {isDonor ? (
             <>
               <div className="rounded-xl bg-white p-4 shadow-soft">
@@ -396,7 +443,7 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-3">
+        <div className="hidden mt-8 grid-cols-1 gap-8 xl:grid-cols-3">
           <div className="space-y-8 xl:col-span-2">
             <div className="rounded-2xl bg-white shadow-soft">
               <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
