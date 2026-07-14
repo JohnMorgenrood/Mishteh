@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
 import { getClientIP, getGeoLocation, logSecurityEvent, checkSuspiciousActivity, getUserAgent, updateUserSecurityInfo } from '@/lib/security';
 import { validateEmail } from '@/lib/email-validation';
 
@@ -20,7 +17,9 @@ export async function POST(request: NextRequest) {
     const fullName = formData.get('fullName') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const userType = formData.get('userType') as string;
+    // Public registration always creates a standard community account.
+    // Never trust a client-supplied role (it could be changed to ADMIN).
+    const userType = 'DONOR';
     const phone = formData.get('phone') as string | null;
     const location = formData.get('location') as string | null;
     
@@ -38,14 +37,6 @@ export async function POST(request: NextRequest) {
     if (!fullName || !email || !password || !userType) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    // Validate location is required
-    if (!location || location.trim() === '') {
-      return NextResponse.json(
-        { error: 'Location is required' },
         { status: 400 }
       );
     }
