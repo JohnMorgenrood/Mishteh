@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
-async function getRequest(id: string) {
+async function getRequest(id: string, viewerId?: string) {
   try {
     const request = await prisma.request.findUnique({
       where: { id },
@@ -112,9 +112,7 @@ async function getRequest(id: string) {
           },
         },
         likes: {
-          select: {
-            userId: true,
-          },
+          select: { userId: true, createdAt: true, user: { select: { fullName: true, image: true } } },
         },
         comments: {
           include: {
@@ -140,6 +138,13 @@ async function getRequest(id: string) {
         where: { id },
         data: { views: { increment: 1 } },
       });
+      if (viewerId && viewerId !== request.user.id) {
+        await prisma.requestView.upsert({
+          where: { requestId_userId: { requestId: id, userId: viewerId } },
+          update: { lastViewedAt: new Date(), viewCount: { increment: 1 } },
+          create: { requestId: id, userId: viewerId },
+        });
+      }
     }
 
     return request;
@@ -151,8 +156,8 @@ async function getRequest(id: string) {
 
 export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const request: any = await getRequest(id);
   const session = await getServerSession(authOptions);
+  const request: any = await getRequest(id, session?.user?.id);
 
   if (!request) {
     return (
@@ -200,6 +205,13 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
       donorImage: donorIsPublic ? donation.donor.image : null,
     };
   });
+  const canSeeEngagement = session?.user?.userType === 'ADMIN' || session?.user?.id === request.user.id;
+  const identifiedViewers = canSeeEngagement ? await prisma.requestView.findMany({
+    where: { requestId: id },
+    include: { user: { select: { id: true, fullName: true, image: true } } },
+    orderBy: { lastViewedAt: 'desc' },
+    take: 50,
+  }) : [];
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 md:py-12">
@@ -506,6 +518,16 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
         </div>
+        {canSeeEngagement && (
+          <section className="mt-8 rounded-2xl border border-primary-100 bg-white p-6 shadow-soft">
+            <div className="mb-5"><p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-600">Private post insights</p><h2 className="mt-1 text-xl font-bold text-gray-900">Who engaged with this post</h2><p className="mt-1 text-sm text-gray-500">Only the post owner and administrators can see these names. Anonymous visitors remain anonymous.</p></div>
+            <div className="grid gap-6 md:grid-cols-3">
+              <div><h3 className="font-semibold text-gray-900">Signed-in viewers ({identifiedViewers.length})</h3><div className="mt-3 space-y-2">{identifiedViewers.length ? identifiedViewers.map((view) => <div key={view.id} className="rounded-lg bg-gray-50 px-3 py-2 text-sm"><p className="font-medium">{view.user.fullName}</p><p className="text-xs text-gray-500">Last viewed {view.lastViewedAt.toLocaleDateString()} · {view.viewCount} visit{view.viewCount === 1 ? '' : 's'}</p></div>) : <p className="text-sm text-gray-500">No identified viewers yet.</p>}</div></div>
+              <div><h3 className="font-semibold text-gray-900">Reactions ({request.likes.length})</h3><div className="mt-3 space-y-2">{request.likes.length ? request.likes.map((like: any) => <div key={like.userId} className="rounded-lg bg-red-50 px-3 py-2 text-sm"><p className="font-medium text-gray-900">{like.user.fullName}</p><p className="text-xs text-gray-500">Liked {new Date(like.createdAt).toLocaleDateString()}</p></div>) : <p className="text-sm text-gray-500">No reactions yet.</p>}</div></div>
+              <div><h3 className="font-semibold text-gray-900">Comments ({request.comments.length})</h3><div className="mt-3 space-y-2">{request.comments.length ? request.comments.map((comment: any) => <div key={comment.id} className="rounded-lg bg-blue-50 px-3 py-2 text-sm"><p className="font-medium text-gray-900">{comment.user.fullName}</p><p className="line-clamp-2 text-xs text-gray-600">{comment.content}</p></div>) : <p className="text-sm text-gray-500">No comments yet.</p>}</div></div>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

@@ -63,6 +63,7 @@ model User {
   videoReactions   VideoReaction[]
   videoComments    VideoComment[]
   videoSuggestions VideoSuggestion[]
+  requestViews     RequestView[]
 
   @@index([email])
   @@index([userType])
@@ -131,6 +132,7 @@ model Request {
   user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   likes             Like[]
   comments          Comment[]
+  viewHistory       RequestView[]
 
   @@index([userId])
   @@index([category])
@@ -144,6 +146,21 @@ model Request {
   @@index([status, createdAt]) // Recent active requests
   @@index([status, category]) // Filtered requests by category
   @@index([status, urgency]) // Filtered requests by urgency
+}
+
+model RequestView {
+  id            String   @id @default(cuid())
+  requestId     String
+  userId        String
+  firstViewedAt DateTime @default(now())
+  lastViewedAt  DateTime @default(now())
+  viewCount     Int      @default(1)
+  request       Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, userId])
+  @@index([requestId, lastViewedAt(sort: Desc)])
+  @@index([userId])
 }
 
 // Social Features - Likes
