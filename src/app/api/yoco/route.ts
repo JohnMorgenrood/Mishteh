@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!['ACTIVE', 'PARTIALLY_FUNDED'].includes(helpRequest.status) || !helpRequest.verified || !helpRequest.user.ficaVerified || helpRequest.user.isSuspicious) {
+    if (!['ACTIVE', 'PARTIALLY_FUNDED'].includes(helpRequest.status) || !helpRequest.donationsEnabled || helpRequest.user.isSuspicious) {
       return NextResponse.json(
         { error: 'This request is not currently approved to receive donations.' },
         { status: 409 }
@@ -157,7 +157,7 @@ export async function GET(request: Request) {
       );
     }
 
-    if (!donation.request || !['ACTIVE', 'PARTIALLY_FUNDED'].includes(donation.request.status) || !donation.request.verified || !donation.request.user.ficaVerified || donation.request.user.isSuspicious) {
+    if (!donation.request || !['ACTIVE', 'PARTIALLY_FUNDED'].includes(donation.request.status) || !donation.request.donationsEnabled || donation.request.user.isSuspicious) {
       return NextResponse.json(
         { error: 'This request is not currently approved to receive donations.' },
         { status: 409 }

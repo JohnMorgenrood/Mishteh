@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
       where: {
         id: requestId,
         status: { in: ['ACTIVE', 'PARTIALLY_FUNDED'] },
-        verified: true,
-        user: { ficaVerified: true, isSuspicious: false },
+        donationsEnabled: true,
+        user: { isSuspicious: false },
       },
       select: { id: true },
     });

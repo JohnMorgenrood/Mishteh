@@ -179,6 +179,7 @@ export async function PATCH(
         contentApproved: isAdmin ? existingRequest.contentApproved : false,
         contentApprovedAt: isAdmin ? existingRequest.contentApprovedAt : null,
         contentApprovedBy: isAdmin ? existingRequest.contentApprovedBy : null,
+        donationsEnabled: isAdmin ? existingRequest.donationsEnabled : false,
       },
     });
 

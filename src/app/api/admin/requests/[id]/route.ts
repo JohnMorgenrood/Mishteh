@@ -66,6 +66,7 @@ export async function PATCH(
                 idDocumentUrl: true,
                 selfieUrl: true,
                 ficaVerified: true,
+                managedByAdmin: true,
                 isSuspicious: true,
               },
             },
@@ -87,9 +88,13 @@ export async function PATCH(
           );
         }
         updateData.verified = owner.ficaVerified;
+        updateData.donationsEnabled = owner.ficaVerified || owner.managedByAdmin;
       }
       updateData.status = status;
-      if (status === 'REJECTED') updateData.verified = false;
+      if (status === 'REJECTED') {
+        updateData.verified = false;
+        updateData.donationsEnabled = false;
+      }
     }
 
     if (featured !== undefined) {
