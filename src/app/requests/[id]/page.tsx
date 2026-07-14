@@ -12,7 +12,6 @@ import {
   Share2, Facebook, Twitter, Instagram, Globe, ExternalLink,
   TrendingUp, ArrowLeft
 } from 'lucide-react';
-import CommentSection from '@/components/CommentSection';
 import SocialActions from '@/components/SocialActions';
 import TranslateButton from '@/components/TranslateButton';
 import { CountryFlag } from '@/components/CountryBadge';
@@ -280,6 +279,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                   initialLikeCount={request._count.likes}
                   initialCommentCount={request._count.comments}
                   initialLiked={userLiked}
+                  commentsEnabled={false}
                 />
               </div>
 
@@ -342,20 +342,6 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Comments Section */}
-            <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-primary-500" />
-                  Comments ({request._count.comments})
-                </h2>
-              </div>
-              <CommentSection 
-                requestId={request.id}
-                initialComments={request.comments}
-              />
             </div>
 
             {/* Donations List */}
@@ -497,11 +483,6 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                     <Heart className="w-5 h-5 text-red-500 mx-auto mb-1" />
                     <p className="text-lg font-bold text-gray-900">{request._count.likes}</p>
                     <p className="text-xs text-gray-500">Likes</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-xl">
-                    <MessageCircle className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-gray-900">{request._count.comments}</p>
-                    <p className="text-xs text-gray-500">Comments</p>
                   </div>
                   <div className="text-center p-3 bg-gray-50 rounded-xl">
                     <User className="w-5 h-5 text-green-500 mx-auto mb-1" />

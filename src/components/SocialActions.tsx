@@ -14,6 +14,7 @@ interface SocialActionsProps {
   initialLiked: boolean;
   onToggleComments?: () => void;
   showComments?: boolean;
+  commentsEnabled?: boolean;
 }
 
 export default function SocialActions({ 
@@ -22,7 +23,8 @@ export default function SocialActions({
   initialCommentCount,
   initialLiked,
   onToggleComments,
-  showComments = false
+  showComments = false,
+  commentsEnabled = true
 }: SocialActionsProps) {
   const { data: session } = useSession();
   const [isLiked, setIsLiked] = useState(initialLiked);
@@ -124,7 +126,7 @@ export default function SocialActions({
       </button>
 
       {/* Comment Button */}
-      <button
+      {commentsEnabled && <button
         onClick={onToggleComments}
         className={`flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-200 font-medium border
           ${showComments 
@@ -136,7 +138,7 @@ export default function SocialActions({
         <MessageCircle className="w-5 h-5" />
         <span>{initialCommentCount}</span>
         <span className="hidden sm:inline">Comments</span>
-      </button>
+      </button>}
 
       {/* Share Button */}
       <div className="relative" ref={shareMenuRef}>
