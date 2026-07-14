@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MobileNav from '@/components/MobileNav';
+import QuickDonateWidget from '@/components/QuickDonateWidget';
 import { AuthProvider } from '@/components/AuthProvider';
 import LoadingScreen from '@/components/LoadingScreen';
 import { ToastProvider } from '@/components/Toast';
@@ -48,6 +49,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <QuickDonateWidget />
             <MobileNav />
           </ToastProvider>
         </AuthProvider>
