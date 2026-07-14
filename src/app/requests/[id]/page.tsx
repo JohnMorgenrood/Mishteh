@@ -405,7 +405,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1">
+          <div id="support-this-request" className="scroll-mt-24 lg:col-span-1">
             <div className="sticky top-24 space-y-6">
               {!request.donationsEnabled ? (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-soft">
