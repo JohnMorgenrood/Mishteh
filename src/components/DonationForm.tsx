@@ -13,6 +13,7 @@ import {
 } from '@/lib/currency';
 import { calculatePayPalBreakdown, calculateYocoBreakdown } from '@/lib/payment-fees';
 import { useToast } from '@/components/Toast';
+import { ShieldCheck } from 'lucide-react';
 
 interface DonationFormProps {
   requestId: string;
@@ -433,19 +434,35 @@ export default function DonationForm({
             <button
               type="submit"
               disabled={isSubmitting || !amount || parseFloat(amount) <= 0}
-              className="w-full rounded-md bg-primary-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+              className="w-full rounded-xl bg-[#d6652f] px-6 py-3.5 font-bold text-white shadow-md transition-all hover:bg-[#b34e27] hover:shadow-lg disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none"
             >
               {isSubmitting
                 ? 'Processing...'
                 : paymentMethod === 'yoco'
-                  ? `Pay with Yoco - ${formatCurrency(totalAmount, userCurrency)}`
+                  ? `Continue with Yoco - ${formatCurrency(totalAmount, userCurrency)}`
                   : `Continue to PayPal - ${formatCurrency(totalAmount, userCurrency)}`}
             </button>
+          )}
+          {paymentMethod === 'yoco' && (
+            <div className="mt-4 rounded-xl border border-orange-100 bg-orange-50/60 p-3.5">
+              <div className="flex items-center justify-center gap-2 text-xs font-semibold text-gray-700">
+                <ShieldCheck className="h-4 w-4 text-[#d6652f]" />
+                Secure checkout powered by Yoco
+              </div>
+              <div className="mt-3 flex flex-wrap justify-center gap-2" aria-label="Payment methods available through Yoco checkout">
+                {['VISA', 'Mastercard', 'AMEX', 'Instant EFT', 'Apple Pay', 'Google Pay'].map((method) => (
+                  <span key={method} className="rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-extrabold tracking-tight text-gray-700 shadow-sm">
+                    {method}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-2.5 text-center text-[10px] leading-4 text-gray-500">Available options are confirmed on the secure Yoco checkout screen.</p>
+            </div>
           )}
         </form>
 
         <p className="mt-4 text-center text-xs text-gray-500">
-          Your donation helps those in need. Secure payment powered by {paymentMethod === 'yoco' ? 'Yoco (with Apple Pay support)' : 'PayPal'}.
+          Your donation helps those in need. Secure payment powered by {paymentMethod === 'yoco' ? 'Yoco' : 'PayPal'}.
         </p>
       </div>
     </PayPalScriptProvider>
