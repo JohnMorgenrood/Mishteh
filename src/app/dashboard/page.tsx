@@ -285,7 +285,7 @@ export default async function DashboardPage() {
 
         <section className="mb-6 rounded-2xl bg-white p-5 shadow-soft">
           <div className="mb-4 flex items-center justify-between">
-            <div><h2 className="text-xl font-bold text-gray-900">For You Today</h2><p className="text-sm text-gray-500">Up to 12 approved stories, videos, and conversations based on what you follow and support.</p></div>
+            <div><h2 className="text-xl font-bold text-gray-900">For You Today</h2><p className="text-sm text-gray-500">A fresh mix of community stories, inspiring videos, and conversations selected for you.</p></div>
             <Link href="/activity" className="text-sm font-semibold text-primary-600">See all</Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
