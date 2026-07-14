@@ -49,27 +49,72 @@ model User {
   websiteUrl       String?
 
   // Security tracking fields
-  signupIp         String?
-  signupCountry    String?
-  signupCity       String?
-  lastLoginIp      String?
-  lastLoginAt      DateTime?
-  securityQuestion String?
-  securityAnswer   String?
-  isSuspicious     Boolean           @default(false)
-  managedByAdmin   Boolean           @default(false)
-  suspiciousReason String?
-  securityLogs     SecurityLog[]
-  videoReactions   VideoReaction[]
-  videoComments    VideoComment[]
-  videoSuggestions VideoSuggestion[]
-  requestViews     RequestView[]
+  signupIp               String?
+  signupCountry          String?
+  signupCity             String?
+  lastLoginIp            String?
+  lastLoginAt            DateTime?
+  securityQuestion       String?
+  securityAnswer         String?
+  isSuspicious           Boolean                 @default(false)
+  managedByAdmin         Boolean                 @default(false)
+  suspiciousReason       String?
+  securityLogs           SecurityLog[]
+  videoReactions         VideoReaction[]
+  videoComments          VideoComment[]
+  videoSuggestions       VideoSuggestion[]
+  requestViews           RequestView[]
+  communityPostComments  CommunityPostComment[]
+  communityPostReactions CommunityPostReaction[]
 
   @@index([email])
   @@index([userType])
   @@index([ficaVerified])
   @@index([signupCountry])
   @@index([isSuspicious])
+}
+
+model CommunityPost {
+  id        String                  @id @default(cuid())
+  slug      String                  @unique
+  title     String
+  body      String
+  question  String
+  category  String
+  published Boolean                 @default(true)
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+  comments  CommunityPostComment[]
+  reactions CommunityPostReaction[]
+
+  @@index([published, createdAt(sort: Desc)])
+}
+
+model CommunityPostComment {
+  id        String        @id @default(cuid())
+  content   String
+  postId    String
+  userId    String
+  createdAt DateTime      @default(now())
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([userId])
+}
+
+model CommunityPostReaction {
+  id        String        @id @default(cuid())
+  kind      String
+  postId    String
+  userId    String
+  createdAt DateTime      @default(now())
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
 }
 
 // Security Log - tracks all security events
