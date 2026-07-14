@@ -12,6 +12,9 @@ export async function middleware(request: NextRequest) {
   });
 
   const pathname = request.nextUrl.pathname;
+  if (pathname === '/' && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard');
   const isAdmin = request.nextUrl.pathname.startsWith('/admin');
@@ -49,5 +52,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/auth/:path*', '/dashboard/:path*', '/admin/:path*', '/activity/:path*', '/requests/:path*', '/profile/:path*'],
+  matcher: ['/', '/auth/:path*', '/dashboard/:path*', '/admin/:path*', '/activity/:path*', '/requests/:path*', '/profile/:path*'],
 };

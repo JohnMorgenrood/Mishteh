@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, LogOut, LogIn, UserPlus, Home, HeartHandshake, PlaySquare, Bell, LayoutDashboard, UserCircle } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut, LogIn, UserPlus, Home, HeartHandshake, PlaySquare, Bell, UserCircle } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import LanguageSelector from './LanguageSelector';
@@ -17,6 +17,7 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => pathname === path;
+  const homeHref = status === 'authenticated' ? '/dashboard' : '/';
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' });
@@ -44,7 +45,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href={homeHref} className="flex items-center gap-2 group">
             <Image 
               src="/assets/logo.png" 
               alt="Mishteh Logo" 
@@ -58,11 +59,11 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-2">
             <Link
-              href="/"
-              title="Home"
-              aria-label="Home"
+              href={homeHref}
+              title={status === 'authenticated' ? 'My dashboard' : 'Home'}
+              aria-label={status === 'authenticated' ? 'My dashboard' : 'Home'}
               className={`flex h-12 w-16 items-center justify-center rounded-xl transition-all ${
-                isActive('/') 
+                (status === 'authenticated' ? pathname?.startsWith('/dashboard') : isActive('/'))
                   ? 'bg-primary-50 text-primary-600' 
                   : 'text-gray-500 hover:bg-gray-100 hover:text-primary-600'
               }`}
@@ -88,19 +89,6 @@ export default function Navbar() {
 
             {status === 'authenticated' ? (
               <>
-                <Link
-                  href="/dashboard"
-                  title="Dashboard"
-                  aria-label="Dashboard"
-                  className={`flex h-12 w-16 items-center justify-center rounded-xl transition-all ${
-                    isActive('/dashboard') 
-                      ? 'bg-primary-50 text-primary-600' 
-                      : 'text-gray-500 hover:bg-gray-100 hover:text-primary-600'
-                  }`}
-                >
-                  <LayoutDashboard className="h-6 w-6" /><span className="sr-only">Dashboard</span>
-                </Link>
-                
                 <Link
                   href="/dashboard/profile"
                   title="Profile and settings"
