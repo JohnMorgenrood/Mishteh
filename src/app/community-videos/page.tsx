@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Heart, MessageCircle, Send, Youtube } from 'lucide-react';
+import { Heart, MessageCircle, Send, Youtube, ThumbsUp, PartyPopper, Loader2 } from 'lucide-react';
 
 export default function CommunityVideosPage() {
   const [videos, setVideos] = useState<any[]>([]);
@@ -10,6 +10,8 @@ export default function CommunityVideosPage() {
   const [comments, setComments] = useState<Record<string, string>>({});
   const [suggestion, setSuggestion] = useState({ youtubeUrl: '', message: '' });
   const [notice, setNotice] = useState('');
+  const [commentNotices, setCommentNotices] = useState<Record<string, { type: 'success' | 'error'; text: string }>>({});
+  const [submittingComment, setSubmittingComment] = useState<string | null>(null);
 
   const load = async () => {
     const response = await fetch('/api/community-videos');
@@ -18,18 +20,28 @@ export default function CommunityVideosPage() {
   };
   useEffect(() => { load(); }, []);
 
-  const react = async (id: string) => {
-    const response = await fetch(`/api/community-videos/${id}/reaction`, { method: 'POST' });
+  const react = async (id: string, type: 'LIKE' | 'LOVE' | 'CELEBRATE') => {
+    const response = await fetch(`/api/community-videos/${id}/reaction`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type }),
+    });
     if (response.ok) load(); else setNotice((await response.json()).error || 'Unable to react.');
   };
   const comment = async (event: FormEvent, id: string) => {
     event.preventDefault();
-    const response = await fetch(`/api/community-videos/${id}/comments`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: comments[id] }),
-    });
-    const data = await response.json();
-    setNotice(data.message || data.error);
-    if (response.ok) { setComments((value) => ({ ...value, [id]: '' })); load(); }
+    setSubmittingComment(id);
+    setCommentNotices((value) => { const next = { ...value }; delete next[id]; return next; });
+    try {
+      const response = await fetch(`/api/community-videos/${id}/comments`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: comments[id] }),
+      });
+      const data = await response.json();
+      setCommentNotices((value) => ({ ...value, [id]: { type: response.ok ? 'success' : 'error', text: data.message || data.error || 'Unable to post comment.' } }));
+      if (response.ok) setComments((value) => ({ ...value, [id]: '' }));
+    } catch {
+      setCommentNotices((value) => ({ ...value, [id]: { type: 'error', text: 'Unable to post your comment. Please check your connection and try again.' } }));
+    } finally {
+      setSubmittingComment(null);
+    }
   };
   const suggest = async (event: FormEvent) => {
     event.preventDefault();
@@ -62,17 +74,20 @@ export default function CommunityVideosPage() {
                   <p className="text-xs font-semibold uppercase tracking-widest text-red-600">{video.channelName}</p>
                   <h2 className="mt-2 text-2xl font-bold text-gray-900">{video.title}</h2>
                   <p className="mt-3 text-gray-600">{video.description}</p>
-                  <div className="mt-5 flex items-center gap-5 border-y py-3 text-sm text-gray-600">
-                    <button onClick={() => react(video.id)} className={`flex items-center gap-2 ${video.reactions?.length ? 'text-red-600' : ''}`}><Heart className="h-5 w-5" fill={video.reactions?.length ? 'currentColor' : 'none'} /> {video._count.reactions}</button>
+                  <div className="mt-5 flex flex-wrap items-center gap-2 border-y py-3 text-sm text-gray-600">
+                    <button onClick={() => react(video.id, 'LIKE')} className={`flex items-center gap-1.5 rounded-full px-3 py-2 transition hover:bg-blue-50 hover:text-blue-600 ${video.reactions?.[0]?.type === 'LIKE' ? 'bg-blue-50 text-blue-600' : ''}`}><ThumbsUp className="h-4 w-4" fill={video.reactions?.[0]?.type === 'LIKE' ? 'currentColor' : 'none'} /> Like <span className="text-xs">{video.reactionCounts?.LIKE || 0}</span></button>
+                    <button onClick={() => react(video.id, 'LOVE')} className={`flex items-center gap-1.5 rounded-full px-3 py-2 transition hover:bg-red-50 hover:text-red-600 ${video.reactions?.[0]?.type === 'LOVE' ? 'bg-red-50 text-red-600' : ''}`}><Heart className="h-4 w-4" fill={video.reactions?.[0]?.type === 'LOVE' ? 'currentColor' : 'none'} /> Love <span className="text-xs">{video.reactionCounts?.LOVE || 0}</span></button>
+                    <button onClick={() => react(video.id, 'CELEBRATE')} className={`flex items-center gap-1.5 rounded-full px-3 py-2 transition hover:bg-amber-50 hover:text-amber-600 ${video.reactions?.[0]?.type === 'CELEBRATE' ? 'bg-amber-50 text-amber-600' : ''}`}><PartyPopper className="h-4 w-4" /> Celebrate <span className="text-xs">{video.reactionCounts?.CELEBRATE || 0}</span></button>
                     <span className="flex items-center gap-2"><MessageCircle className="h-5 w-5" /> {video._count.comments}</span>
                     <Link href="/requests" className="ml-auto font-semibold text-primary-600">Support a request</Link>
                   </div>
                   <form onSubmit={(event) => comment(event, video.id)} className="mt-4 flex gap-2">
                     <input value={comments[video.id] || ''} onChange={(event) => setComments((value) => ({ ...value, [video.id]: event.target.value }))} placeholder="Write a respectful comment…" className="flex-1 rounded-xl border px-4 py-2" required />
-                    <button className="rounded-xl bg-primary-600 px-4 text-white"><Send className="h-4 w-4" /></button>
+                    <button disabled={submittingComment === video.id} aria-label="Post comment" className="rounded-xl bg-primary-600 px-4 text-white transition hover:bg-primary-700 disabled:cursor-wait disabled:opacity-60">{submittingComment === video.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</button>
                   </form>
+                  {commentNotices[video.id] && <p role="status" className={`mt-2 rounded-xl px-3 py-2 text-sm ${commentNotices[video.id].type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{commentNotices[video.id].text}</p>}
                   <div className="mt-4 space-y-3">
-                    {video.comments.map((item: any) => <div key={item.id} className="rounded-xl bg-gray-50 p-3"><p className="text-sm font-semibold">{item.user.fullName}</p><p className="mt-1 text-sm text-gray-600">{item.content}</p></div>)}
+                    {video.comments.map((item: any) => <div key={item.id} className={`rounded-xl p-3 ${item.approved ? 'bg-gray-50' : 'border border-amber-200 bg-amber-50'}`}><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold">{item.user.fullName}</p>{!item.approved && <span className="text-xs font-semibold text-amber-700">Awaiting approval</span>}</div><p className="mt-1 text-sm text-gray-600">{item.content}</p></div>)}
                   </div>
                 </div>
               </article>

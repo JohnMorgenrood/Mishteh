@@ -8,21 +8,28 @@ import { extractYouTubeId } from '@/lib/youtube';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const videos = await prisma.communityVideo.findMany({
+  const [videos, reactionGroups] = await Promise.all([prisma.communityVideo.findMany({
     where: { published: true },
     include: {
       _count: { select: { reactions: true, comments: { where: { approved: true } } } },
       reactions: session?.user?.id ? { where: { userId: session.user.id }, select: { type: true } } : false,
       comments: {
-        where: { approved: true },
+        where: session?.user?.id
+          ? { OR: [{ approved: true }, { userId: session.user.id }] }
+          : { approved: true },
         orderBy: { createdAt: 'desc' },
         take: 20,
-        select: { id: true, content: true, createdAt: true, user: { select: { fullName: true, image: true } } },
+        select: { id: true, content: true, approved: true, createdAt: true, user: { select: { fullName: true, image: true } } },
       },
     },
     orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
-  });
-  return NextResponse.json({ videos });
+  }), prisma.videoReaction.groupBy({ by: ['videoId', 'type'], _count: { _all: true } })]);
+  const reactionCounts = reactionGroups.reduce<Record<string, Record<string, number>>>((counts, group) => {
+    counts[group.videoId] ||= {};
+    counts[group.videoId][group.type] = group._count._all;
+    return counts;
+  }, {});
+  return NextResponse.json({ videos: videos.map((video) => ({ ...video, reactionCounts: reactionCounts[video.id] || {} })) });
 }
 
 export async function POST(request: NextRequest) {
