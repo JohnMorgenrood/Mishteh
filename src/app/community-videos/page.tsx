@@ -55,21 +55,21 @@ export default function CommunityVideosPage() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gray-100 py-5 sm:py-8">
-      <div className="mx-auto w-full max-w-6xl px-3 sm:px-4">
-        <section className="rounded-2xl bg-gray-900 p-5 text-white sm:rounded-3xl sm:p-8">
+    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-gray-100 py-5 sm:py-8">
+      <div className="mx-auto box-border w-full max-w-6xl px-4">
+        <section className="mx-auto box-border w-full max-w-full rounded-2xl bg-gray-900 p-5 text-white sm:rounded-3xl sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-red-400">Curated by MISHTEH</p>
           <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Community Videos</h1>
           <p className="mt-3 max-w-2xl text-gray-300">Watch trusted creators helping people. MISHTEH reviews every video before it appears here.</p>
         </section>
         {notice && <div className="my-5 rounded-xl border border-primary-200 bg-primary-50 p-4 text-sm text-primary-800">{notice}</div>}
 
-        <div className="mt-6 grid min-w-0 gap-6 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
-          <main className="min-w-0 space-y-6 sm:space-y-8">
+        <div className="mt-6 flex w-full min-w-0 max-w-full flex-col items-center gap-6 lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8">
+          <main className="w-full min-w-0 max-w-full space-y-6 sm:space-y-8">
             {loading ? <p>Loading videos…</p> : videos.length === 0 ? (
               <div className="rounded-2xl bg-white p-10 text-center shadow-soft"><Youtube className="mx-auto h-12 w-12 text-red-500" /><p className="mt-4 text-gray-600">No videos have been published yet.</p></div>
             ) : videos.map((video) => (
-              <article key={video.id} className="w-full min-w-0 overflow-hidden rounded-2xl bg-white shadow-soft">
+              <article key={video.id} className="mx-auto box-border w-full min-w-0 max-w-full overflow-hidden rounded-2xl bg-white shadow-soft">
                 <div className="aspect-video w-full overflow-hidden bg-black">
                   <iframe className="block h-full w-full border-0" src={`https://www.youtube-nocookie.com/embed/${video.youtubeId}`} title={video.title} allowFullScreen />
                 </div>
@@ -77,7 +77,7 @@ export default function CommunityVideosPage() {
                   <p className="text-xs font-semibold uppercase tracking-widest text-red-600">{video.channelName}</p>
                   <h2 className="mt-2 break-words text-xl font-bold text-gray-900 sm:text-2xl">{video.title}</h2>
                   <p className="mt-3 break-words text-sm leading-6 text-gray-600 sm:text-base">{video.description}</p>
-                  <div className="mt-5 flex flex-wrap items-center gap-2 border-y py-3 text-sm text-gray-600">
+                  <div className="mt-5 flex w-full max-w-full flex-wrap items-center justify-center gap-2 border-y py-3 text-sm text-gray-600 sm:justify-start">
                     <button onClick={() => react(video.id, 'LIKE')} className={`flex items-center gap-1.5 rounded-full px-3 py-2 transition hover:bg-blue-50 hover:text-blue-600 ${video.reactions?.[0]?.type === 'LIKE' ? 'bg-blue-50 text-blue-600' : ''}`}><ThumbsUp className="h-4 w-4" fill={video.reactions?.[0]?.type === 'LIKE' ? 'currentColor' : 'none'} /> Like <span className="text-xs">{video.reactionCounts?.LIKE || 0}</span></button>
                     <button onClick={() => react(video.id, 'LOVE')} className={`flex items-center gap-1.5 rounded-full px-3 py-2 transition hover:bg-red-50 hover:text-red-600 ${video.reactions?.[0]?.type === 'LOVE' ? 'bg-red-50 text-red-600' : ''}`}><Heart className="h-4 w-4" fill={video.reactions?.[0]?.type === 'LOVE' ? 'currentColor' : 'none'} /> Love <span className="text-xs">{video.reactionCounts?.LOVE || 0}</span></button>
                     <button onClick={() => react(video.id, 'CELEBRATE')} className={`flex items-center gap-1.5 rounded-full px-3 py-2 transition hover:bg-amber-50 hover:text-amber-600 ${video.reactions?.[0]?.type === 'CELEBRATE' ? 'bg-amber-50 text-amber-600' : ''}`}><PartyPopper className="h-4 w-4" /> Celebrate <span className="text-xs">{video.reactionCounts?.CELEBRATE || 0}</span></button>
@@ -114,8 +114,8 @@ export default function CommunityVideosPage() {
             ))}
           </main>
 
-          <aside className="min-w-0">
-            <form onSubmit={suggest} className="rounded-2xl bg-white p-5 shadow-soft lg:sticky lg:top-24 lg:p-6">
+          <aside className="mx-auto w-full min-w-0 max-w-full lg:mx-0">
+            <form onSubmit={suggest} className="mx-auto box-border w-full max-w-full rounded-2xl bg-white p-5 shadow-soft lg:sticky lg:top-24 lg:p-6">
               <h2 className="text-xl font-bold">Suggest a Video</h2>
               <p className="mt-2 text-sm text-gray-600">Send a YouTube link privately. Only admins can publish it.</p>
               <input type="url" value={suggestion.youtubeUrl} onChange={(e) => setSuggestion({ ...suggestion, youtubeUrl: e.target.value })} placeholder="YouTube link" className="mt-5 w-full rounded-xl border px-4 py-3" required />
