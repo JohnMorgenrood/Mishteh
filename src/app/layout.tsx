@@ -45,7 +45,7 @@ export default function RootLayout({
           <ToastProvider>
             <LoadingScreen />
             <Navbar />
-            <main className="flex-grow pb-20 md:pb-0">
+            <main className="w-full min-w-0 flex-grow pb-20 md:pb-0">
               {children}
             </main>
             <Footer />
