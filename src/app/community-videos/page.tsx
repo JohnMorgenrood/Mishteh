@@ -56,7 +56,7 @@ export default function CommunityVideosPage() {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-clip bg-gray-100 py-5 sm:py-8">
-      <div className="mx-auto box-border w-[calc(100vw-2rem)] max-w-6xl sm:w-full sm:px-4">
+      <div className="mx-auto box-border w-full max-w-6xl px-4">
         <section className="mx-auto box-border w-full max-w-full rounded-2xl bg-gray-900 p-5 text-white sm:rounded-3xl sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-red-400">Curated by MISHTEH</p>
           <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Community Videos</h1>
@@ -65,11 +65,11 @@ export default function CommunityVideosPage() {
         {notice && <div className="my-5 rounded-xl border border-primary-200 bg-primary-50 p-4 text-sm text-primary-800">{notice}</div>}
 
         <div className="mx-auto mt-6 flex w-full min-w-0 max-w-full flex-col items-center gap-6 lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8">
-          <main className="mx-auto w-full min-w-0 max-w-[calc(100vw-2rem)] space-y-6 sm:max-w-full sm:space-y-8">
+          <main className="mx-auto w-full min-w-0 max-w-full space-y-6 sm:space-y-8">
             {loading ? <p>Loading videos…</p> : videos.length === 0 ? (
               <div className="rounded-2xl bg-white p-10 text-center shadow-soft"><Youtube className="mx-auto h-12 w-12 text-red-500" /><p className="mt-4 text-gray-600">No videos have been published yet.</p></div>
             ) : videos.map((video) => (
-              <article key={video.id} className="mx-auto box-border w-full min-w-0 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white shadow-soft sm:max-w-full">
+              <article key={video.id} className="mx-auto box-border w-full min-w-0 max-w-full overflow-hidden rounded-2xl bg-white shadow-soft">
                 <div className="aspect-video w-full overflow-hidden bg-black">
                   <iframe className="block h-full w-full border-0" src={`https://www.youtube-nocookie.com/embed/${video.youtubeId}`} title={video.title} allowFullScreen />
                 </div>
@@ -114,7 +114,7 @@ export default function CommunityVideosPage() {
             ))}
           </main>
 
-          <aside className="mx-auto w-full min-w-0 max-w-[calc(100vw-2rem)] sm:max-w-full lg:mx-0">
+          <aside className="mx-auto w-full min-w-0 max-w-full lg:mx-0">
             <form onSubmit={suggest} className="mx-auto box-border w-full max-w-full rounded-2xl bg-white p-5 shadow-soft lg:sticky lg:top-24 lg:p-6">
               <h2 className="text-xl font-bold">Suggest a Video</h2>
               <p className="mt-2 text-sm text-gray-600">Send a YouTube link privately. Only admins can publish it.</p>
