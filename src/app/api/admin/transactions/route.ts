@@ -257,7 +257,19 @@ export async function GET(request: Request) {
       take: 100,
     });
 
-    return NextResponse.json(transactions);
+    // Prefer the current request title over the title captured when the
+    // transaction was created. This also repairs the display for older edits.
+    const requestIds = Array.from(new Set(transactions.map((item) => item.requestId).filter((id): id is string => Boolean(id))));
+    const currentRequests = requestIds.length
+      ? await prisma.request.findMany({ where: { id: { in: requestIds } }, select: { id: true, title: true } })
+      : [];
+    const currentTitles = new Map(currentRequests.map((item) => [item.id, item.title]));
+    const hydratedTransactions = transactions.map((item) => ({
+      ...item,
+      requestTitle: item.requestId ? currentTitles.get(item.requestId) || item.requestTitle : item.requestTitle,
+    }));
+
+    return NextResponse.json(hydratedTransactions);
   } catch (error: any) {
     console.error('Transaction fetch error:', error);
     return NextResponse.json(

@@ -27,7 +27,14 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(transaction);
+    const currentRequest = transaction.requestId
+      ? await prisma.request.findUnique({ where: { id: transaction.requestId }, select: { title: true } })
+      : null;
+
+    return NextResponse.json({
+      ...transaction,
+      requestTitle: currentRequest?.title || transaction.requestTitle,
+    });
   } catch (error: any) {
     console.error('Transaction fetch error:', error);
     return NextResponse.json(

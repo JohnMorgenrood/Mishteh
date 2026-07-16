@@ -158,6 +158,15 @@ export async function PATCH(
       },
     });
 
+    // Transactions keep a historical title snapshot for reporting. Keep that
+    // snapshot aligned when an administrator corrects the request title.
+    if (title !== undefined) {
+      await prisma.transaction.updateMany({
+        where: { requestId: id },
+        data: { requestTitle: helpRequest.title },
+      });
+    }
+
     const message = status 
       ? `Request ${status.toLowerCase()} successfully`
       : featured !== undefined

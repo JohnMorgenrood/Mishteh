@@ -187,6 +187,13 @@ export async function PATCH(
       },
     });
 
+    if (body.title !== undefined) {
+      await prisma.transaction.updateMany({
+        where: { requestId: id },
+        data: { requestTitle: updatedRequest.title },
+      });
+    }
+
     return NextResponse.json({
       message: 'Request updated successfully',
       request: updatedRequest,
