@@ -100,6 +100,7 @@ export default function DonationForm({
           totalAmount,
           requestId,
           isAnonymous: anonymous,
+          message,
         }),
       });
 

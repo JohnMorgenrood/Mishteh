@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { amount, totalAmount, requestId, isAnonymous } = body;
+    const { amount, totalAmount, requestId, isAnonymous, message } = body;
 
     // Validate input
     if (!amount || amount <= 0) {
@@ -69,6 +69,7 @@ export async function POST(request: Request) {
         paymentMethod: 'YOCO',
         paymentStatus: 'PENDING',
         anonymous: isAnonymous || false,
+        message: typeof message === 'string' && message.trim() ? message.trim() : null,
         donorId: session.user.id,
         requestId: requestId,
       },
