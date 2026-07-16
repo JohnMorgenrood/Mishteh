@@ -9,7 +9,7 @@ import { formatShortDate } from '@/lib/utils';
 import { getAvatarInitial, isUploadedProfileImage } from '@/lib/avatar';
 
 type Comment = { id: string; content: string; createdAt: string; user: { id: string; fullName: string; image?: string | null } };
-type Post = { id: string; title: string; body: string; question: string; category: string; createdAt: string; reactionCount: number; viewerReaction: string | null; comments: Comment[] };
+type Post = { id: string; title: string; body: string; question: string; category: string; createdAt: string; reactionCount: number; commentCount: number; conversationScore: number; viewerReaction: string | null; comments: Comment[] };
 
 const accents = ['from-red-500 to-orange-500', 'from-gray-900 to-red-500', 'from-red-600 to-primary-500', 'from-gray-700 to-gray-900'];
 
@@ -20,12 +20,17 @@ export default function PostsPage() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [weeklyTopic, setWeeklyTopic] = useState('kindness, community, and the ideas that bring us closer');
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
 
   const loadPosts = useCallback(async () => {
     try {
       const response = await fetch('/api/community-posts');
       const data = await response.json();
-      if (response.ok) setPosts(data.posts || []);
+      if (response.ok) {
+        setPosts(data.posts || []);
+        if (data.weeklyTopic) setWeeklyTopic(data.weeklyTopic);
+      }
     } finally { setLoading(false); }
   }, []);
 
@@ -53,7 +58,7 @@ export default function PostsPage() {
     });
     const data = await response.json();
     if (response.ok) {
-      setPosts((current) => current.map((post) => post.id === postId ? { ...post, comments: [data.comment, ...post.comments] } : post));
+      setPosts((current) => current.map((post) => post.id === postId ? { ...post, comments: [data.comment, ...post.comments], commentCount: post.commentCount + 1, conversationScore: post.conversationScore + 3 } : post));
       setDrafts((current) => ({ ...current, [postId]: '' }));
     } else setErrors((current) => ({ ...current, [postId]: data.error || 'Could not post your comment' }));
     setBusy(null);
@@ -69,9 +74,10 @@ export default function PostsPage() {
     <main className="min-h-screen bg-gray-100 py-6 md:py-10">
       <div className="mx-auto max-w-3xl px-3 sm:px-6">
         <header className="mb-6 overflow-hidden rounded-[2rem] bg-gray-900 p-6 text-white shadow-xl md:p-9">
-          <span className="inline-flex items-center gap-2 rounded-full bg-red-500/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-400"><Sparkles className="h-3.5 w-3.5" /> Community conversations</span>
-          <h1 className="mt-4 text-3xl font-extrabold tracking-tight md:text-4xl">Stories and ideas worth sharing</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-300 md:text-base">Join positive conversations, celebrate kindness, and share ideas that can strengthen our community.</p>
+          <span className="inline-flex items-center gap-2 rounded-full bg-red-500/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-400"><Sparkles className="h-3.5 w-3.5" /> Updated every week</span>
+          <p className="mt-5 text-sm font-bold uppercase tracking-[0.18em] text-gray-400">This week’s discussion is about</p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">{weeklyTopic}</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-300 md:text-base">We introduce a fresh topic each week, then move the conversation forward together. The most active discussions are shown first so thoughtful community exchanges are easy to find.</p>
         </header>
 
         {loading ? <div className="py-24 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-red-500" /></div> : (
@@ -82,7 +88,7 @@ export default function PostsPage() {
                 <div className="p-5 md:p-7">
                   <div className="flex items-center justify-between gap-3">
                     <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-600">{post.category}</span>
-                    <time className="text-xs text-slate-400">{formatShortDate(post.createdAt)}</time>
+                    <div className="flex items-center gap-2"><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600">{post.commentCount} replies</span><time className="text-xs text-slate-400">{formatShortDate(post.createdAt)}</time></div>
                   </div>
                   <h2 className="mt-4 text-xl font-extrabold leading-tight text-slate-900 md:text-2xl">{post.title}</h2>
                   <p className="mt-3 text-sm leading-7 text-slate-600 md:text-base">{post.body}</p>
@@ -92,7 +98,7 @@ export default function PostsPage() {
                     <button onClick={() => react(post.id)} disabled={busy === `reaction-${post.id}`} className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition ${post.viewerReaction ? 'bg-rose-50 text-rose-600' : 'text-slate-600 hover:bg-slate-50'}`}>
                       <Heart className={`h-5 w-5 ${post.viewerReaction ? 'fill-current' : ''}`} /> {post.reactionCount || ''} Like
                     </button>
-                    <button onClick={() => document.getElementById(`comment-${post.id}`)?.focus()} className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50"><MessageCircle className="h-5 w-5" /> {post.comments.length || ''} Comment</button>
+                    <button onClick={() => { setExpandedComments((current) => ({ ...current, [post.id]: !current[post.id] })); document.getElementById(`comment-${post.id}`)?.focus(); }} aria-expanded={Boolean(expandedComments[post.id])} className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50"><MessageCircle className="h-5 w-5" /> {post.commentCount || ''} Comment</button>
                     <button onClick={() => share(post)} className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50"><Share2 className="h-5 w-5" /> Share</button>
                   </div>
 
@@ -107,11 +113,12 @@ export default function PostsPage() {
                   </form>
                   {errors[post.id] && <p className="ml-11 mt-2 text-xs font-medium text-red-600">{errors[post.id]}</p>}
 
-                  {post.comments.length > 0 && <div className="ml-11 mt-4 space-y-3">
-                    {post.comments.slice(0, 8).map((item) => <div key={item.id} className="rounded-2xl bg-slate-50 px-4 py-3">
+                  {post.comments.length > 0 && <div className="ml-0 mt-4 space-y-3 sm:ml-11">
+                    {(expandedComments[post.id] ? post.comments : post.comments.slice(0, 2)).map((item) => <div key={item.id} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
                       <div className="flex justify-between gap-3"><p className="text-sm font-bold text-slate-900">{item.user.fullName}</p><time className="text-[11px] text-slate-400">{formatShortDate(item.createdAt)}</time></div>
                       <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-600">{item.content}</p>
                     </div>)}
+                    {post.comments.length > 2 && <button type="button" onClick={() => setExpandedComments((current) => ({ ...current, [post.id]: !current[post.id] }))} className="w-full rounded-xl py-2 text-sm font-bold text-red-600 transition hover:bg-red-50">{expandedComments[post.id] ? 'Show fewer comments' : `View the full conversation (${post.commentCount} comments)`}</button>}
                   </div>}
                 </div>
               </article>

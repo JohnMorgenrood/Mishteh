@@ -47,6 +47,7 @@ export async function GET() {
       where: { published: true },
       orderBy: { createdAt: 'desc' },
       include: {
+        _count: { select: { comments: true, reactions: true } },
         comments: {
           take: 20,
           orderBy: { createdAt: 'desc' },
@@ -55,14 +56,16 @@ export async function GET() {
         reactions: { select: { userId: true, kind: true } },
       },
     });
-    return NextResponse.json({
-      posts: posts.map((post) => ({
+    const weeklyTopic = posts[0]?.title || null;
+    const rankedPosts = posts.map((post) => ({
         ...post,
         reactionCount: post.reactions.length,
+        commentCount: post._count.comments,
+        conversationScore: post._count.comments * 3 + post._count.reactions * 2,
         viewerReaction: post.reactions.find((reaction) => reaction.userId === session?.user?.id)?.kind || null,
         reactions: undefined,
-      })),
-    });
+      })).sort((a, b) => b.conversationScore - a.conversationScore || b.createdAt.getTime() - a.createdAt.getTime());
+    return NextResponse.json({ posts: rankedPosts, weeklyTopic });
   } catch (error) {
     console.error('Community posts error:', error);
     return NextResponse.json({ error: 'Failed to load posts' }, { status: 500 });
