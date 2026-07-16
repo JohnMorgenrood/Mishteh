@@ -72,11 +72,11 @@ const urgencyColors = {
   CRITICAL: 'bg-red-100 text-red-700 border-red-200',
 };
 
-const urgencyIcons = {
-  LOW: '🟢',
-  MEDIUM: '🟡', 
-  HIGH: '🟠',
-  CRITICAL: '🔴',
+const urgencyDots = {
+  LOW: 'bg-green-500',
+  MEDIUM: 'bg-amber-500',
+  HIGH: 'bg-orange-500',
+  CRITICAL: 'bg-red-500',
 };
 
 // Create category labels map from constants
@@ -221,13 +221,14 @@ export default function SocialCard({ request, index = 0, onLikeUpdate }: SocialC
   return (
     <div
       ref={cardRef}
-      className={`group bg-white rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-500 overflow-hidden border border-gray-100 
+      className={`group relative overflow-hidden rounded-3xl border border-white/80 bg-white shadow-[0_12px_40px_-24px_rgba(37,72,113,0.45)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_24px_55px_-25px_rgba(214,101,47,0.4)]
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
       `}
       style={{ 
         transitionDelay: `${index * 100}ms`,
       }}
     >
+      <div className="h-1.5 w-full bg-gradient-to-r from-primary-500 via-accent-gold to-secondary-500" />
       {/* Card Header - User Info */}
       <div className="p-5 pb-3">
         <div className="flex items-center justify-between">
@@ -301,7 +302,7 @@ export default function SocialCard({ request, index = 0, onLikeUpdate }: SocialC
           {categoryDisplay}
         </span>
         <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border ${urgencyColors[request.urgency]}`}>
-          {urgencyIcons[request.urgency]} {request.urgency}
+          <span className={`h-1.5 w-1.5 rounded-full ${urgencyDots[request.urgency]}`} /> {request.urgency}
         </span>
       </div>
 
@@ -324,7 +325,7 @@ export default function SocialCard({ request, index = 0, onLikeUpdate }: SocialC
       {/* Progress Bar */}
       {request.targetAmount && (
         <div className="px-5 pb-4">
-          <div className="bg-gray-100 rounded-xl p-4">
+          <div className="rounded-2xl border border-primary-100/60 bg-gradient-to-br from-primary-50 to-[#fffaf3] p-4">
             <div className="flex justify-between text-sm mb-2">
               <span className="font-bold text-gray-900">
                 <CurrencyDisplay amount={request.currentAmount} />
@@ -477,7 +478,7 @@ export default function SocialCard({ request, index = 0, onLikeUpdate }: SocialC
       <div className="px-5 pb-5">
         <Link
           href={`/requests/${request.id}`}
-          className="block w-full text-center px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold rounded-xl hover:from-primary-700 hover:to-primary-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+          className="block w-full rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 px-6 py-3 text-center font-semibold text-white shadow-[0_8px_20px_-8px_rgba(214,101,47,0.75)] transition-all duration-200 hover:-translate-y-0.5 hover:from-primary-700 hover:to-primary-600 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-primary-200"
         >
           View Story & Donate
         </Link>

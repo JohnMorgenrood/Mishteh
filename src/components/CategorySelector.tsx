@@ -37,7 +37,7 @@ export default function CategorySelector({ value, onChange, isMobile = false }: 
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+        className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 outline-none transition hover:border-slate-300 focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
       >
         <option value="">All Categories</option>
         {REQUEST_CATEGORY_GROUPS.map((group) => (
@@ -59,7 +59,7 @@ export default function CategorySelector({ value, onChange, isMobile = false }: 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-2 text-left border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white flex items-center justify-between"
+        className="flex h-12 w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 text-left text-sm font-medium text-slate-700 outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
       >
         <span className="truncate">{getSelectedLabel()}</span>
         <ChevronDown className={`w-5 h-5 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
