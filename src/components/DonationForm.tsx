@@ -201,23 +201,27 @@ export default function DonationForm({
         currency: 'USD',
       }}
     >
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-md">
-        <h2 className="mb-4 text-2xl font-bold text-gray-900">Make a Donation</h2>
+      <div className="overflow-hidden rounded-3xl border border-primary-100 bg-white shadow-[0_24px_65px_-32px_rgba(37,72,113,0.45)]">
+        <div className="border-b border-primary-100 bg-gradient-to-br from-primary-50 via-white to-secondary-50 px-5 py-6 sm:px-7">
+          <p className="mb-1 text-xs font-extrabold uppercase tracking-[0.18em] text-primary-700">Secure giving</p>
+          <h2 className="text-2xl font-bold text-secondary-900 sm:text-3xl">Make a Donation</h2>
+          <p className="mt-2 text-sm font-medium leading-6 text-slate-700">Choose an amount and send meaningful support directly to this request.</p>
+        </div>
 
-        <div className="mb-6 rounded-lg bg-gray-50 p-4">
-          <h3 className="mb-2 font-semibold text-gray-900">{requestTitle}</h3>
+        <div className="mx-5 mt-5 rounded-2xl border border-secondary-100 bg-secondary-50/70 p-4 sm:mx-7 sm:p-5">
+          <h3 className="mb-3 text-lg font-bold text-secondary-900">{requestTitle}</h3>
           {targetAmount && (
-            <div className="text-sm text-gray-600">
-              <p>Goal: {formatCurrency(targetAmount, userCurrency)}</p>
-              <p>Raised: {formatCurrency(currentAmount, userCurrency)}</p>
-              <p>Remaining: {formatCurrency(targetAmount - currentAmount, userCurrency)}</p>
+            <div className="grid gap-2 text-sm text-slate-800 sm:grid-cols-3">
+              <p><span className="block text-xs font-bold uppercase tracking-wide text-slate-600">Goal</span><strong className="text-secondary-900">{formatCurrency(targetAmount, userCurrency)}</strong></p>
+              <p><span className="block text-xs font-bold uppercase tracking-wide text-slate-600">Raised</span><strong className="text-green-700">{formatCurrency(currentAmount, userCurrency)}</strong></p>
+              <p><span className="block text-xs font-bold uppercase tracking-wide text-slate-600">Remaining</span><strong className="text-secondary-900">{formatCurrency(Math.max(targetAmount - currentAmount, 0), userCurrency)}</strong></p>
             </div>
           )}
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-7">
+          <div className="mb-6">
+            <label className="mb-2 block text-sm font-bold text-slate-900">
               Payment Method
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -228,15 +232,15 @@ export default function DonationForm({
                   setShowPayPal(false);
                   setError('');
                 }}
-                className={`rounded-lg border-2 px-4 py-3 font-medium transition-all ${
+                className={`rounded-2xl border-2 px-3 py-4 font-semibold transition-all focus:outline-none focus:ring-4 focus:ring-blue-100 ${
                   paymentMethod === 'paypal'
                     ? 'border-blue-600 bg-blue-50 text-blue-900'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                    : 'border-slate-200 bg-white text-slate-800 hover:border-blue-300 hover:bg-blue-50/40'
                 }`}
               >
                 <div className="flex flex-col items-center gap-1">
                   <span className="text-lg">PayPal</span>
-                  <span className="text-xs text-gray-500">Global</span>
+                  <span className="text-xs font-medium text-slate-600">Global</span>
                 </div>
               </button>
               <button
@@ -246,22 +250,22 @@ export default function DonationForm({
                   setShowPayPal(false);
                   setError('');
                 }}
-                className={`rounded-lg border-2 px-4 py-3 font-medium transition-all ${
+                className={`rounded-2xl border-2 px-3 py-4 font-semibold transition-all focus:outline-none focus:ring-4 focus:ring-green-100 ${
                   paymentMethod === 'yoco'
                     ? 'border-green-600 bg-green-50 text-green-900'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                    : 'border-slate-200 bg-white text-slate-800 hover:border-green-300 hover:bg-green-50/40'
                 }`}
               >
                 <div className="flex flex-col items-center gap-1">
                   <span className="text-lg">Yoco</span>
-                  <span className="text-xs text-gray-500">SA + Apple Pay</span>
+                  <span className="text-xs font-medium text-slate-600">SA + Apple Pay</span>
                 </div>
               </button>
             </div>
           </div>
 
-          <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+          <div className="mb-6">
+            <label className="mb-2 block text-sm font-bold text-slate-900">
               Currency
             </label>
             <select
@@ -271,7 +275,7 @@ export default function DonationForm({
                 setAmount('');
                 setShowPayPal(false);
               }}
-              className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+              className="h-12 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 font-medium text-slate-900 outline-none transition focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-100"
             >
               {Object.entries(CURRENCIES).map(([code, config]) => (
                 <option key={code} value={code}>
@@ -281,11 +285,11 @@ export default function DonationForm({
             </select>
           </div>
 
-          <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+          <div className="mb-6">
+            <label className="mb-2 block text-sm font-bold text-slate-900">
               Quick Select Amount
             </label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
               {quickAmounts.map((quickAmount) => (
                 <button
                   key={quickAmount}
@@ -294,10 +298,10 @@ export default function DonationForm({
                     setAmount(quickAmount.toString());
                     setShowPayPal(false);
                   }}
-                  className={`overflow-hidden whitespace-nowrap rounded-md border px-2 py-2 text-xs font-medium transition-colors ${
+                  className={`min-h-11 overflow-hidden whitespace-nowrap rounded-xl border px-2 py-2 text-sm font-bold transition-all focus:outline-none focus:ring-4 focus:ring-primary-100 ${
                     amount === quickAmount.toString()
                       ? 'border-primary-600 bg-primary-600 text-white'
-                      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                      : 'border-slate-300 bg-white text-slate-800 hover:border-primary-300 hover:bg-primary-50'
                   }`}
                   title={`${currencySymbol}${quickAmount}`}
                 >
@@ -307,12 +311,12 @@ export default function DonationForm({
             </div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="amount" className="mb-2 block text-sm font-medium text-gray-700">
+          <div className="mb-6">
+            <label htmlFor="amount" className="mb-2 block text-sm font-bold text-slate-900">
               Total Amount You Want To Pay
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-500">{currencySymbol}</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-secondary-800">{currencySymbol}</span>
               <input
                 type="number"
                 id="amount"
@@ -323,18 +327,18 @@ export default function DonationForm({
                 }}
                 step="0.01"
                 min="0.01"
-                className="w-full rounded-md border border-gray-300 py-2 pl-8 pr-4 focus:border-primary-500 focus:ring-primary-500"
+                className="h-14 w-full rounded-2xl border border-slate-300 bg-slate-50 py-2 pl-10 pr-4 text-lg font-bold text-slate-950 outline-none transition placeholder:text-slate-500 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-100"
                 placeholder="0.00"
                 required
               />
             </div>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs font-medium leading-5 text-slate-700">
               Processing and platform fees are deducted from this amount before the requester payout is calculated.
             </p>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="message" className="mb-2 block text-sm font-medium text-gray-700">
+          <div className="mb-6">
+            <label htmlFor="message" className="mb-2 block text-sm font-bold text-slate-900">
               Message (Optional)
             </label>
             <textarea
@@ -342,24 +346,24 @@ export default function DonationForm({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
-              className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+              className="w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-500 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-100"
               placeholder="Leave a message of encouragement..."
             />
           </div>
 
-          <div className="mb-6">
-            <label className="flex items-center">
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <label className="flex cursor-pointer items-center">
               <input
                 type="checkbox"
                 checked={anonymous}
                 onChange={(e) => setAnonymous(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="h-5 w-5 rounded border-slate-400 text-primary-600 focus:ring-primary-500"
               />
-              <span className="ml-2 text-sm text-gray-700">
+              <span className="ml-3 text-sm font-bold text-slate-900">
                 Keep my donation private
               </span>
             </label>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="ml-8 mt-2 text-xs font-medium leading-5 text-slate-700">
               Donor names are hidden by default unless you choose to show them in your dashboard privacy settings and uncheck this box for this donation.
             </p>
           </div>
@@ -460,11 +464,10 @@ export default function DonationForm({
               <p className="mt-2.5 text-center text-[10px] leading-4 text-gray-500">Available options are confirmed on the secure Yoco checkout screen.</p>
             </div>
           )}
-        </form>
-
-        <p className="mt-4 text-center text-xs text-gray-500">
+          <p className="mt-4 text-center text-xs font-medium text-slate-700">
           Your donation helps those in need. Secure payment powered by {paymentMethod === 'yoco' ? 'Yoco' : 'PayPal'}.
-        </p>
+          </p>
+        </form>
       </div>
     </PayPalScriptProvider>
   );
