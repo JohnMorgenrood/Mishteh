@@ -103,6 +103,12 @@ async function getRequest(id: string, viewerId?: string) {
             createdAt: 'desc',
           },
         },
+        documents: {
+          where: { documentType: 'REQUEST_PHOTO', status: 'VERIFIED' },
+          select: { id: true, filePath: true, fileName: true },
+          orderBy: { uploadedAt: 'asc' },
+          take: 3,
+        },
         _count: {
           select: {
             donations: true,
@@ -272,6 +278,17 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                   {/* Facebook-style translate button */}
                   <TranslateButton text={request.description} className="mt-3" />
                 </div>
+
+                {request.documents.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="mb-4 text-lg font-bold text-gray-900">Photos from this request</h2>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {request.documents.map((photo: { id: string; filePath: string }) => (
+                        <img key={photo.id} src={photo.filePath} alt={`Supporting photo for ${request.title}`} className="aspect-video w-full rounded-2xl border border-gray-200 object-cover shadow-sm" />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Social Actions */}
                 <SocialActions

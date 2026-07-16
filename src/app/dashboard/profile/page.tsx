@@ -552,7 +552,7 @@ export default function ProfileSettingsPage() {
               <div className="border-t border-gray-200 pt-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">Identity Documents (FICA)</h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  Upload your ID or passport here. These files stay private and must be reviewed by an administrator.
+                  Upload your ID or passport here when you need payout access. These files stay private, never appear on a request, and must be reviewed by an administrator before funds can be withdrawn.
                 </p>
 
                 <div className="space-y-6">

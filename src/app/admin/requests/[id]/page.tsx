@@ -21,6 +21,7 @@ interface Request {
   featured: boolean;
   isAnonymous: boolean;
   createdAt: string;
+  documents: Array<{ id: string; filePath: string; fileName: string }>;
   user: {
     id: string;
     fullName: string;
@@ -277,6 +278,14 @@ export default function AdminRequestReview() {
             {/* Request Details */}
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">{request.title}</h2>
+              {request.documents?.length > 0 && (
+                <div className="mb-5">
+                  <p className="mb-2 text-sm font-semibold text-gray-700">Public situation photo — review before publishing</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {request.documents.map((photo: { id: string; filePath: string }) => <img key={photo.id} src={photo.filePath} alt="Request situation evidence" className="aspect-video w-full rounded-xl border object-cover" />)}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Category</p>

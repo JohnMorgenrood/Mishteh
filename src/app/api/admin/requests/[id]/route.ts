@@ -11,7 +11,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   const helpRequest = await prisma.request.findUnique({
     where: { id },
-    include: { user: { select: { id: true, fullName: true, email: true, phone: true, location: true, bio: true, image: true, idDocumentUrl: true, selfieUrl: true, ficaVerified: true, isSuspicious: true } } },
+    include: {
+      user: { select: { id: true, fullName: true, email: true, phone: true, location: true, bio: true, image: true, idDocumentUrl: true, selfieUrl: true, ficaVerified: true, isSuspicious: true } },
+      documents: { where: { documentType: 'REQUEST_PHOTO' }, select: { id: true, filePath: true, fileName: true } },
+    },
   });
   if (!helpRequest) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
   return NextResponse.json({ request: helpRequest });
@@ -116,7 +119,9 @@ export async function PATCH(
           );
         }
         updateData.verified = owner.ficaVerified;
-        updateData.donationsEnabled = owner.ficaVerified || owner.managedByAdmin;
+        // Publishing and collecting support are based on content/admin review.
+        // Private identity verification remains a separate payout safeguard.
+        updateData.donationsEnabled = true;
       }
       updateData.status = status;
       if (status === 'REJECTED') {
@@ -155,6 +160,7 @@ export async function PATCH(
             isSuspicious: true,
           },
         },
+        documents: { where: { documentType: 'REQUEST_PHOTO' }, select: { id: true, filePath: true, fileName: true } },
       },
     });
 

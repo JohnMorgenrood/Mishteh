@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import FileUpload from '@/components/FileUpload';
+import FicaUpload from '@/components/FicaUpload';
 import { REQUEST_CATEGORY_GROUPS } from '@/lib/constants';
 
 // Declare Google Maps types
@@ -29,7 +29,7 @@ export default function NewRequestPage() {
     targetAmount: '',
     isAnonymous: false,
   });
-  const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
+  const [situationPhoto, setSituationPhoto] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [beneficiaries, setBeneficiaries] = useState<Array<{ id: string; fullName: string; email: string; ficaVerified: boolean }>>([]);
@@ -177,7 +177,20 @@ export default function NewRequestPage() {
         throw new Error(data.error || 'Failed to create request');
       }
 
-      alert('Request created successfully! It will be reviewed by our team.');
+      let completionMessage = 'Request created successfully! It will be reviewed by our team.';
+      if (situationPhoto) {
+        const photoData = new FormData();
+        photoData.append('file', situationPhoto);
+        photoData.append('documentType', 'REQUEST_PHOTO');
+        photoData.append('requestId', data.request.id);
+        const photoResponse = await fetch('/api/documents', { method: 'POST', body: photoData });
+        if (!photoResponse.ok) {
+          const photoError = await photoResponse.json();
+          completionMessage = `Your request was created, but its public photo could not be uploaded: ${photoError.error || 'Upload failed'}. You do not need to submit the request again.`;
+        }
+      }
+
+      alert(completionMessage);
       router.push('/dashboard');
       router.refresh();
     } catch (err: any) {
@@ -393,30 +406,18 @@ export default function NewRequestPage() {
             </div>
           </div>
 
-          {/* Document Upload */}
+          {/* Public situation photo */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">
-              Supporting Documents
+              Situation Photo <span className="font-normal text-gray-500">(Optional)</span>
             </h2>
             <p className="text-sm text-gray-600 mb-4">
-              You can submit now without identity documents. Before the request can be published or receive money, you must upload your ID and selfie and pass an admin review.
+              Add one respectful photo that helps people understand the situation. This image will be public, so do not upload an ID, bank document, private address, or anyone who has not consented to being shown.
             </p>
-            <FileUpload
-              documentType="proof_of_need"
-              onUploadSuccess={(doc) => setUploadedDocs([...uploadedDocs, doc])}
-            />
-            {uploadedDocs.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Uploaded Documents ({uploadedDocs.length})
-                </p>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  {uploadedDocs.map((doc) => (
-                    <li key={doc.id}>✓ {doc.fileName}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <FicaUpload label="Public request photo" description="JPG or PNG, maximum 5MB. You can submit without a photo." icon="image" value={situationPhoto} onFileSelect={setSituationPhoto} acceptedTypes={['image/jpeg', 'image/png', 'image/jpg']} />
+            <p className="mt-4 rounded-xl bg-secondary-50 p-3 text-xs leading-5 text-secondary-800">
+              Identity verification is handled separately and privately in Profile Settings when payout access is required. Identity files are never shown on your request.
+            </p>
           </div>
 
           {/* Privacy Settings */}

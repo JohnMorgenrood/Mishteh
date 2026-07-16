@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
         targetAmount: data.targetAmount,
         isAnonymous: data.isAnonymous || false,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
-        status: 'PENDING', // Never public until an admin verifies the recipient and approves it.
+        status: 'PENDING', // Never public until an admin approves the request content.
       },
       include: {
         user: {

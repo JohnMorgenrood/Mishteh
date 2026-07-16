@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File;
     const documentType = formData.get('documentType') as string;
     const requestId = formData.get('requestId') as string | null;
+    const isPublicRequestPhoto = documentType === 'REQUEST_PHOTO';
 
     if (!file) {
       return NextResponse.json(
@@ -51,9 +52,19 @@ export async function POST(request: NextRequest) {
     if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
       return NextResponse.json({ error: 'Secure private storage is not configured.' }, { status: 503 });
     }
+
+    if (isPublicRequestPhoto) {
+      if (!requestId || !file.type.startsWith('image/')) {
+        return NextResponse.json({ error: 'Request photos must be JPG or PNG images attached to a request.' }, { status: 400 });
+      }
+      const helpRequest = await prisma.request.findUnique({ where: { id: requestId }, select: { userId: true } });
+      if (!helpRequest || (helpRequest.userId !== session.user.id && session.user.userType !== 'ADMIN')) {
+        return NextResponse.json({ error: 'You cannot add a photo to this request.' }, { status: 403 });
+      }
+    }
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const blob = await put(`identity/${session.user.id}/document-${safeName}`, file, {
-      access: 'private',
+    const blob = await put(isPublicRequestPhoto ? `request-media/${requestId}/${safeName}` : `identity/${session.user.id}/document-${safeName}`, file, {
+      access: isPublicRequestPhoto ? 'public' : 'private',
       addRandomSuffix: true,
     });
 
@@ -67,14 +78,14 @@ export async function POST(request: NextRequest) {
         fileSize: file.size,
         filePath: blob.url,
         documentType: documentType || 'general',
-        status: 'PENDING',
+        status: isPublicRequestPhoto ? 'VERIFIED' : 'PENDING',
       },
     });
 
     return NextResponse.json(
       { 
         message: 'Document uploaded successfully',
-        document: { id: document.id, fileName: document.fileName, fileType: document.fileType, fileSize: document.fileSize, documentType: document.documentType, status: document.status, uploadedAt: document.uploadedAt },
+        document: { id: document.id, fileName: document.fileName, fileType: document.fileType, fileSize: document.fileSize, filePath: isPublicRequestPhoto ? document.filePath : undefined, documentType: document.documentType, status: document.status, uploadedAt: document.uploadedAt },
       },
       { status: 201 }
     );
