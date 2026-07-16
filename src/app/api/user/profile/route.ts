@@ -146,13 +146,15 @@ export async function PUT(request: NextRequest) {
         if (!allowedTypes.includes(file.type)) {
           throw new Error('Unsupported upload type');
         }
-        if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
+        const privateBlobToken = process.env.PRIVATE_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN;
+        if (!privateBlobToken) {
           throw new Error('Secure file storage is not configured. Please contact the site administrator.');
         }
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const blob = await put(`identity/${session.user.id}/${prefix}-${safeName}`, file, {
           access: 'private',
           addRandomSuffix: true,
+          token: privateBlobToken,
         });
         return blob.url;
       };

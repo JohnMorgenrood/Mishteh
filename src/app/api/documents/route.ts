@@ -49,8 +49,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
-      return NextResponse.json({ error: 'Secure private storage is not configured.' }, { status: 503 });
+    const blobToken = isPublicRequestPhoto
+      ? process.env.PUBLIC_BLOB_READ_WRITE_TOKEN
+      : process.env.PRIVATE_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN;
+    if (!blobToken) {
+      return NextResponse.json({
+        error: isPublicRequestPhoto
+          ? 'Public photo storage is not configured. Connect a Public Vercel Blob store.'
+          : 'Secure private storage is not configured. Connect a Private Vercel Blob store.',
+      }, { status: 503 });
     }
 
     if (isPublicRequestPhoto) {
@@ -66,6 +73,7 @@ export async function POST(request: NextRequest) {
     const blob = await put(isPublicRequestPhoto ? `request-media/${requestId}/${safeName}` : `identity/${session.user.id}/document-${safeName}`, file, {
       access: isPublicRequestPhoto ? 'public' : 'private',
       addRandomSuffix: true,
+      token: blobToken,
     });
 
     // Create document record in database
