@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import DonationForm from '@/components/DonationForm';
+import ContributionOfferCard from '@/components/ContributionOfferCard';
 import { CurrencyDisplay, CurrencyProgressBar } from '@/components/CurrencyDisplay';
 import { formatShortDate, getApproximateLocation } from '@/lib/utils';
 import { getServerSession } from 'next-auth';
@@ -413,30 +413,8 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
           {/* Sidebar */}
           <div id="support-this-request" className="scroll-mt-24 lg:col-span-1">
             <div className="sticky top-24 space-y-6">
-              {!request.donationsEnabled ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-soft">
-                  <h2 className="text-lg font-bold text-amber-950">Story published — support coming soon</h2>
-                  <p className="mt-2 text-sm text-amber-800">MISHTEH approved this post. Donations will open after the recipient identity review is complete.</p>
-                </div>
-              ) : session?.user ? (
-                // Keep payment choices out of view until the donor chooses to continue.
-                <details id="request-donation-panel" className="group overflow-hidden rounded-2xl bg-white shadow-soft">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 bg-gray-900 px-6 py-5 text-white transition hover:bg-gray-800 [&::-webkit-details-marker]:hidden">
-                    <span>
-                      <span className="block text-lg font-bold">Make a Donation</span>
-                      <span className="mt-1 block text-xs font-medium text-gray-300">Open secure Yoco or PayPal payment</span>
-                    </span>
-                    <span className="rounded-full bg-red-500 px-4 py-2 text-sm font-bold shadow-sm">Donate</span>
-                  </summary>
-                  <div className="border-t border-gray-200">
-                    <DonationForm
-                      requestId={request.id}
-                      requestTitle={request.title}
-                      targetAmount={request.targetAmount}
-                      currentAmount={request.currentAmount}
-                    />
-                  </div>
-                </details>
+              {session?.user ? (
+                session.user.id === request.user.id ? <div className="rounded-2xl border border-primary-200 bg-primary-50 p-6 shadow-soft"><h2 className="text-lg font-bold text-primary-950">This is your story</h2><p className="mt-2 text-sm text-primary-800">Contribution offers appear in Messages. Accept only after you and the supporter agree on the arrangement.</p><Link href="/messages" className="mt-4 inline-flex rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white">Open messages</Link></div> : <ContributionOfferCard requestId={request.id} recipientName={request.user.fullName} phone={request.user.phone} />
               ) : (
                 // Show login prompt if not logged in
                 <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
@@ -476,10 +454,10 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                         href={`/auth/login?callbackUrl=/requests/${request.id}`}
                         className="block w-full rounded-xl bg-gray-900 px-6 py-3 text-center font-semibold text-white shadow-md transition hover:bg-gray-800 hover:shadow-lg"
                       >
-                        Login to Donate
+                        Login to See Contact Details
                       </Link>
                       <p className="text-xs text-gray-500 text-center">
-                        You must be logged in to make a donation
+                        Sign in to message this person or send a contribution offer
                       </p>
                     </div>
                   </div>

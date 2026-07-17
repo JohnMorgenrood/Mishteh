@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   if (!session?.user?.id) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
   const conversationId = new URL(request.url).searchParams.get('conversationId');
   if (conversationId) {
-    const conversation = await prisma.directConversation.findFirst({ where: { id: conversationId, OR: [{ starterId: session.user.id }, { recipientId: session.user.id }] }, include: { starter: { select: person }, recipient: { select: person }, messages: { include: { sender: { select: { id: true, fullName: true, image: true } } }, orderBy: { createdAt: 'asc' }, take: 200 } } });
+    const conversation = await prisma.directConversation.findFirst({ where: { id: conversationId, OR: [{ starterId: session.user.id }, { recipientId: session.user.id }] }, include: { starter: { select: person }, recipient: { select: person }, messages: { include: { sender: { select: { id: true, fullName: true, image: true } } }, orderBy: { createdAt: 'asc' }, take: 200 }, offers: { orderBy: { createdAt: 'asc' } } } });
     if (!conversation) return NextResponse.json({ error: 'Conversation not found.' }, { status: 404 });
     await prisma.directMessage.updateMany({ where: { conversationId, senderId: { not: session.user.id }, readAt: null }, data: { readAt: new Date() } });
     return NextResponse.json({ conversation });

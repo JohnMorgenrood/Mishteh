@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { 
   User, MapPin, Calendar, Heart, MessageCircle, 
   Instagram, Facebook, Twitter, Globe, ExternalLink,
-  HandHeart, TrendingUp
+  HandHeart, TrendingUp, Award
 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { getApproximateLocation } from '@/lib/utils';
@@ -95,6 +95,7 @@ async function getUserProfile(userId: string) {
       },
       _count: true,
     });
+    const contributionsMade = await prisma.donation.aggregate({ where: { donorId: userId, status: 'COMPLETED' }, _sum: { amount: true }, _count: true });
 
     return {
       ...user,
@@ -103,6 +104,8 @@ async function getUserProfile(userId: string) {
         totalStories: user._count.requests,
         donationsReceived: donationsReceived._sum.amount || 0,
         donorCount: donationsReceived._count,
+        contributionsMade: contributionsMade._count,
+        contributionValue: contributionsMade._sum.amount || 0,
       },
     };
   } catch (error) {
@@ -160,6 +163,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
                   {user.fullName}
                 </h1>
+                {user.stats.contributionsMade > 0 && <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-100 to-yellow-50 px-3 py-1.5 text-xs font-black text-amber-900 ring-1 ring-amber-200"><Award className="h-4 w-4 text-amber-600" /> Community Supporter · {user.stats.contributionsMade} confirmed contribution{user.stats.contributionsMade === 1 ? '' : 's'}</div>}
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
                   {user.location && (
                     <span className="flex items-center gap-1">

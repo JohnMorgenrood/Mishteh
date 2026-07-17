@@ -74,6 +74,8 @@ model User {
   conversationsStarted     DirectConversation[] @relation("ConversationStarter")
   conversationsReceived    DirectConversation[] @relation("ConversationRecipient")
   directMessages           DirectMessage[]
+  contributionOffersSent  ContributionOffer[] @relation("OfferSupporter")
+  contributionOffersReceived ContributionOffer[] @relation("OfferRecipient")
 
   @@index([email])
   @@index([userType])
@@ -92,10 +94,35 @@ model DirectConversation {
   starter     User     @relation("ConversationStarter", fields: [starterId], references: [id], onDelete: Cascade)
   recipient   User     @relation("ConversationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
   messages    DirectMessage[]
+  offers      ContributionOffer[]
 
   @@unique([starterId, recipientId, requestId])
   @@index([starterId, updatedAt(sort: Desc)])
   @@index([recipientId, updatedAt(sort: Desc)])
+}
+
+model ContributionOffer {
+  id             String   @id @default(cuid())
+  conversationId String
+  requestId      String
+  supporterId    String
+  recipientId    String
+  amount         Float
+  message        String?
+  status         String   @default("PENDING")
+  donationId     String?  @unique
+  respondedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  conversation   DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  request        Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  supporter      User @relation("OfferSupporter", fields: [supporterId], references: [id], onDelete: Cascade)
+  recipient      User @relation("OfferRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  donation       Donation? @relation(fields: [donationId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt])
+  @@index([requestId, status])
+  @@index([recipientId, status])
 }
 
 model DirectMessage {
@@ -250,7 +277,8 @@ model Request {
   user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   likes             Like[]
   comments          Comment[]
-  viewHistory       RequestView[]
+    viewHistory       RequestView[]
+    contributionOffers ContributionOffer[]
 
   @@index([userId])
   @@index([category])
@@ -338,7 +366,8 @@ model Donation {
   paymentMethod   String?        @default("STRIPE")
   paymentStatus   String?        @default("PENDING")
   donor           User           @relation(fields: [donorId], references: [id], onDelete: Cascade)
-  request         Request        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+    request         Request        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+    contributionOffer ContributionOffer?
 
   @@index([donorId])
   @@index([requestId])
