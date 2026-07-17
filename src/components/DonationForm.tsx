@@ -97,7 +97,6 @@ export default function DonationForm({
         },
         body: JSON.stringify({
           amount: donationAmount,
-          totalAmount,
           requestId,
           isAnonymous: anonymous,
           message,
@@ -313,7 +312,7 @@ export default function DonationForm({
 
           <div className="mb-6">
             <label htmlFor="amount" className="mb-2 block text-sm font-bold text-slate-900">
-              Total Amount You Want To Pay
+              {paymentMethod === 'yoco' ? 'Donation Amount' : 'Total Amount You Want To Pay'}
             </label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-secondary-800">{currencySymbol}</span>
@@ -333,7 +332,9 @@ export default function DonationForm({
               />
             </div>
             <p className="mt-2 text-xs font-medium leading-5 text-slate-700">
-              Processing and platform fees are deducted from this amount before the requester payout is calculated.
+              {paymentMethod === 'yoco'
+                ? 'Processing and service costs are added to this donation. You will see the complete total before continuing.'
+                : 'Processing and platform fees are included in this amount before the requester payout is calculated.'}
             </p>
           </div>
 
@@ -382,14 +383,17 @@ export default function DonationForm({
                   <span className="text-green-800">You pay:</span>
                   <span className="font-semibold text-green-900">{formatCurrency(totalAmount, userCurrency)}</span>
                 </div>
-                <div className="flex justify-between text-xs text-green-700">
-                  <span>{paymentMethod === 'yoco' ? 'Yoco fee (2.6%):' : 'PayPal fee (~2.9% + $0.30):'}</span>
-                  <span>-{formatCurrency(fees.processingFee, userCurrency)}</span>
-                </div>
-                <div className="flex justify-between text-xs text-green-700">
-                  <span>Mishteh platform fee (1%):</span>
-                  <span>-{formatCurrency(fees.platformFee, userCurrency)}</span>
-                </div>
+                {paymentMethod === 'yoco' ? (
+                  <div className="flex justify-between text-xs text-green-700">
+                    <span>Processing and service costs:</span>
+                    <span>-{formatCurrency(fees.totalFees, userCurrency)}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-xs text-green-700"><span>PayPal processing fee:</span><span>-{formatCurrency(fees.processingFee, userCurrency)}</span></div>
+                    <div className="flex justify-between text-xs text-green-700"><span>Platform service fee:</span><span>-{formatCurrency(fees.platformFee, userCurrency)}</span></div>
+                  </>
+                )}
                 <div className="pt-2 text-xs italic text-green-600">
                   {paymentMethod === 'yoco'
                     ? 'Yoco is recommended for South African Rand donations because the local fee structure is better for smaller payments.'

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getYocoPaymentDetails, isYocoPaymentSuccessful } from '@/lib/yoco';
-import { calculateYocoBreakdown } from '@/lib/payment-fees';
+import { calculateYocoBreakdownFromGross, YOCO_TOTAL_FEE_RATE } from '@/lib/payment-fees';
 
 function buildLegacyBackfillNote(paymentMethod?: string | null) {
   const gateway = paymentMethod || 'UNKNOWN';
@@ -150,8 +150,8 @@ async function finalizePendingYocoDonations() {
         if (!alreadyTracked) {
           const totalPaid = typeof paymentDetails.amount === 'number'
             ? paymentDetails.amount / 100
-            : Math.round((donation.amount / 0.964) * 100) / 100;
-          const feeBreakdown = calculateYocoBreakdown(totalPaid);
+            : Math.round((donation.amount / (1 - YOCO_TOTAL_FEE_RATE)) * 100) / 100;
+          const feeBreakdown = calculateYocoBreakdownFromGross(totalPaid, donation.amount);
 
           await prisma.transaction.create({
             data: {
@@ -197,7 +197,7 @@ async function finalizePendingYocoDonations() {
               requestId: donation.requestId,
               requestTitle: donation.request.title,
               completedAt: new Date(),
-              adminNotes: `Mishteh 1% platform fee on Yoco donation ${donation.paymentIntentId}.`,
+              adminNotes: `Mishteh 2% platform fee on Yoco donation ${donation.paymentIntentId}.`,
             },
           });
         }

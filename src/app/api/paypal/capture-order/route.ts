@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create a separate transaction for the Mishteh platform fee (1% revenue for platform)
+    // Create a separate transaction for the Mishteh platform fee (2% revenue for platform)
     await prisma.transaction.create({
       data: {
         type: 'FEE',
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
         requestId: requestId || null,
         requestTitle: request_details?.title || null,
         completedAt: new Date(),
-        adminNotes: `Mishteh 1% platform fee. Donor paid: ${localCurrency} ${grossAmount.toFixed(2)}, PayPal fee: ${localCurrency} ${paypalFee.toFixed(2)}, Mishteh fee: ${localCurrency} ${mishtehFee.toFixed(2)}, requester receives: ${localCurrency} ${donationAmount.toFixed(2)}. PayPal capture total: ${currency} ${totalAmount.toFixed(2)}.`,
+        adminNotes: `Mishteh 2% platform fee. Donor paid: ${localCurrency} ${grossAmount.toFixed(2)}, PayPal fee: ${localCurrency} ${paypalFee.toFixed(2)}, Mishteh fee: ${localCurrency} ${mishtehFee.toFixed(2)}, requester receives: ${localCurrency} ${donationAmount.toFixed(2)}. PayPal capture total: ${currency} ${totalAmount.toFixed(2)}.`,
       },
     });
 

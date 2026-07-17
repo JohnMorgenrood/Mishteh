@@ -92,7 +92,7 @@ export default function TermsOfServicePage() {
 
                 <h3 className="text-xl font-medium text-gray-800">4.4 Platform Fees</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  MISHTEH currently charges a small platform fee of 1% on supported payments to help cover
+                  MISHTEH currently charges a platform fee of 2% on supported payments to help cover
                   operational costs. Payment gateway fees may also apply. All fees and net payout amounts
                   will be shown before payment is completed.
                 </p>

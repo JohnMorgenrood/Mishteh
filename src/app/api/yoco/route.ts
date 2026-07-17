@@ -3,7 +3,7 @@ import { createYocoCheckout, getYocoPaymentDetails, isYocoPaymentSuccessful } fr
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { calculateYocoBreakdown } from '@/lib/payment-fees';
+import { calculateYocoBreakdown, calculateYocoBreakdownFromGross, YOCO_TOTAL_FEE_RATE } from '@/lib/payment-fees';
 
 /**
  * POST /api/yoco/create-checkout
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { amount, totalAmount, requestId, isAnonymous, message } = body;
+    const { amount, requestId, isAnonymous, message } = body;
 
     // Validate input
     if (!amount || amount <= 0) {
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
 
     const feeBreakdown = calculateYocoBreakdown(amount);
-    const calculatedTotal = totalAmount || feeBreakdown.grossAmount;
+    const calculatedTotal = feeBreakdown.grossAmount;
 
     // Store the net amount that will be available to the requester after fees.
     const donation = await prisma.donation.create({
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
         requestId: requestId,
         donorName: isAnonymous ? 'Anonymous' : session.user.name,
         donorEmail: session.user.email,
-        originalAmount: feeBreakdown.grossAmount,
+        originalAmount: amount,
         totalWithFees: calculatedTotal,
         mishtehFee: feeBreakdown.platformFee,
         yocoFee: feeBreakdown.processingFee,
@@ -196,8 +196,8 @@ export async function GET(request: Request) {
       });
       const totalPaid = typeof paymentDetails.amount === 'number'
         ? paymentDetails.amount / 100
-        : Math.round((donation.amount / 0.964) * 100) / 100;
-      const feeBreakdown = calculateYocoBreakdown(totalPaid);
+        : Math.round((donation.amount / (1 - YOCO_TOTAL_FEE_RATE)) * 100) / 100;
+      const feeBreakdown = calculateYocoBreakdownFromGross(totalPaid, donation.amount);
       const existingDonationTransaction = await prisma.transaction.findFirst({
         where: {
           paymentId: checkoutId,
@@ -250,7 +250,7 @@ export async function GET(request: Request) {
             requestId: donation.requestId,
             requestTitle: donation.request.title,
             completedAt: new Date(),
-            adminNotes: `Mishteh 1% platform fee on Yoco donation ${checkoutId}.`,
+            adminNotes: `Mishteh 2% platform fee on Yoco donation ${checkoutId}.`,
           },
         });
       }
