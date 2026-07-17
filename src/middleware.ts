@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard');
   const isAdmin = request.nextUrl.pathname.startsWith('/admin');
+  const isMessages = request.nextUrl.pathname.startsWith('/messages');
 
   // Redirect authenticated users away from auth pages
   if (isAuthPage && token) {
@@ -29,7 +30,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect unauthenticated users to login
-  if ((isDashboard || isAdmin) && !token) {
+  if ((isDashboard || isAdmin || isMessages) && !token) {
     const loginUrl = new URL('/auth/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(loginUrl);
@@ -48,5 +49,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/auth/:path*', '/dashboard/:path*', '/admin/:path*', '/activity/:path*', '/requests/:path*', '/profile/:path*'],
+  matcher: ['/', '/auth/:path*', '/dashboard/:path*', '/admin/:path*', '/messages/:path*', '/activity/:path*', '/requests/:path*', '/profile/:path*'],
 };

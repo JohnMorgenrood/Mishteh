@@ -1,0 +1,32 @@
+'use client';
+
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Loader2, MessageCircle, Phone, Send } from 'lucide-react';
+
+const wa = (phone: string) => phone.replace(/\D/g, '').replace(/^0/, '27');
+
+function MessagesContent() {
+  const { data: session, status } = useSession(); const router = useRouter(); const params = useSearchParams();
+  const [list, setList] = useState<any[]>([]); const [active, setActive] = useState<any>(null); const [text, setText] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
+  const activeId = params.get('conversation');
+  const loadList = useCallback(() => fetch('/api/messages').then((r) => r.json()).then((d) => setList(d.conversations || [])), []);
+  const loadThread = useCallback((id: string) => fetch(`/api/messages?conversationId=${id}`).then((r) => r.json()).then((d) => setActive(d.conversation)), []);
+  useEffect(() => { if (status === 'unauthenticated') router.push('/auth/login?callbackUrl=/messages'); if (status === 'authenticated') loadList(); }, [status, router, loadList]);
+  useEffect(() => { if (activeId) loadThread(activeId); }, [activeId, loadThread]);
+  const other = useMemo(() => active ? (active.starter.id === session?.user?.id ? active.recipient : active.starter) : null, [active, session]);
+  const open = (id: string) => router.push(`/messages?conversation=${id}`);
+  const send = async () => { if (!activeId || !text.trim()) return; setBusy(true); setError(''); const response = await fetch('/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conversationId: activeId, message: text }) }); const data = await response.json(); if (response.ok) { setText(''); await Promise.all([loadThread(activeId), loadList()]); } else setError(data.error || 'Unable to send.'); setBusy(false); };
+  if (status === 'loading') return <main className="grid min-h-screen place-items-center"><Loader2 className="h-8 w-8 animate-spin" /></main>;
+  return <main className="min-h-[calc(100vh-4rem)] bg-slate-100 px-3 py-4 sm:px-6 sm:py-8"><div className="mx-auto grid h-[calc(100vh-8rem)] max-w-6xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl md:grid-cols-[340px_1fr]">
+    <aside className={`${activeId ? 'hidden md:block' : 'block'} overflow-y-auto border-r border-slate-200`}><div className="sticky top-0 border-b bg-white p-5"><h1 className="text-2xl font-black text-gray-950">Messages</h1><p className="text-sm text-gray-500">Private conversations with the community</p></div>{list.length ? list.map((c) => { const person = c.starter.id === session?.user?.id ? c.recipient : c.starter; return <button key={c.id} onClick={() => open(c.id)} className={`flex w-full gap-3 border-b p-4 text-left hover:bg-primary-50 ${activeId === c.id ? 'bg-primary-50' : ''}`}><div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary-100">{person.image ? <Image src={person.image} alt="" fill className="object-cover" /> : <span className="grid h-full place-items-center font-bold text-primary-700">{person.fullName[0]}</span>}</div><div className="min-w-0 flex-1"><div className="flex justify-between"><p className="truncate font-bold text-gray-900">{person.fullName}</p>{c._count.messages > 0 && <span className="rounded-full bg-primary-600 px-2 py-0.5 text-xs font-bold text-white">{c._count.messages}</span>}</div><p className="truncate text-sm text-gray-500">{c.messages[0]?.body || 'Start chatting'}</p></div></button>}) : <div className="p-8 text-center text-gray-500"><MessageCircle className="mx-auto mb-3 h-10 w-10 text-gray-300" />Message someone from their request page.</div>}</aside>
+    <section className={`${activeId ? 'flex' : 'hidden md:flex'} min-w-0 flex-col`}>{active && other ? <><header className="flex items-center justify-between border-b p-4"><div className="flex items-center gap-3"><button onClick={() => router.push('/messages')} className="md:hidden">←</button><div><h2 className="font-black text-gray-950">{other.fullName}</h2><p className="text-xs text-gray-500">MISHTEH private conversation</p></div></div>{other.phone && <a href={`https://wa.me/${wa(other.phone)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-3 py-2 text-sm font-bold text-white"><Phone className="h-4 w-4" /><span className="hidden sm:inline">WhatsApp {other.phone}</span></a>}</header><div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4 sm:p-6">{active.messages.map((m: any) => { const mine = m.senderId === session?.user?.id; return <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${mine ? 'rounded-br-md bg-primary-600 text-white' : 'rounded-bl-md bg-white text-gray-900'}`}><p className="whitespace-pre-wrap">{m.body}</p><p className={`mt-1 text-[10px] ${mine ? 'text-primary-100' : 'text-gray-400'}`}>{new Date(m.createdAt).toLocaleString()}</p></div></div>})}</div><footer className="border-t bg-white p-3 sm:p-4">{error && <p className="mb-2 text-sm text-red-700">{error} {error.toLowerCase().includes('membership') && <Link href="/membership" className="font-bold underline">Renew for R10</Link>}</p>}<div className="flex gap-2"><textarea rows={1} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Write a message…" className="min-h-11 flex-1 resize-none rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-primary-500" /><button onClick={send} disabled={busy || !text.trim()} className="grid h-11 w-11 place-items-center rounded-full bg-primary-600 text-white disabled:opacity-50"><Send className="h-5 w-5" /></button></div></footer></> : <div className="grid flex-1 place-items-center text-gray-400"><p>Select a conversation</p></div>}</section>
+  </div></main>;
+}
+
+export default function MessagesPage() {
+  return <Suspense fallback={<main className="grid min-h-screen place-items-center"><Loader2 className="h-8 w-8 animate-spin text-primary-600" /></main>}><MessagesContent /></Suspense>;
+}

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { HandHeart, PlusCircle, MessageSquareText, PlaySquare, Crown, LucideIcon } from 'lucide-react';
+import { HandHeart, PlusCircle, MessageSquareText, PlaySquare, MessagesSquare, LucideIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 interface NavItem {
@@ -25,7 +25,7 @@ export default function MobileNav() {
     { href: '/requests', icon: HandHeart, label: 'Donate' },
     { href: '/activity', icon: MessageSquareText, label: 'Posts' },
     { href: '/community-videos', icon: PlaySquare, label: 'Videos' },
-    ...(session ? [{ href: '/membership', icon: Crown, label: 'Member' }] : []),
+    ...(session ? [{ href: '/messages', icon: MessagesSquare, label: 'Messages' }] : []),
   ];
 
   return (

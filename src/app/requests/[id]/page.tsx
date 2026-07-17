@@ -77,6 +77,7 @@ async function getRequest(id: string, viewerId?: string) {
             twitterUrl: true,
             tiktokUrl: true,
             websiteUrl: true,
+            phone: true,
           },
         },
         donations: {
@@ -357,7 +358,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                         ))}
                       </div>
                     )}
-                    {session?.user?.id && session.user.id !== request.user.id && <ContactRequestButton recipientId={request.user.id} requestId={request.id} />}
+                    {session?.user?.id && session.user.id !== request.user.id && <ContactRequestButton recipientId={request.user.id} requestId={request.id} phone={request.user.phone} name={request.user.fullName} />}
                   </div>
                 </div>
               </div>
