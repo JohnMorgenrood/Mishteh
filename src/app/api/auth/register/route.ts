@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { getClientIP, getGeoLocation, logSecurityEvent, checkSuspiciousActivity, getUserAgent, updateUserSecurityInfo } from '@/lib/security';
 import { validateEmail } from '@/lib/email-validation';
+import { trialEndFrom } from '@/lib/membership';
 
 export async function POST(request: NextRequest) {
   try {
@@ -113,6 +114,7 @@ export async function POST(request: NextRequest) {
         signupCity: geoLocation.city,
         isSuspicious: suspiciousCheck.suspicious,
         suspiciousReason: suspiciousCheck.reasons.join('; ') || null,
+        membershipTrialEndsAt: trialEndFrom(),
       },
       select: {
         id: true,

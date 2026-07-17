@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireActiveMembership } from '@/lib/membership';
 import { z } from 'zod';
 import { moderateSupportiveContent } from '@/lib/content-moderation';
 import { flagModerationIncident } from '@/lib/moderation-incident';
@@ -148,6 +149,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    const inactiveMembership = await requireActiveMembership(session.user.id, session.user.userType);
+    if (inactiveMembership) return NextResponse.json({ error: 'An active MISHTEH membership is required.', membershipRequired: true }, { status: 402 });
     const data = validationResult.data;
     const isAdmin = session.user.userType === 'ADMIN';
     let beneficiaryUserId = isAdmin ? data.beneficiaryUserId : session.user.id;

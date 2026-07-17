@@ -96,6 +96,14 @@ export default function TermsOfServicePage() {
                   operational costs. Payment gateway fees may also apply. All fees and net payout amounts
                   will be shown before payment is completed.
                 </p>
+
+                <h3 className="text-xl font-medium text-gray-800">4.5 Community Membership</h3>
+                <p className="text-gray-700 leading-relaxed">
+                  New accounts receive a seven-day free trial. Participating in community features requires
+                  an active membership after the trial. Membership costs R10 for one month and is renewed
+                  manually through Yoco. MISHTEH does not automatically debit members, and an expired
+                  membership does not prevent access to public information.
+                </p>
               </div>
             </section>
 

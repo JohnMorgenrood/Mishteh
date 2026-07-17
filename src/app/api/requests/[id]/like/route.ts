@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireActiveMembership } from '@/lib/membership';
 
 // POST /api/requests/[id]/like - Toggle like on a request
 export async function POST(
@@ -87,6 +88,7 @@ export async function POST(
       ]);
       liked = true;
     }
+    if (await requireActiveMembership(session.user.id, session.user.userType)) return NextResponse.json({ error: 'Active membership required.', membershipRequired: true }, { status: 402 });
 
     // Get updated like count
     const likeCount = await prisma.like.count({

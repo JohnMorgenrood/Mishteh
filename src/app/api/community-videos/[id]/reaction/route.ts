@@ -2,12 +2,14 @@ import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireActiveMembership } from '@/lib/membership';
 
 const REACTION_TYPES = ['LIKE', 'LOVE', 'CELEBRATE'] as const;
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: 'Sign in to react.' }, { status: 401 });
+  if (await requireActiveMembership(session.user.id, session.user.userType)) return NextResponse.json({ error: 'Active membership required.', membershipRequired: true }, { status: 402 });
   const { id } = await params;
   const body = await request.json().catch(() => ({}));
   const type = REACTION_TYPES.includes(body.type) ? body.type : 'LIKE';

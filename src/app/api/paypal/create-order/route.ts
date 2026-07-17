@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { requireActiveMembership } from '@/lib/membership';
 import { createOrder } from '@/lib/paypal';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+    const inactiveMembership = await requireActiveMembership(session.user.id, session.user.userType);
+    if (inactiveMembership) return NextResponse.json({ error: 'An active MISHTEH membership is required.', membershipRequired: true }, { status: 402 });
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

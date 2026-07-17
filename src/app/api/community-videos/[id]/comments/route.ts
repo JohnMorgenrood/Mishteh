@@ -4,10 +4,12 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { moderateSupportiveContent } from '@/lib/content-moderation';
 import { flagModerationIncident } from '@/lib/moderation-incident';
+import { requireActiveMembership } from '@/lib/membership';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: 'Sign in to comment.' }, { status: 401 });
+  if (await requireActiveMembership(session.user.id, session.user.userType)) return NextResponse.json({ error: 'Active membership required.', membershipRequired: true }, { status: 402 });
   const account = await prisma.user.findUnique({ where: { id: session.user.id }, select: { isSuspicious: true } });
   if (account?.isSuspicious) return NextResponse.json({ error: 'Your account is pending administrator review.' }, { status: 403 });
   const content = String((await request.json()).content || '').trim();

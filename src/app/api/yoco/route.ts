@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { calculateYocoBreakdown, calculateYocoBreakdownFromGross, YOCO_TOTAL_FEE_RATE } from '@/lib/payment-fees';
+import { requireActiveMembership } from '@/lib/membership';
 
 /**
  * POST /api/yoco/create-checkout
@@ -50,6 +51,8 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+    const inactiveMembership = await requireActiveMembership(session.user.id, session.user.userType);
+    if (inactiveMembership) return NextResponse.json({ error: 'An active MISHTEH membership is required.', membershipRequired: true }, { status: 402 });
 
     if (!['ACTIVE', 'PARTIALLY_FUNDED'].includes(helpRequest.status) || !helpRequest.donationsEnabled || helpRequest.user.isSuspicious) {
       return NextResponse.json(

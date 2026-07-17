@@ -48,7 +48,7 @@ export default function RegisterPage() {
         <div className="mb-6 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg"><UserPlus className="h-7 w-7" /></div>
           <h1 className="mt-5 text-3xl font-bold text-gray-900">Join MISHTEH</h1>
-          <p className="mt-2 text-sm text-gray-600">One account to donate, request help, and support the community.</p>
+          <p className="mt-2 text-sm text-gray-600">Start with seven days free, then renew for only R10 per month. No automatic deductions.</p>
         </div>
 
         <form onSubmit={register} className="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-xl sm:p-8">

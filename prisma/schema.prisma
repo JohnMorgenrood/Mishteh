@@ -66,12 +66,52 @@ model User {
   requestViews           RequestView[]
   communityPostComments  CommunityPostComment[]
   communityPostReactions CommunityPostReaction[]
+  membershipTrialEndsAt  DateTime?
+  membershipExpiresAt    DateTime?
+  membershipPayments     MembershipPayment[]
+  contactRequestsSent    ContactDetailRequest[] @relation("ContactRequester")
+  contactRequestsReceived ContactDetailRequest[] @relation("ContactRecipient")
 
   @@index([email])
   @@index([userType])
   @@index([ficaVerified])
   @@index([signupCountry])
   @@index([isSuspicious])
+}
+
+model MembershipPayment {
+  id              String   @id @default(cuid())
+  userId          String
+  amount          Float    @default(10)
+  currency        String   @default("ZAR")
+  status          String   @default("PENDING")
+  checkoutId      String?  @unique
+  membershipFrom  DateTime?
+  membershipUntil DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status])
+}
+
+model ContactDetailRequest {
+  id          String   @id @default(cuid())
+  requesterId String
+  recipientId String
+  requestId   String?
+  message     String
+  status      String   @default("PENDING")
+  respondedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  requester   User     @relation("ContactRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  recipient   User     @relation("ContactRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([requesterId, createdAt(sort: Desc)])
+  @@index([recipientId, status, createdAt(sort: Desc)])
+  @@unique([requesterId, recipientId, requestId])
 }
 
 model CommunityPost {

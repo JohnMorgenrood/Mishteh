@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
+import { trialEndFrom } from './membership';
 
 // SECURITY: Only these emails can be ADMIN - NO ONE ELSE
 const ADMIN_EMAILS = ['mishteh144@gmail.com', 'golearnx@gmail.com'];
@@ -114,6 +115,7 @@ export const authOptions: NextAuthOptions = {
                 fullName: user.name || 'Google User',
                 userType: userType,
                 image: user.image,
+                membershipTrialEndsAt: trialEndFrom(),
               },
             });
             

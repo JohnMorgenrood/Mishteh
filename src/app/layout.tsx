@@ -8,6 +8,7 @@ import QuickDonateWidget from '@/components/QuickDonateWidget';
 import { AuthProvider } from '@/components/AuthProvider';
 import LoadingScreen from '@/components/LoadingScreen';
 import { ToastProvider } from '@/components/Toast';
+import MembershipBanner from '@/components/MembershipBanner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -45,6 +46,7 @@ export default function RootLayout({
           <ToastProvider>
             <LoadingScreen />
             <Navbar />
+            <MembershipBanner />
             <main className="w-full min-w-0 flex-grow pb-20 md:pb-0">
               {children}
             </main>

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { formatCurrency } from '@/lib/currency';
+import { requireActiveMembership } from '@/lib/membership';
 
 // Validation schema for creating donations
 const createDonationSchema = z.object({
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+    if (await requireActiveMembership(session.user.id, session.user.userType)) return NextResponse.json({ error: 'Active membership required.', membershipRequired: true }, { status: 402 });
 
     const donations = await prisma.donation.findMany({
       where: {

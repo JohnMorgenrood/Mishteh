@@ -15,6 +15,7 @@ import {
 import SocialActions from '@/components/SocialActions';
 import TranslateButton from '@/components/TranslateButton';
 import { CountryFlag } from '@/components/CountryBadge';
+import ContactRequestButton from '@/components/ContactRequestButton';
 
 // Dynamic SEO metadata
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -356,6 +357,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                         ))}
                       </div>
                     )}
+                    {session?.user?.id && session.user.id !== request.user.id && <ContactRequestButton recipientId={request.user.id} requestId={request.id} />}
                   </div>
                 </div>
               </div>
