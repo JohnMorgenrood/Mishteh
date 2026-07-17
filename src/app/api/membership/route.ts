@@ -3,12 +3,33 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createYocoCheckout } from '@/lib/yoco';
-import { getMembershipStatus, MEMBERSHIP_PRICE_ZAR } from '@/lib/membership';
+import { createMembershipReminder, getMembershipStatus, MEMBERSHIP_PRICE_ZAR } from '@/lib/membership';
+import { getYocoPaymentDetails, isYocoPaymentSuccessful } from '@/lib/yoco';
+import { membershipEndFrom } from '@/lib/membership';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
-  return NextResponse.json(await getMembershipStatus(session.user.id, session.user.userType));
+  const pending = await prisma.membershipPayment.findFirst({ where: { userId: session.user.id, status: 'PENDING', checkoutId: { not: null } }, orderBy: { createdAt: 'desc' } });
+  if (pending?.checkoutId) {
+    try {
+      const checkout = await getYocoPaymentDetails(pending.checkoutId);
+      if (isYocoPaymentSuccessful(checkout.status)) {
+        const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { membershipExpiresAt: true } });
+        const now = new Date();
+        const membershipFrom = user?.membershipExpiresAt && user.membershipExpiresAt > now ? user.membershipExpiresAt : now;
+        const membershipUntil = membershipEndFrom(membershipFrom);
+        await prisma.$transaction([
+          prisma.user.update({ where: { id: session.user.id }, data: { membershipExpiresAt: membershipUntil } }),
+          prisma.membershipPayment.update({ where: { id: pending.id }, data: { status: 'COMPLETED', membershipFrom, membershipUntil } }),
+        ]);
+      }
+    } catch (error) { console.error('Membership reconciliation failed:', error); }
+  }
+  const status = await getMembershipStatus(session.user.id, session.user.userType);
+  await createMembershipReminder(session.user.id, status);
+  const payments = await prisma.membershipPayment.findMany({ where: { userId: session.user.id }, select: { id: true, amount: true, currency: true, status: true, membershipUntil: true, createdAt: true }, orderBy: { createdAt: 'desc' }, take: 12 });
+  return NextResponse.json({ ...status, payments });
 }
 
 export async function POST() {

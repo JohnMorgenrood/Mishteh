@@ -11,6 +11,7 @@ export default function AboutPage() {
           <p className="text-xl max-w-3xl mx-auto opacity-90">
             Connecting compassionate donors with people in need, one story at a time
           </p>
+          <p className="mx-auto mt-4 max-w-2xl text-sm text-white/80">Public stories are free to browse. New accounts receive 7 days of full access free, followed by an optional R10 monthly membership with no automatic deductions.</p>
         </div>
       </div>
 

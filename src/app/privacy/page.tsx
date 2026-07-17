@@ -36,6 +36,11 @@ export default function PrivacyPage() {
             </section>
 
             <section>
+              <h2 className="text-xl font-semibold text-gray-900">Membership Payments</h2>
+              <p className="mt-2">Membership payments are processed securely by Yoco. Mishteh stores the payment status, amount and membership dates, but does not store your full card details. Renewals are manual and are not automatically deducted.</p>
+            </section>
+
+            <section>
               <h2 className="text-xl font-semibold text-gray-900">Donor Privacy</h2>
               <p className="mt-2">
                 Donor identities are private by default. Public supporter lists will show <strong>Private Donor</strong> unless

@@ -62,7 +62,7 @@ export default function CommunityVideosPage() {
           <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Community Videos</h1>
           <p className="mt-3 max-w-2xl text-gray-300">Watch trusted creators helping people. MISHTEH reviews every video before it appears here.</p>
         </section>
-        {notice && <div className="my-5 rounded-xl border border-primary-200 bg-primary-50 p-4 text-sm text-primary-800">{notice}</div>}
+        {notice && <div className="my-5 rounded-xl border border-primary-200 bg-primary-50 p-4 text-sm text-primary-800">{notice} {notice.toLowerCase().includes('membership') && <a href="/membership" className="font-bold underline">Renew for R10</a>}</div>}
 
         <div className="mx-auto mt-6 flex w-full min-w-0 max-w-full flex-col items-center gap-6 lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8">
           <main className="mx-auto w-full min-w-0 max-w-full space-y-6 sm:space-y-8">
@@ -96,7 +96,7 @@ export default function CommunityVideosPage() {
                     <input value={comments[video.id] || ''} onChange={(event) => setComments((value) => ({ ...value, [video.id]: event.target.value }))} placeholder="Write a respectful comment…" className="flex-1 rounded-xl border px-4 py-2" required />
                     <button disabled={submittingComment === video.id} aria-label="Post comment" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-white transition hover:bg-primary-700 disabled:cursor-wait disabled:opacity-60 sm:w-auto sm:px-4">{submittingComment === video.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</button>
                   </form>
-                  {commentNotices[video.id] && <p role="status" className={`mt-2 rounded-xl px-3 py-2 text-sm ${commentNotices[video.id].type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{commentNotices[video.id].text}</p>}
+                  {commentNotices[video.id] && <p role="status" className={`mt-2 rounded-xl px-3 py-2 text-sm ${commentNotices[video.id].type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{commentNotices[video.id].text} {commentNotices[video.id].text.toLowerCase().includes('membership') && <a href="/membership" className="font-bold underline">Renew for R10</a>}</p>}
                   <div className="mt-4 space-y-3">
                     {(expandedComments[video.id] ? video.comments : video.comments.slice(0, 2)).map((item: any) => <div key={item.id} className={`min-w-0 rounded-xl p-3 ${item.approved ? 'bg-gray-50' : 'border border-amber-200 bg-amber-50'}`}><div className="flex flex-wrap items-center justify-between gap-2"><p className="min-w-0 break-words text-sm font-semibold">{item.user.fullName}</p>{!item.approved && <span className="shrink-0 text-xs font-semibold text-amber-700">Awaiting approval</span>}</div><p className="mt-1 break-words text-sm text-gray-600">{item.content}</p></div>)}
                     {video.comments.length > 2 && (

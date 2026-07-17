@@ -21,6 +21,7 @@ import { formatCurrency } from '@/lib/currency';
 import { prisma } from '@/lib/prisma';
 import RequesterGratitudePrompt from '@/components/RequesterGratitudePrompt';
 import ContactRequestsPanel from '@/components/ContactRequestsPanel';
+import MembershipCard from '@/components/MembershipCard';
 
 function formatMoney(amount: number) {
   return formatCurrency(amount, 'ZAR');
@@ -246,6 +247,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-6"><MembershipCard compact /></div>
         <ContactRequestsPanel />
         <div className="mb-8 rounded-3xl bg-gray-800 p-8 text-white shadow-soft-lg">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

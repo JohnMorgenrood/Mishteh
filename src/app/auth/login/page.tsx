@@ -67,7 +67,7 @@ export default function LoginPage() {
             Welcome Back
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to your MISHTEH account
+            Sign in to your MISHTEH account and manage your R10 monthly membership
           </p>
         </div>
 

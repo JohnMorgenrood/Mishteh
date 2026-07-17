@@ -7,8 +7,8 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 const slides = [
   {
     image: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=1600&h=900&fit=crop',
-    title: 'Together, We Can Make a Difference',
-    subtitle: 'Connecting hearts through acts of kindness and compassion',
+    title: 'A Caring Community for Only R10 a Month',
+    subtitle: 'Browse freely, then start with 7 days free to donate, request help and join the conversation',
   },
   {
     image: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1600&h=900&fit=crop',
@@ -81,7 +81,7 @@ export default function HeroSlider() {
                     href="/auth/register"
                     className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl border-2 border-white/30 hover:bg-white/20 hover:scale-105 transition-all"
                   >
-                    Get Started
+                    Start 7 Days Free
                   </Link>
                 </div>
               </div>

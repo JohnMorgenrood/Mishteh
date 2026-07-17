@@ -18,10 +18,6 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard');
   const isAdmin = request.nextUrl.pathname.startsWith('/admin');
-  const isActivityPage = pathname.startsWith('/activity');
-  const isRequestsPage = pathname === '/requests' || pathname.startsWith('/requests/');
-  const isProfilePage = pathname.startsWith('/profile/');
-  const isProtectedCommunityPage = isActivityPage || isRequestsPage || isProfilePage;
 
   // Redirect authenticated users away from auth pages
   if (isAuthPage && token) {
@@ -33,7 +29,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect unauthenticated users to login
-  if ((isDashboard || isAdmin || isProtectedCommunityPage) && !token) {
+  if ((isDashboard || isAdmin) && !token) {
     const loginUrl = new URL('/auth/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(loginUrl);

@@ -111,7 +111,7 @@ export default function PostsPage() {
                       <button type="submit" disabled={busy === `comment-${post.id}` || !drafts[post.id]?.trim()} aria-label="Post comment" className="grid h-9 w-9 place-items-center rounded-full bg-gray-900 text-white transition hover:bg-red-600 disabled:opacity-40"><Send className="h-4 w-4" /></button>
                     </div>
                   </form>
-                  {errors[post.id] && <p className="ml-11 mt-2 text-xs font-medium text-red-600">{errors[post.id]}</p>}
+                  {errors[post.id] && <p className="ml-11 mt-2 text-xs font-medium text-red-600">{errors[post.id]} {errors[post.id].toLowerCase().includes('membership') && <a className="font-bold underline" href="/membership">Renew for R10</a>}</p>}
 
                   {post.comments.length > 0 && <div className="ml-0 mt-4 space-y-3 sm:ml-11">
                     {(expandedComments[post.id] ? post.comments : post.comments.slice(0, 2)).map((item) => <div key={item.id} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">

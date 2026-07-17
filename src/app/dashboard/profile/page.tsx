@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { User, Camera, FileText, Home, Shield, Loader, CheckCircle } from 'lucide-react';
 import FicaUpload from '@/components/FicaUpload';
+import MembershipCard from '@/components/MembershipCard';
 
 // Declare Google Maps types
 declare global {
@@ -234,6 +235,7 @@ export default function ProfileSettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6"><MembershipCard /></div>
         <div className="bg-white rounded-xl shadow-soft p-6 md:p-8">
           <div className="flex items-center gap-3 mb-6">
             <User className="w-8 h-8 text-primary-600" />

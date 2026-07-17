@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, LogOut, LogIn, UserPlus, Home, HeartHandshake, PlaySquare, Bell, UserCircle } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut, LogIn, UserPlus, Home, HeartHandshake, PlaySquare, Bell, UserCircle, Crown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import LanguageSelector from './LanguageSelector';
@@ -86,6 +86,7 @@ export default function Navbar() {
               <PlaySquare className="h-6 w-6" /><span className="sr-only">Community Videos</span>
             </Link>
             {status === 'authenticated' && <Link href="/activity" title="Activity" aria-label="Activity" className={`flex h-12 w-16 items-center justify-center rounded-xl transition-all ${isActive('/activity') ? 'bg-primary-50 text-primary-600' : 'text-gray-500 hover:bg-gray-100 hover:text-primary-600'}`}><Bell className="h-6 w-6" /><span className="sr-only">Activity</span></Link>}
+            {status === 'authenticated' && <Link href="/membership" title="Membership" aria-label="Membership" className={`flex h-12 w-12 items-center justify-center rounded-xl transition-all ${isActive('/membership') ? 'bg-amber-100 text-amber-700' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-700'}`}><Crown className="h-6 w-6" /><span className="sr-only">Membership</span></Link>}
 
             {status === 'authenticated' ? (
               <>
@@ -137,6 +138,7 @@ export default function Navbar() {
                         <Link href="/admin/videos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors" onClick={() => setAdminDropdownOpen(false)}>
                           📺 Community Videos
                         </Link>
+                        <Link href="/admin/memberships" className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors" onClick={() => setAdminDropdownOpen(false)}>Memberships</Link>
                         <Link
                           href="/admin/security"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
@@ -224,6 +226,7 @@ export default function Navbar() {
                   >
                     Profile
                   </Link>
+                  <Link href="/membership" className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${isActive('/membership') ? 'bg-amber-50 text-amber-700' : 'text-gray-700 hover:bg-gray-50'}`} onClick={() => setMobileMenuOpen(false)}>Membership · R10/month</Link>
                   
                   {/* Admin Dropdown for Mobile - Full Access */}
                   {(session.user.userType === 'ADMIN' || ['mishteh144@gmail.com', 'golearnx@gmail.com'].includes(session.user.email || '')) && (
@@ -249,6 +252,7 @@ export default function Navbar() {
                       <Link href="/admin/videos" className={`block px-4 py-2 text-sm rounded-md transition-colors ${isActive('/admin/videos') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'}`} onClick={() => setMobileMenuOpen(false)}>
                         📺 Community Videos
                       </Link>
+                      <Link href="/admin/memberships" className={`block px-4 py-2 text-sm rounded-md transition-colors ${isActive('/admin/memberships') ? 'bg-primary-50 text-primary-600' : 'text-gray-700 hover:bg-gray-50'}`} onClick={() => setMobileMenuOpen(false)}>Memberships</Link>
                       <Link
                         href="/admin/security"
                         className={`block px-4 py-2 text-sm rounded-md transition-colors ${

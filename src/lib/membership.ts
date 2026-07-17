@@ -53,3 +53,23 @@ export async function requireActiveMembership(userId: string, userType?: string)
   const status = await getMembershipStatus(userId, userType);
   return status.active ? null : status;
 }
+
+export async function createMembershipReminder(userId: string, status: Awaited<ReturnType<typeof getMembershipStatus>>) {
+  if (status.status === 'ADMIN' || status.status === 'ACTIVE' && (status.daysRemaining ?? 99) > 3) return;
+  if (status.status === 'TRIAL' && (status.daysRemaining ?? 99) > 3) return;
+  const since = new Date(Date.now() - 7 * 86400000);
+  const existing = await prisma.notification.findFirst({
+    where: { userId, type: 'MEMBERSHIP', link: '/membership', createdAt: { gte: since } },
+  });
+  if (existing) return;
+  const expired = status.status === 'EXPIRED';
+  await prisma.notification.create({ data: {
+    userId,
+    type: 'MEMBERSHIP',
+    title: expired ? 'Renew your MISHTEH membership' : 'Membership renewal reminder',
+    message: expired
+      ? 'Your membership has ended. Renew for R10 to keep donating, posting and requesting help.'
+      : `Your ${status.status === 'TRIAL' ? 'free trial' : 'membership'} ends in ${status.daysRemaining} day${status.daysRemaining === 1 ? '' : 's'}.`,
+    link: '/membership',
+  } });
+}

@@ -80,6 +80,13 @@ export default async function HomePage() {
       {/* Hero Slider */}
       <HeroSlider />
 
+      <section className="border-y border-amber-200 bg-gradient-to-r from-amber-50 via-white to-primary-50 py-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-4 text-center md:flex-row md:text-left">
+          <div><p className="text-sm font-black uppercase tracking-[0.18em] text-amber-700">Simple community membership</p><h2 className="mt-2 text-3xl font-black text-gray-950">7 days free, then only R10 per month</h2><p className="mt-2 max-w-2xl text-gray-700">Explore every public story for free. Membership unlocks donations, help requests, comments, reactions and safe contact requests. Pay one month at a time—no automatic deductions.</p></div>
+          <Link href="/auth/register" className="shrink-0 rounded-xl bg-gray-950 px-7 py-4 font-bold text-white shadow-lg hover:bg-primary-700">Start free trial</Link>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -101,7 +108,7 @@ export default async function HomePage() {
                 Create an Account
               </h3>
               <p className="text-gray-600">
-                Register as a donor or someone in need. All users are verified for safety.
+                Register and receive seven days of full community access free. No card is needed to begin.
               </p>
             </div>
 
